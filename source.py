@@ -90,7 +90,7 @@ class FlowPlot:
         self.show_gene_list = Div(text='Gene/Marker List: '+str(self.data_columns[0:10]))
         # Log
         self.log_axis = CheckboxGroup(labels=['Log-scaled axis'],active=[])
-        self.log_axis.on_click(lambda new: self.log_cb)
+        self.log_axis.on_change('active',lambda attr, old, new: self.log_cb())
         # Change the color of selected parts
         self.color_selection = ColorPicker(title="Select color:", color=color_list[0], css_classes=color_list)
         self.color_selection.on_change("color", lambda attr,old,new: self.select_color_func())
@@ -106,7 +106,7 @@ class FlowPlot:
         # Select class group
         if self.label_existed:
             group_list = list(self.adata.uns['category_dict'].keys())
-            self.group = Select(title='Select Cluster Group:', options=group_list, value=group_list[0])
+            self.group = Select(title='Select Cluster Group:', options=group_list, value=group_list[-1])
             # self.update_checkbox()
             # self.show_color()
         else:
@@ -235,10 +235,12 @@ class FlowPlot:
             self.data_df['color'] = self.source.data['color']
             self.data_df['hl_gene'] = self.source.data['hl_gene']
             self.source.data = self.data_df
+            print(self.log_axis.active)
         else:
             self.data_log['color'] = self.source.data['color']
             self.data_log['hl_gene'] = self.source.data['hl_gene']
             self.source.data = self.data_log
+            print(self.log_axis.active)
 
     # Callback of colorpicker(selection), update the selected dots with picked color
     def select_color_func(self):
@@ -275,6 +277,7 @@ class FlowPlot:
         try: 
             self.adata.uns['category_dict'][self.group.value]['class_name'][0]
             self.update_checkbox()
+            print(self.adata.uns['category_dict'][self.group.value])
             self.class_checkbox.active = [0]
             self.show_color()
         except:
@@ -476,7 +479,7 @@ class FlowPlot:
 
         labels = self.class_checkbox.labels
         labels[ind] = str(self.class_name.value) + ': cell_nums=' + str(cell_num)
-        self.adata.uns['category_dict'][self.group.value]['class_name'] = self.class_name.value
+        self.adata.uns['category_dict'][self.group.value]['class_name'][ind] = self.class_name.value
         self.class_name.value = ''
         print(labels)
         self.class_checkbox.labels = labels
