@@ -1,0 +1,300 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Apr  6 15:04:27 2021
+
+@author: qy
+"""
+
+import numpy as np
+import scipy
+from scipy.special import gammaln
+import time
+import pickle
+import traceback
+import pandas as pd
+import os, sys
+import pyDIMM
+
+
+class HiddenPrints:
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
+
+
+
+#%% DMN optimization with python 
+
+def dmn(adata, groupby, groups, output, c_version=True, maxiter=2000, subset=None):
+    '''
+    Fit Dirichlet-Multinomial distribution with UMI counts of homo-droplet populations.
+
+    Parameters
+    ----------
+    adata : AnnData
+        The (annotated) UMI count matrix of shape `n_obs` × `n_vars`.
+        Rows correspond to droplets and columns to genes.
+    groupby : str
+        The key of the droplet categories stored in adata.obs. 
+    groups : list of strings
+        Droplet categories, e.g. ['Homo-ct1', 'Homo-ct2'] annotated in adata.obs[groupby] to which DMN model shoudl be fitted with.
+    output : path
+        Path to save the results.
+    c_version : bool, optional
+        If or not to use DMN fitting in C language. The default is True.
+    maxiter : int, optional
+        The maximal number of iteration. The default is 2000.
+    subset : int, optional
+        Whether to downsample droplets to fit DMN. If so, how many droplets should be sampled. The default is None.
+
+    Returns
+    -------
+    None.
+    The optimized alpha vectors for each kind of droplet population is stroed in adata.varm['para_diri'].
+
+    '''
+    
+    if not os.path.exists(output):
+        raise ValueError("Provide a valid path to save results!")
+
+    alpha_out = []
+    for group in groups:
+        
+        print('Fit dmn with '+group+' droplets. This may take a long time. Please wait...')
+        counts = adata[adata.obs[groupby]==group,:].X
+        if isinstance(counts,scipy.sparse.csr.csr_matrix):
+            counts = counts.toarray()
+            
+        if subset is not None:
+            idx = np.random.choice(counts.shape[0], subset, replace=False)
+            counts = counts[idx,:]
+        
+        if c_version:
+            t0 = time.time()
+            with HiddenPrints():
+                dimm = pyDIMM.DIMM(observe_data=counts, n_components=1, print_log=True)
+                dimm.EM(max_iter=maxiter, max_alpha_tol=1e-3, max_loglik_tol=1e-3, save_log=True)
+            print('Time cost:', time.time()-t0, 'seconds.')
+
+            alpha_vec = np.ravel(dimm.get_model()['alpha'])
+            
+            log = pd.read_csv('pyDIMM.log')
+            log.to_csv(os.path.join(output,group+'.dmnlog.txt'))
+                        
+        else:
+            
+            log = open(os.path.join(output,group+'.dmnlog.txt'),'w',buffering=1)    
+            log.write('niter'+','+'alpha_sum'+','+'loglik'+','+'alpha_l2norm'+','+'alpha_l2norm_delta'+'\n')
+            
+            t0 = time.time()
+            alpha_init = initialize_alpha(counts)
+            alpha_vec = optimize_alpha(counts, alpha_init, log=log,maxiter=maxiter)
+            print('Time cost:', time.time()-t0, 'seconds.')
+            log.close()
+            
+        alpha_out.append(alpha_vec)
+        
+    alpha_df = pd.DataFrame(np.array(alpha_out).T, index=adata.var_names, columns=groups)
+    adata.varm['para_diri'] = alpha_df
+    alpha_df.to_csv(os.path.join(output,'alpha,csv'))
+
+
+        
+
+def initialize_alpha(Y):
+
+    gene_tot = np.ravel(np.sum(Y, axis=0))
+    lib_size = np.ravel(np.sum(Y, axis=1))
+    
+    G = sum(gene_tot > 0)
+    #C = sum(lib_size > 0)
+    
+    new_Y = Y[lib_size > 0, :]
+    new_Y = new_Y[:, gene_tot > 0] 
+    
+    p_mat = ( new_Y.T/lib_size[lib_size > 0] ).T
+    p_mean = p_mat.mean(0)
+    p_var = p_mat.var(0)
+    p_var[p_var == 0] = np.nanmean(p_var)
+    
+    alpha_sum = np.exp( sum(np.log(p_mean[:-1]*(1-p_mean[:-1])/p_var[:-1] - 1))/(G-1) )
+    
+    alpha = np.array([0.0]*Y.shape[1])
+    alpha[gene_tot > 0] = alpha_sum * p_mean
+    alpha[alpha == 0.0] = 1e-6
+
+    return alpha
+    
+
+
+def optimize_alpha(Y, alpha, **para):
+    
+    minAlpha = 1e-200
+    
+    maxiter = para.get('maxiter',2000)
+    likTol = para.get('likTol',1e-2)
+    log = para.get('log',None)
+    delta_alpha_Tol = para.get('alpTol',1e-1)
+    keeptimes =  para.get('ntimes',100)
+    
+    delta_LL = 100.0
+    delta_alpha = 20
+    iteration = 0
+    
+    lib_size = np.ravel(np.sum(Y, axis=1))
+    C,G = Y.shape
+    
+    #record = {'alpha': [], 'LL': [], 'alpha_norm': [], 'delta_alpha':[]}
+    
+    logLik = sum(calculate_LL(alpha, Y))
+    alpha_norm = np.linalg.norm(alpha)
+    
+    #record['alpha'].append(alpha)
+    #record['LL'].append(logLik)
+    #record['alpha_norm'].append(alpha_norm)
+    
+    alpha_hits = []
+    
+    try:
+    
+        while( ((delta_LL > likTol) or len(alpha_hits) <  keeptimes) and (iteration < maxiter)):
+            
+            # calculate new alpha
+            alphaNew = np.zeros(alpha.shape)
+            den = sum(lib_size/(lib_size -1 + alpha.sum() ))
+            for gidx in range(G):
+                dataG = (( Y[:,gidx] + minAlpha)/(Y[:,gidx] + minAlpha - 1 + alpha[gidx]))
+                num = dataG.sum()
+                alphaNew[gidx] = alpha[gidx] * num / den
+            
+            # calculate new logLik
+            LL_tmp = calculate_LL(alphaNew, Y)
+            newLogLik  = LL_tmp.sum()
+            
+            # calculate diff to check convergence
+            delta_LL = np.abs( (newLogLik - logLik)/logLik*100.0 )
+            delta_alpha = np.linalg.norm(alphaNew - alpha)
+            # update 
+            alpha = alphaNew
+            alpha[alpha <= 0] = minAlpha
+            logLik = newLogLik
+            
+            alpha_norm = np.linalg.norm(alpha)
+            
+            #record['alpha'].append(alpha)
+            #record['LL'].append(logLik)
+            #record['alpha_norm'].append(alpha_norm)
+            #record['delta_alpha'].append(delta_alpha)
+            iteration += 1
+            #if log is None:
+            #    print('iter '+str(iteration)+': precision = '+str(sum(alpha)) + ', LL = ' + str(logLik))
+            #else:
+            log.write(str(iteration)+','+str(sum(alpha)) +','+str(logLik) +','+str(alpha_norm)+','+str(delta_alpha)+ '\n')
+            
+            # if delta_alpha is less than delta_alpha_Tol in continuous keeptimes, then break
+            alpha_hits.append( delta_alpha < delta_alpha_Tol)
+            if not np.all(alpha_hits):
+                alpha_hits = []
+        #elif len(alpha_hits) >= keeptimes:
+        '''
+        if log is None:
+            print('terminated after '+str(iteration)+' iterations.')
+        else:
+            log.write('terminated after '+str(iteration)+' iterations.\n')
+            #break        
+        '''
+    except Exception as e:
+        #if log is None:
+        print('repr(e):\n',repr(e))
+        print('traceback.print_exc():')
+        traceback.print_exc()
+        '''
+        else:
+            log.write('repr(e):\t'+repr(e)+'\n')
+            log.write('traceback.print_exc():\n'+str(traceback.print_exc())+'\n')
+        '''
+    return alpha
+    
+
+
+
+def lgammaVec(inVec):
+    outVec = gammaln(inVec)
+    idx_inf = np.isinf(outVec)
+    outVec[idx_inf] = 709.1962086421661
+    # lnGamma(1e-308) = 709.1962086421661, lnGamma(1e-309) = inf
+    # if val is closer than 1e-308 to 0, e.g. 1e-309, inf will be returned 
+    # we would truncate it to a certain number: here it's lnGamma(1e-308)
+    return outVec
+
+
+
+
+def calculate_LL(alpha, Y):
+    
+    lib_size = np.ravel(np.sum(Y, axis=1))
+    C = Y.shape[0]
+    lgammaAlpha = lgammaVec(alpha)
+    alphaSum = alpha.sum()    
+    
+    LL_tmp = np.array([0]*C)
+    num1 = np.array([0]*C)#np.zeros((C,1))
+    num2 = np.array([0]*C)#np.zeros((C,1))
+    for i in range(C):
+        dataAlphaTmp = Y[i,:] + alpha
+        num1[i] = sum(lgammaVec(dataAlphaTmp) - lgammaAlpha)
+        num2[i] = gammaln(alpha.sum()) - gammaln( alphaSum + lib_size[i] )
+        LL_tmp[i] = num1[i] + num2[i] 
+    
+    return LL_tmp
+
+
+
+#%% logNormal distribution optimization
+
+from scipy.stats import norm
+
+def logN_para(adata,logUMIby,groupby,groups=None,inplace=True):
+    '''
+    Fit logNormal distributions with UMI amounts of homo-droplet populations.
+
+    Parameters
+    ----------
+    adata : AnnData
+        The (annotated) UMI count matrix of shape `n_obs` × `n_vars`.
+        Rows correspond to droplets and columns to genes.
+    logUMIby : str
+        The key of total UMIs in log10 stored in adata.obs.
+    groupby : str
+        The key of the droplet categories stored in adata.obs. 
+    groups : list of strings
+        Subset of droplet categories, e.g. ['Homo-ct1', 'Homo-ct2'], to which DMN model shoudl be fitted with.
+    inplace : bool, optional
+        If or not to store fitted parameters into adata. The default is True.
+
+    Returns
+    -------
+    para : list
+        Retuen mean and std of fitted logNormal distributions if inplace is False.
+    '''
+    if groups is None:
+        groups = adata.obs[groupby].unique()
+    
+    para = []
+    for g in groups:
+        m,s = norm.fit(adata.obs[logUMIby][adata.obs[groupby]==g])
+        para.append([m,s])
+
+    if inplace:
+        adata.uns['logUMI_para'] = pd.DataFrame(np.array(para),
+                                                       index=groups,
+                                                       columns=['mean','std'])
+    else:
+        return para
+
+
