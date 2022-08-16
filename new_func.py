@@ -1,28 +1,25 @@
-
 from bokeh.io import curdoc
 from bokeh.models import FileInput, Button, TextInput, Div, Select
-from matplotlib.pyplot import figure, title
-from pyparsing import col
 from sklearn import cluster
 from transform import data_trans
 from bokeh.layouts import row, column
 import anndata
 import scanpy as sc
 import json
-from PIL import Image
+from bokeh.palettes import d3
 
 import tomas as tm
 import scanpy as sc
-import pickle
 import numpy as np
 import pandas as pd
-import copy
 import base64
 from io import BytesIO
 import os
 
 
 from source import connection, plot_function
+
+color_list = d3['Category20c'][20]
 
 class new_layout:
     def __init__(self):
@@ -79,8 +76,7 @@ class new_layout:
             group = data_dict['selected_group']            
             cluster_list = list(api.get_group_dict()[group]['class_name'])
         except:
-            div = Div(text='There is no group!')
-            curdoc().add_root(div)
+            print('No Group!')
 
         test_method = Select(title='Choose the method:', options=['t-test','wilcoxon','logreg'], value='t-test')
         rank_n_genes = TextInput(title='Input the num of genes to rank')
@@ -173,20 +169,21 @@ def tomas_callback3(group, show_clusters):
     def process():       
         api = connection()
         adata = api.get_anndata()
-        size = os.path.getsize('./tomas/output/Tcells')
+        print(os.getcwd())
+        size = os.path.getsize('./output/Tcells')
         if size == 0:
             tm.fit.dmn(adata,
                     groupby=group,
                     groups=show_clusters[0:2], 
                     c_version=True,
                     #subset=100,
-                    output='./tomas/output/Tcells')
+                    output='./output/Tcells')
         else:
-            p = pd.read_csv('./tomas/output/Tcells/alpha.csv',index_col=0)
+            p = pd.read_csv('./output/Tcells/alpha.csv',index_col=0)
             print(p)
-            adata.varm['para_diri'] = pd.read_csv('./tomas/output/Tcells/alpha.csv',index_col=0)
-        figure2 = tm.vis.dmn_convergence(show_clusters[0],output='./tomas/output/Tcells',return_fig=True)
-        figure3 = tm.vis.dmn_convergence(show_clusters[1],output='./tomas/output/Tcells',return_fig=True)
+            adata.varm['para_diri'] = pd.read_csv('./output/Tcells/alpha.csv',index_col=0)
+        figure2 = tm.vis.dmn_convergence(show_clusters[0],output='./output/Tcells',return_fig=True)
+        figure3 = tm.vis.dmn_convergence(show_clusters[1],output='./output/Tcells',return_fig=True)
         div = curdoc().get_model_by_name('Reminder')
         layout.children.remove(div)
         # Save it to a temporary buffer.
@@ -217,10 +214,12 @@ def tomas_callback4(group,show_cluster):
         adata_dbl_mg = tm.auxi.get_dbl_mg_bc(adata,
                                             groupby = group,
                                             groups = show_cluster,
-                                            output = './tomas/output/Tcells') #'./prepareForRepo/re_test/test')
-        r_list = tm.infer.ratio_2types(adata_dbl_mg, output='./tomas/output/Tcells')#'./prepareForRepo/re_test/test')
-        #np.savetxt('./tomas/output/Tcells/Homo-naive_Homo-activated_dbl_Rest.txt',r_list)
-        #r_list = np.loadtxt('./prepareForRepo/re_test/test/rest.txt')
+                                            save_path = './output/Tcells') #'./prepareForRepo/re_test/test')
+        try:
+            r_list = np.loadtxt('./output/Tcells/Homo-naive_Homo-activated_dbl_Rest.txt')
+        except:
+            r_list = tm.infer.ratio_2types(adata_dbl_mg, output='./output/Tcells')#'./prepareForRepo/re_test/test')        
+            np.savetxt('./output/Tcells/Homo-naive_Homo-activated_dbl_Rest.txt',r_list)
         figure5 = tm.vis.logRatio_dist(r_list, return_fig=True)
         buf = BytesIO()
         figure5.savefig(buf, format="png")
@@ -374,6 +373,7 @@ def neighborhood_graph(neighbor_num, pc_num, resolution):
     adata = sc.pp.neighbors(adata, n_neighbors=int(neighbor_num), n_pcs=int(pc_num), copy=True)
     sc.tl.umap(adata)
     sc.tl.leiden(adata, resolution=float(resolution))
+    print('new')
 
     change.set_obsm(adata.obsm)
     change.set_uns(adata.uns)
@@ -383,7 +383,6 @@ def find_marker(groupby='leiden',test_method='t-test',rank_n_genes=25):
     layout = curdoc().get_model_by_name('find_marker')
     change = connection()
     adata = change.get_anndata()
-
 
     sc.tl.rank_genes_groups(adata, groupby, method=test_method)
     sc.pl.rank_genes_groups(adata, n_genes=rank_n_genes, sharey=False, save='.png')

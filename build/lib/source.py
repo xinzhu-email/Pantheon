@@ -2,12 +2,13 @@ import json
 from bokeh.models import ColumnDataSource, CDSView, IndexFilter, CustomJS, Circle, Div, Panel, Tabs, CheckboxGroup, FileInput,FixedTicker, ColorBar, LogColorMapper
 from bokeh.models.widgets import Select, Button, ColorPicker,TextInput, DataTable, MultiSelect, AutocompleteInput
 from bokeh.events import ButtonClick
-from bokeh.transform import log_cmap
+from bokeh.transform import linear_cmap, log_cmap
 from bokeh.palettes import d3
 from bokeh.layouts import row, column, layout
 from bokeh.io import curdoc
 from bokeh.layouts import row
 from bokeh.plotting import figure
+from matplotlib.figure import Figure
 import pandas
 import numpy as np
 import anndata
@@ -17,7 +18,7 @@ import scanpy as sc
 # from main3 import change_class_color
 from transform import data_trans
 import os, sys
-
+import random
 
 
 
@@ -603,7 +604,7 @@ class FlowPlot:
     def marker_choice(self):
         print('filename change: ',self.marker_file.filename)
         if True:
-            marker = pandas.read_csv('data/',self.marker_file.filename)
+            marker = pandas.read_csv(self.marker_file.filename)
 
             cell_type = list(set(marker['cell_type']))
             print(cell_type)
@@ -783,9 +784,6 @@ class connection:
 
         for group in set_group_name:
             if True:
-                if group in list(self.Figure.adata.uns['category_dict'].keys()):
-                    del self.Figure.adata.uns['category_dict'][group]
-                    self.Figure.adata.obs.drop(group, axis=1)
                 self.Figure.adata.uns['category_dict'][group] = pandas.DataFrame(columns=['class_name','color','cell_num'])
                 class_list = group_label[group]
                 self.Figure.adata.obs[group] = pandas.Series(group_label[group], dtype=object)
@@ -814,7 +812,7 @@ class connection:
                 for i in range(obsm[view_name].shape[1]):
                     self.Figure.data_df[view_name+str(i)] = pandas.Series(obsm[view_name][:,i],index=self.Figure.data_df.index)
                     self.Figure.data_log[view_name+str(i)] = self.Figure.data_df[view_name+str(i)]
-                    #print('data_df===',self.Figure.data_df[view_name+str(i)])
+                    print('data_df===',self.Figure.data_df[view_name+str(i)])
         view_list = list(obsm.keys())+['generic_columns']
         self.Figure.adata.obsm = obsm
         self.Figure.choose_panel.options = view_list
