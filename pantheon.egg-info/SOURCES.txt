@@ -1,7 +1,0 @@
-README.md
-setup.py
-source.py
-pantheon.egg-info/PKG-INFO
-pantheon.egg-info/SOURCES.txt
-pantheon.egg-info/dependency_links.txt
-pantheon.egg-info/top_level.txt

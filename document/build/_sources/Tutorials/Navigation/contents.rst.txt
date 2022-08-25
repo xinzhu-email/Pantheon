@@ -1,0 +1,46 @@
+Navigation
+==========
+
+Overview
+--------
+This is an example of PBMC_3k scRNA-seq data labeled by leiden and showed with umap.
+
+.. image:: image/1overview0.png
+    :width: 600
+    :align: center
+
+Toolbox
+--------------
+The Toolbox is just on the right of main plot. 
+
+.. image:: image/2mouse1.png
+    :width: 600
+    :align: center
+
+Map Editor
+------------
+Click to choose the map. 
+
+.. image:: image/3map.png
+    :width: 600
+    :align: center
+
+The option of map is decided by the existed view. If there is not existed view of data, the plot map will be constructed by the feature, which is named by *generic_columns*.
+
+Then input the x and y axis.
+
+.. image:: image/3map1.png
+    :width: 600
+    :align: center
+
+Check *Log-scaled axis* if log scaled feature is expected to show. 
+
+.. image:: image/3map2.png
+    :width: 600
+    :align: center
+
+Select current color with color selection.
+
+.. image:: image/3map3.png
+    :width: 600
+    :align: center

@@ -14,9 +14,11 @@ import anndata
 import scipy.sparse as ss
 import colorcet as cc
 import scanpy as sc
+#from new_func import new_layout
 # from main3 import change_class_color
 from transform import data_trans
 import os, sys
+import importlib
 
 
 
@@ -183,7 +185,7 @@ class FlowPlot:
                     collection[0].children[0].children[i].style.color = color[i];
                 }
                 console.log('collection:' + collection[0].children[0].innerHTML);
-            }, 500);
+            }, 100);
             
             
         """))
@@ -292,7 +294,6 @@ class FlowPlot:
         data.drop(labels='index', axis=1, inplace=True)
         print(data)
         self.source.data = data
- 
         setattr(effector, attr, selector.value)
 
     # Log
@@ -476,13 +477,20 @@ class FlowPlot:
             color = self.cur_color
         
         cluster_list = self.adata.uns['category_dict'][group]['class_name']
-        self.adata.obs.loc[self.adata.obs[group].isin([cluster_list[i] for i in self.class_checkbox.active]),group] = toclass
+        try:
+            for i in self.class_checkbox.active:
+                self.adata.obs[self.group.value] = self.adata.obs[self.group.value].cat.rename_categories({cluster_list[i]: toclass})
+        except:
+            self.adata.obs.loc[self.adata.obs[group].isin([cluster_list[i] for i in self.class_checkbox.active]), group] = toclass
         count = sum([self.adata.uns['category_dict'][group].loc[i,'cell_num'] for i in self.class_checkbox.active])
         checked_color = [self.adata.uns['category_dict'][group].loc[i,'color'] for i in self.class_checkbox.active]
         self.adata.uns['category_dict'][group].drop(index=self.class_checkbox.active,inplace=True)
-        self.adata.uns['category_dict'][group] = pandas.DataFrame(self.adata.uns['category_dict'][group], index=list(range(self.adata.uns['category_dict'][group].shape[0])))
+        temp = self.adata.uns['category_dict'][group]
+        self.adata.uns['category_dict'][group] = pandas.DataFrame(columns=['class_name','color','cell_num'],index=list(range(self.adata.uns['category_dict'][group].shape[0])))
+        self.adata.uns['category_dict'][group]['class_name'] = pandas.Series(list(temp['class_name'])) 
+        self.adata.uns['category_dict'][group]['color'] = pandas.Series(list(temp['color'])) 
+        self.adata.uns['category_dict'][group]['cell_num'] = pandas.Series(list(temp['cell_num'])) 
         self.adata.uns['category_dict'][group].loc[self.adata.uns['category_dict'][group].shape[0]] = {'class_name':toclass,'color':color,'cell_num':count}
-
         del_list2 = self.class_checkbox.labels
         for i in range(len(self.class_checkbox.active)):
             del del_list2[self.class_checkbox.active[i]-i]
@@ -523,7 +531,10 @@ class FlowPlot:
         labels = self.class_checkbox.labels
         labels[ind] = str(self.class_name.value) + ': cell_nums=' + str(cell_num)
         old_name = self.adata.uns['category_dict'][self.group.value]['class_name'][ind]
-        self.adata.obs.loc[self.adata.obs[self.group.value]==old_name, self.group.value] = self.class_name.value
+        try:
+            self.adata.obs[self.group.value] = self.adata.obs[self.group.value].cat.rename_categories({old_name: self.class_name.value})
+        except:
+            self.adata.obs.loc[self.adata.obs[self.group.value]==old_name, self.group.value] = self.class_name.value
         self.adata.uns['category_dict'][self.group.value]['class_name'][ind] = self.class_name.value
         self.class_name.value = ''
         print(labels)
@@ -603,7 +614,7 @@ class FlowPlot:
     def marker_choice(self):
         print('filename change: ',self.marker_file.filename)
         if True:
-            marker = pandas.read_csv('data/',self.marker_file.filename)
+            marker = pandas.read_csv('data/' + self.marker_file.filename)
 
             cell_type = list(set(marker['cell_type']))
             print(cell_type)
@@ -618,7 +629,7 @@ class FlowPlot:
 
     def change_marker_ct(self):
         cell_type = self.cell_type.value
-        marker = pandas.read_csv(self.marker_file.filename)
+        marker = pandas.read_csv('data/' + self.marker_file.filename)
         print('+++++++marker gene')
         #cell_type = list(set(marker['cell_type']))
         if cell_type == 'No cell type':
@@ -636,6 +647,8 @@ class FlowPlot:
 
     def change_view(self,main_plot):
         self.source.data = dict(main_plot.source.data)
+        self.adata = main_plot.adata
+        self.data_df = main_plot.data_df
         self.r.glyph.x = main_plot.r.glyph.x
         self.r.glyph.y = main_plot.r.glyph.y
         self.p.xaxis.axis_label = main_plot.p.xaxis.axis_label
@@ -671,18 +684,15 @@ class CreateTool:
     def base_tool(self):        
         Figure = FlowPlot(data=self.adata, color_map='color',title='Main Plot')
         module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox')
-        #module_buttons = CheckboxGroup(labels=[], name='module_buttons')
-        #select_module = Select(title='Select Module:', options=['Change color'], value='Change Color')
-        #import_button = Button(label='Import Module')
-        #import_button.on_click(lambda: load_package(list(module_checkbox.active)))
-        #Figure.p.visible = False
+        module_select = MultiSelect(title='Choose Functions to Add:', options=load_options(), value=[], name='modules_checkbox')
         layout=row(column(Figure.p, Figure.show_gene_list, Figure.para_color, Figure.trigger_color, module_checkbox),
             column(Figure.choose_panel,Figure.s_x, Figure.s_y, Figure.log_axis, Figure.color_selection, Figure.gate_button, Figure.remove_button, Figure.showall_button, Figure.export_button),
             column(Figure.group, Figure.group_name, Figure.create_group, Figure.rename_group, Figure.delete_group,
              Figure.class_name, Figure.new_class, Figure.checkbox_color, Figure.class_checkbox),
             column(Figure.show_selected_class, Figure.add_to, Figure.remove_from, Figure.update_class, 
              Figure.rename_class,  Figure.merge_class, Figure.delete_class))
-        module_checkbox.on_change('active', lambda attr, old, new: load_package(list(module_checkbox.active), layout))    
+        module_checkbox.on_change('active', lambda attr, old, new: load_module(list(module_checkbox.active))) 
+        module_select.on_change('value', lambda attr, old, new: load_module(list(module_select.value))) 
         return Figure, layout
     
     def highlight_gene(self, main_plot):
@@ -794,7 +804,7 @@ class connection:
                     class_dict[value] = class_dict.get(value,0) + 1
                 ind = 0
                 for key in class_dict.keys():
-                    self.Figure.adata.uns['category_dict'][group].loc[ind,:] = {'class_name': key, 'cell_num': class_dict[key], 'color':color_list[int(ind*4%20)]}
+                    self.Figure.adata.uns['category_dict'][group].loc[ind,:] = {'class_name': key, 'cell_num': class_dict[key], 'color':color_list[int(ind*3%20)]}
                     ind = ind + 1
         self.Figure.adata.obs = group_label
         self.Figure.group.options = list(self.Figure.adata.uns['category_dict'].keys())
@@ -839,70 +849,118 @@ class plot_function:
 
 
 
+# def _load_package(active, layout):    
+#     buttons = curdoc().get_model_by_name('module_buttons')
+#     try:
+#         curdoc().remove_root(buttons)
+#     except:
+#         print('##### NO MODULE #####')
+#     try:
+#         options = new_layout().add()
+#     except:
+#         sys.path = [os.path.dirname(os.path.abspath(__file__))] + sys.path
+#         from new_func import new_layout
+#         new_class = new_layout()
+#         options = new_class.add()
 
+#     #     print(len(options)-i-1)
+#     #     curdoc().remove_root(options[len(options)-i-1])
+#     # for i in active:
+#     #     curdoc().add_root(options[i])
+#     layouts = column()
+#     for i in range(len(options)):
+#         if i in active:
+#             layouts = column(layouts, options[i])
+#     buttons = layouts
+#     buttons.name = 'module_buttons'
+#     curdoc().add_root(buttons)
 
 def load_options():
-    try:
-        options = new_layout().options()
-    except:
-        sys.path = [os.path.dirname(os.path.abspath(__file__))] + sys.path
-        from new_func import new_layout
-        options = new_layout().options()
-    return options
-
-def load_package(active, layout):    
+    name_list = os.listdir('extension')
+    return name_list
+    
+def load_module(active):
     buttons = curdoc().get_model_by_name('module_buttons')
-    try:
-        curdoc().remove_root(buttons)
-    except:
-        print('##### NO MODULE #####')
-    try:
-        options = new_layout().add()
-    except:
-        sys.path = [os.path.dirname(os.path.abspath(__file__))] + sys.path
-        from new_func import new_layout
-        print('+++++++++')
-        new_class = new_layout()
-        options = new_class.add()
-        print('------------')
-
-    #     print(len(options)-i-1)
-    #     curdoc().remove_root(options[len(options)-i-1])
-    # for i in active:
-    #     curdoc().add_root(options[i])
-    layouts = column()
-    for i in range(len(options)):
-        if i in active:
-            layouts = column(layouts, options[i])
-    buttons = layouts
-    buttons.name = 'module_buttons'
-    curdoc().add_root(buttons)
-    print('+++++======')
-    # checkbox = curdoc().get_model_by_name('modules_checkbox')
-    # print(checkbox)
-    # layout.remove(checkbox)
-    # layout.append(column(checkbox, layouts))
     # try:
-    #     #layout.children.clear()
-    #     layout.children.append(layouts)
+    #     curdoc().remove_root(buttons)
     # except:
-    #     layout.children.append(layouts)
-        #curdoc().add_root(layouts)
+    #     print('##### NO MODULE #####')
+    name_list = os.listdir('extension')
+    layouts = column()
+    print('active',active)
+    for i in range(len(name_list)):
+        but = curdoc().get_model_by_name(name_list[i])
+        div = Div(text='')
+        if i in active:
+            if but != None and but.visible == False:
+                but.visible = True
+                
+                but.children.append(div)
+                continue
+            if but != None and but.visible == True:
+                continue
+            sys.path = [os.path.dirname(os.path.abspath(__file__))] + sys.path
+            module_name = 'extension.' + name_list[i] + '.module'
+            try:
+                new_class = module_name.new_layout()
+            except:            
+                mod = importlib.import_module(module_name)
+                new_class = mod.new_layout()
+            clear = Button(label='Clear the figures!', button_type='warning', name=str(i))
+            clear.on_click(lambda: clear_cb(clear.name))
+            new_buttons = new_class.add()
+            new_buttons = column(new_class.add(), clear)
+            new_buttons.sizing_mode = 'scale_height'
+            new_buttons.name = name_list[i]
+            new_buttons.children.append(div)
+            curdoc().add_root(new_buttons)
+            layouts = column(layouts, new_buttons)
+
+        else:
+            if but != None:
+                but.visible = False
+    buttons = layouts
+    if curdoc().get_model_by_name('module_buttons') == None:
+        buttons.name = 'module_buttons'
+    #curdoc().add_root(buttons)
+    
+
+def clear_cb(ind):
+    module_checkbox = curdoc().get_model_by_name('modules_checkbox')
+    # options = module_checkbox.labels
+    # for i in range(len(options)):
+    #     if options[i] == 'Find_Marker_Gene':
+    #         ind = i
+    option = module_checkbox.labels[int(ind)]
+    models = curdoc().get_model_by_name(option)
+    curdoc().remove_root(models)
+    print(curdoc().get_model_by_name(option))
+    load_module(module_checkbox.active)
+    # models.visible = False
+    # module_checkbox.active.remove(int(ind))
+
+    
 
 
 def upload_callback(upload_button):
     loading_remind = Div(text='Loading data……')
     #loading_remind = Div(text='<img src="./images/loading.gif" alt='' />')
     curdoc().add_root(loading_remind)
-    
+    print('===loading finifshed=====')
     def load():
         global Main_plot
-        try:
+        filetype = os.path.splitext(upload_button.filename)[-1][1:]
+        if filetype == 'csv':
             adata = anndata.read_csv('data/'+upload_button.filename)
             print('csv')
-        except:
+        elif filetype == 'h5ad':
             adata = anndata.read('data/'+upload_button.filename)
             print('h5ad')
+        elif filetype == 'mtx':
+            adata = sc.read_10x_mtx(
+                'data/hg19/',  # the directory with the `.mtx` file
+                var_names='gene_symbols',                # use gene symbols for the variable names (variables-axis index)
+                cache=True)                              # write a cache file for faster subsequent reading
         print(upload_button.filename)
         mainplot, panel1 = CreateTool(adata=adata).base_tool()
         print('===mainplot finifshed=====')
@@ -916,8 +974,8 @@ def upload_callback(upload_button):
         curdoc().add_root(tab)
 
     curdoc().add_next_tick_callback(load)
-    
-    
+
+
     
 
 
