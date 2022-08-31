@@ -46,6 +46,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#toolbox">Toolbox</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#map-editor">Map Editor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plot-editor">Plot Editor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#export-results">Export Results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cluster-group-editor">Cluster Group Editor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cluster-options">Cluster Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#highlight-gene">Highlight Gene</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../Preprocessing%20with%20scanpy.html">Preprocessing with scanpy</a></li>
@@ -84,24 +89,64 @@
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
 <p>This is an example of PBMC_3k scRNA-seq data labeled by leiden and showed with umap.</p>
-<a class="reference internal image-reference" href="../../_images/1overview0.png"><img alt="../../_images/1overview0.png" class="align-center" src="../../_images/1overview0.png" style="width: 600px;" /></a>
+<a class="reference internal image-reference" href="Tutorials/Navigation/image/1overview0.png"><img alt="Tutorials/Navigation/image/1overview0.png" class="align-center" src="Tutorials/Navigation/image/1overview0.png" style="width: 1000px;" /></a>
 </section>
 <section id="toolbox">
 <h2>Toolbox<a class="headerlink" href="#toolbox" title="Permalink to this heading"></a></h2>
 <p>The Toolbox is just on the right of main plot.</p>
-<a class="reference internal image-reference" href="../../_images/2mouse1.png"><img alt="../../_images/2mouse1.png" class="align-center" src="../../_images/2mouse1.png" style="width: 600px;" /></a>
+<a class="reference internal image-reference" href="Tutorials/Navigation/image/2mouse1.png"><img alt="Tutorials/Navigation/image/2mouse1.png" class="align-center" src="Tutorials/Navigation/image/2mouse1.png" style="width: 600px;" /></a>
 </section>
 <section id="map-editor">
 <h2>Map Editor<a class="headerlink" href="#map-editor" title="Permalink to this heading"></a></h2>
 <p>Click to choose the map.</p>
-<a class="reference internal image-reference" href="../../_images/3map.png"><img alt="../../_images/3map.png" class="align-center" src="../../_images/3map.png" style="width: 600px;" /></a>
-<p>The option of map is decided by the existed view. If there is not existed view of data, the plot map will be constructed by the feature, which is named by <em>generic_columns</em>.</p>
+<a class="reference internal image-reference" href="Tutorials/Navigation/image/3map.png"><img alt="Tutorials/Navigation/image/3map.png" class="align-center" src="Tutorials/Navigation/image/3map.png" style="width: 600px;" /></a>
+<p>The option of map is decided by the existed view. If there is not existed view of data, the plot map will be constructed by the feature, which is named by <strong>generic_columns</strong>.</p>
 <p>Then input the x and y axis.</p>
-<a class="reference internal image-reference" href="../../_images/3map1.png"><img alt="../../_images/3map1.png" class="align-center" src="../../_images/3map1.png" style="width: 600px;" /></a>
-<p>Check <em>Log-scaled axis</em> if log scaled feature is expected to show.</p>
-<a class="reference internal image-reference" href="../../_images/3map2.png"><img alt="../../_images/3map2.png" class="align-center" src="../../_images/3map2.png" style="width: 600px;" /></a>
-<p>Select current color with color selection.</p>
-<a class="reference internal image-reference" href="../../_images/3map3.png"><img alt="../../_images/3map3.png" class="align-center" src="../../_images/3map3.png" style="width: 600px;" /></a>
+<a class="reference internal image-reference" href="Tutorials/Navigation/image/3map1.png"><img alt="Tutorials/Navigation/image/3map1.png" class="align-center" src="Tutorials/Navigation/image/3map1.png" style="width: 600px;" /></a>
+</section>
+<section id="plot-editor">
+<h2>Plot Editor<a class="headerlink" href="#plot-editor" title="Permalink to this heading"></a></h2>
+<p>Check <strong>Log-scaled axis</strong> if log scaled feature is expected to show.</p>
+<a class="reference internal image-reference" href="Tutorials/Navigation/image/3map2.png"><img alt="Tutorials/Navigation/image/3map2.png" class="align-center" src="Tutorials/Navigation/image/3map2.png" style="width: 600px;" /></a>
+<p>Select current color with color selection button.</p>
+<a class="reference internal image-reference" href="Tutorials/Navigation/image/3map3.png"><img alt="Tutorials/Navigation/image/3map3.png" class="align-center" src="Tutorials/Navigation/image/3map3.png" style="width: 600px;" /></a>
+<p><strong>Gate</strong>: click <em>Gate</em> button, then only the selected dots will show in the plot.
+<strong>Trim</strong>: click <em>Trim</em> button, then selected dots will be removed in the plot.
+<strong>Show All</strong>: click <em>Show All</em> button, then all the dots will show in the plot.</p>
+<a class="reference internal image-reference" href="Tutorials/Navigation/image/4plot1.png"><img alt="Tutorials/Navigation/image/4plot1.png" class="align-center" src="Tutorials/Navigation/image/4plot1.png" style="width: 600px;" /></a>
+</section>
+<section id="export-results">
+<h2>Export Results<a class="headerlink" href="#export-results" title="Permalink to this heading"></a></h2>
+<p>The exported results include one anndata file (in form of ‘.h5ad’) and a file to save result of clustering, whose head is name of the cluster group.</p>
+</section>
+<section id="cluster-group-editor">
+<h2>Cluster Group Editor<a class="headerlink" href="#cluster-group-editor" title="Permalink to this heading"></a></h2>
+<p>Firstly <em>select the cluster group</em> in the dropdown list.
+If there is not existed cluster group, input the group name and click the <strong>Create Group</strong> button to create a new group. (The default group name will be construction of name of x- and y- axis).
+Users can also edit the selected group by <strong>Rename Group</strong> and <strong>Delete Group</strong> buttons.</p>
+<a class="reference internal image-reference" href="Tutorials/Navigation/image/5group1.png"><img alt="Tutorials/Navigation/image/5group1.png" class="align-center" src="Tutorials/Navigation/image/5group1.png" style="width: 600px;" /></a>
+</section>
+<section id="cluster-options">
+<h2>Cluster Options<a class="headerlink" href="#cluster-options" title="Permalink to this heading"></a></h2>
+<p>Select dots, input the name of this cluater, and click <strong>Create Cluster</strong> button. Then the created cluster will be shown in the followed checkbox list.</p>
+<a class="reference internal image-reference" href="Tutorials/Navigation/image/6cluster1.png"><img alt="Tutorials/Navigation/image/6cluster1.png" class="align-center" src="Tutorials/Navigation/image/6cluster1.png" style="width: 600px;" /></a>
+<p>The <strong>Select Cluster</strong> button will highlight the dots of the checked clusters in the checkbox list.</p>
+<p>Click <strong>Add to</strong> button, the selected dots will be added to the checked cluster.</p>
+<p>Click <strong>Remove from</strong> button, the selected dots will be removed from the checked cluster.</p>
+<p>Click <strong>Update Cluster</strong> button to easily update the checked cluster with the selected dots.</p>
+<p>Input the new name of cluster and click <strong>Rename Cluster</strong> to change name of checked cluster.</p>
+<p><strong>Merge Cluster</strong> button merges the checked clusters into one cluster(defaultly merged into the first checked cluster).</p>
+<p>Click the <strong>Delete Cluster</strong> will delete the checked cluster.</p>
+<a class="reference internal image-reference" href="Tutorials/Navigation/image/6cluster2.png"><img alt="Tutorials/Navigation/image/6cluster2.png" class="align-center" src="Tutorials/Navigation/image/6cluster2.png" style="width: 600px;" /></a>
+</section>
+<section id="highlight-gene">
+<h2>Highlight Gene<a class="headerlink" href="#highlight-gene" title="Permalink to this heading"></a></h2>
+<p>Choose the <strong>Highlight Gene</strong> panel to show the level of gene expression.</p>
+<p>Input the gene to analyse, click the <strong>Show Highlight Gene</strong> button, then the degree of gene expression will show in plot.</p>
+<p>Users can also import marker list(in form of .csv file) to define marker gene expression leve of certain celltype.</p>
+<p>With the <strong>Filter</strong> button, only the cells meet the conditions of hightlight gene will be highlighted in the plot.</p>
+<p>Click the <strong>Change Selected</strong> button, the selected dots in the Highlight Gene panel will Synchronously show in the main panel for further options.</p>
+<a class="reference internal image-reference" href="Tutorials/Navigation/image/7hlg1.png"><img alt="Tutorials/Navigation/image/7hlg1.png" class="align-center" src="Tutorials/Navigation/image/7hlg1.png" style="width: 800px;" /></a>
 </section>
 </section>
 

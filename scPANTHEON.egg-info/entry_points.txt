@@ -1,0 +1,2 @@
+[console_scripts]
+sc-pantheon = scpantheon.main:run

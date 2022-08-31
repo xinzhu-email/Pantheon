@@ -11,8 +11,10 @@ from bokeh.models import FileInput, Button, TextInput, Div, Select
 from bokeh.layouts import row, column
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-
-from source import connection, plot_function
+try:
+    from scpantheon.source import connection, plot_function
+except:
+    from source import connection, plot_function
 
 color_list = d3['Category20c'][20]
 

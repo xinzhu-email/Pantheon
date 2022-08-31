@@ -11,8 +11,10 @@ from bokeh.models import FileInput, Button, TextInput, Div, Select
 from bokeh.layouts import row, column
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-
-from source import connection, plot_function
+try:
+    from scpantheon.source import connection, plot_function
+except:
+    from source import connection, plot_function
 
 color_list = d3['Category20c'][20]
 
@@ -128,14 +130,6 @@ def hvg(min_mean, max_mean, min_disp):
     output1 = base64.b64encode(buf.getbuffer()).decode("ascii")
     div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output1))
     layout.children.append(div)
-    clear = Button(label='Delete figure')
-    clear.on_click(lambda: clear_cb(layout,div))
-    layout.children.append(clear)
-    
 
-def clear_cb(layout,figure):
-    print('-----Delete------')
-    figure.visible = False
-    layout.children.clear(figure)
-    
+
 

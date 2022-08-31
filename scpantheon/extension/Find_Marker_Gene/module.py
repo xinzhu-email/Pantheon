@@ -11,8 +11,10 @@ from bokeh.models import FileInput, Button, TextInput, Div, Select
 from bokeh.layouts import row, column
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-
-from source import connection, plot_function
+try:
+    from scpantheon.source import connection, plot_function
+except:
+    from source import connection, plot_function
 
 color_list = d3['Category20c'][20]
 
@@ -30,10 +32,12 @@ class new_layout:
 
         test_method = Select(title='Choose the method:', options=['t-test','wilcoxon','logreg'], value='t-test')
         rank_n_genes = TextInput(title='Input the num of genes to rank')
-        de_analysis = Button(label='Find marker of these clusters', button_type='success')
-        de_analysis.on_click(lambda: find_marker(groupby=group, test_method=test_method.value, rank_n_genes=int(rank_n_genes.value)))
+        marker = Button(label='Find marker of these clusters', button_type='success')
+        marker.on_click(lambda: find_marker(groupby=group, test_method=test_method.value, rank_n_genes=int(rank_n_genes.value)))
+        violin_figure = Button(label='Show violin plot', button_type='success')
+        violin_figure.on_click(lambda: violin(cluster_list=cluster_list, gene_num=int(rank_n_genes.value)))
 
-        self.marker = column(row(test_method, rank_n_genes),de_analysis)
+        self.marker = column(row(test_method, rank_n_genes),marker,violin_figure)
         # self.marker.name = 'Find_Marker_Gene'
 
     def add(self):
@@ -56,8 +60,21 @@ def find_marker(groupby='leiden',test_method='t-test',rank_n_genes=25):
     sc.tl.rank_genes_groups(adata, groupby, method=test_method)
     sc.pl.rank_genes_groups(adata, n_genes=rank_n_genes, sharey=False, save='.png')
 
-    img = open('figures/rank_genes_groups_leiden.png','rb')
+    name = 'figures/rank_genes_groups_' + groupby + '.png'
+    img = open(name,'rb')
     img_base64 = base64.b64encode(img.read()).decode("ascii")
     div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
     layout.children.append(div)
     change.set_obsm(adata.obsm)
+
+def violin(cluster_list,gene_num):
+    layout = curdoc().get_model_by_name('Find_Marker_Gene')
+    api = connection()
+    adata = api.get_anndata()
+
+    sc.pl.rank_genes_groups_violin(adata, groups=cluster_list[1:], n_genes=gene_num, save='.png')
+
+    img = open('figures/violin.png','rb')
+    img_base64 = base64.b64encode(img.read()).decode("ascii")
+    div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
+    layout.children.append(div)
