@@ -1,3 +1,4 @@
+from email import header
 import json
 from bokeh.models import ColumnDataSource, CDSView, IndexFilter, CustomJS, Circle, Div, Panel, Tabs, CheckboxGroup, FileInput,FixedTicker, ColorBar, LogColorMapper
 from bokeh.models.widgets import Select, Button, ColorPicker,TextInput, DataTable, MultiSelect, AutocompleteInput
@@ -268,9 +269,11 @@ class FlowPlot:
         print(column_list)
 
     def save_profile(self):
+        if os.path.exists('result') == False:
+            os.mkdir('result')
         path = 'result/'
-        self.adata.write(path+'result.h5ad')
-        self.adata.obs.to_csv(path+'cluster.csv')
+        self.adata.write_h5ad(path+self.group.value+'_result.h5ad')
+        self.adata.obs.to_csv(path+self.group.value+'_cluster.csv')
         # for cate in list(self.adata.uns['category_dict'].keys()):
         #     self.adata.obs[cate].to_csv(path+'%s.csv'%cate)
         #adata.uns['category_dict']('cluster name.csv') 
@@ -619,8 +622,9 @@ class FlowPlot:
 
     def marker_choice(self):
         print('filename change: ',self.marker_file.filename)
+        path = os.path.split(__file__)[0]
         if True:
-            marker = pandas.read_csv('data/' + self.marker_file.filename)
+            marker = pandas.read_csv(path+'/data/' + self.marker_file.filename)
 
             cell_type = list(set(marker['cell_type']))
             print(cell_type)
@@ -977,16 +981,18 @@ def upload_callback(upload_button):
         global Main_plot
         filetype = os.path.splitext(upload_button.filename)[-1][1:]
         if filetype == 'csv':
-            adata = anndata.read_csv(path+'/data/'+upload_button.filename)
+            adata = anndata.read_csv(path+'/data/'+upload_button.filename, first_column_names=1)
             print('csv')
         elif filetype == 'h5ad':
             adata = anndata.read(path+'/data/'+upload_button.filename)
             print('h5ad')
-        elif filetype == 'mtx':
+        elif upload_button.filename == 'h19':
             adata = sc.read_10x_mtx(
-                'data/hg19/',  # the directory with the `.mtx` file
+                'data/' + upload_button.filename + '/',  # the directory with the `.mtx` file
                 var_names='gene_symbols',                # use gene symbols for the variable names (variables-axis index)
                 cache=True)                              # write a cache file for faster subsequent reading
+        elif filetype == 'tsv':
+            adata = anndata.read_csv(path+'/data/'+upload_button.filename, delimiter='\t').T
         print(upload_button.filename)
         mainplot, panel1 = CreateTool(adata=adata).base_tool()
         print('===mainplot finifshed=====')
