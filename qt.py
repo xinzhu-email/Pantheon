@@ -88,8 +88,6 @@ class Ui_Dialog(QWidget, object):
 
 
     def slot_btn_chooseDir(self):
-        # global path_
-
         dir_choose = QFileDialog.getExistingDirectory(self,"choose dir",self.cwd) # 起始路径
         if dir_choose == "":
             print("\nchoose canceled")
@@ -99,8 +97,6 @@ class Ui_Dialog(QWidget, object):
         print("\npath_:",dir_choose)
 
     def slot_btn_chooseFile(self):
-        # global file_name
-
         fileName_choose, file_type = QFileDialog.getOpenFileName(self,"Choose file", self.cwd)   # 设置文件扩展名过滤,用双分号间隔
 
         if fileName_choose == "":
@@ -119,11 +115,7 @@ class Ui_Dialog(QWidget, object):
 def main():
     # Create mysql database
     try: myconnect()
-    except:
-        try: creatbase()
-        except: 
-            '''delete = "DROP TABLE IF EXISTS vlist"
-            mycursor.execute(delete)'''
+    except: creatbase()
     try:creatable() # vlist is the table name
     except: ()
     # create qt app
@@ -134,21 +126,5 @@ def main():
     ui = Ui_Dialog()
     ui.setupUi(Dialog)
     Dialog.show()
-    sys.exit(app.exec_())
-
-# main()
-
-'''
-
-name 传不进去
-mysql语法太死了
-
-'''
-
-'''
-
-filename = os.path.split(file_name)[1]
-filetype = os.path.splitext(filename)[-1][1:]
-if filetype == 'csv':
-
-'''
+    app.exec()
+    return 'app closed'
