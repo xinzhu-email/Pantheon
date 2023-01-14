@@ -1,5 +1,5 @@
 import json
-from bokeh.models import ColumnDataSource, CDSView, IndexFilter, CustomJS, Circle, Div, Panel, Tabs, CheckboxGroup, FileInput,FixedTicker, ColorBar, LogColorMapper, Widget
+from bokeh.models import ColumnDataSource, CDSView, IndexFilter, CustomJS, Circle, Div, Panel, Tabs, CheckboxGroup, FileInput,FixedTicker, ColorBar, LogColorMapper, Widget, Quad
 from bokeh.models.widgets import Select, Button, ColorPicker,TextInput, DataTable, MultiSelect, AutocompleteInput
 from bokeh.events import ButtonClick
 from bokeh.transform import log_cmap
@@ -7,7 +7,7 @@ from bokeh.palettes import d3
 from bokeh.layouts import row, column, layout
 from bokeh.io import curdoc# current document
 from bokeh.plotting import figure, output_file, save, show
-import pandas
+import pandas 
 import numpy as np
 import anndata
 import scipy.sparse as ss
@@ -31,32 +31,46 @@ TOOLTIPS = [
         ("color", "@color"),
 ]
 class FlowPlot:
-    def __init__(self, data=None, color_map=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, legend = None, main_plot = None,title=None):
+    global filename
+    def __init__(self, data=None, color_map=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
         self.adata = data
         self.data_df = self.adata.to_df()
         """
-        The data matrix X is returned as data frame, 
         where obs_names are the rownames, and var_names the columns names. 
-        The data matrix is densified in case it is sparse.
         """
 
-        self.data_log = np.log1p(self.data_df)     
+        self.data_log = np.log1p(self.data_df)    
+        '''
+                            CD154_TotalA  CD4_TotalA  CD56_TotalA  CD3_TotalA  CD19_TotalA  CD14_TotalA  CD11c_TotalA  CD8a_TotalA  CD16_TotalA  CD127_TotalA
+        AAACCTGAGACAAAGG-1      2.564949    3.496508     1.791759    4.882802     2.833213     2.833213      3.332205     7.114769     3.258096      3.850147
+        AAACCTGAGACAAGCC-1      2.995732    3.583519     2.397895    5.017280     2.772589     3.044523      3.178054     7.459915     2.890372      2.772589
+        AAACCTGAGAGGTTGC-1      2.944439    4.060443     2.397895    5.204007     2.564949     2.772589      2.772589     7.307202     3.555348      3.737670
+        AAACCTGAGAGTGAGA-1      2.772589    6.289716     2.397895    3.258096     2.890372     2.639057      2.890372     3.988984     3.135494      3.332205
+        AAACCTGAGCCCAACC-1      3.044523    6.028278     2.397895    5.968708     2.944439     2.995732      3.433987     7.516433     3.610918      3.295837
+        ...                          ...         ...          ...         ...          ...          ...           ...          ...          ...           ...
+        TTTGTCATCCCGGATG-1      1.386294    6.280396     1.609438    5.337538     2.484907     2.890372      2.564949     3.871201     3.135494      2.833213
+        TTTGTCATCCCTTGCA-1      3.258096    6.327937     2.302585    5.777652     6.821107     4.700480      5.389072     4.317488     3.135494      2.995732
+        TTTGTCATCCTGCAGG-1      2.995732    6.352629     2.564949    4.682131     3.091043     2.708050      2.772589     6.886532     2.944439      2.944439
+        TTTGTCATCCTTGGTC-1      2.639057    4.174387     2.484907    2.639057     2.772589     3.401197      5.356586     3.713572     7.049255      1.609438
+        TTTGTCATCGTTTGCC-1      2.302585    3.806663     1.791759    5.153292     2.639057     2.833213      3.135494     7.501082     3.135494      2.708050
+
+        [15839 rows x 10 columns]
+        ''' 
         # For real-valued input, log1p is accurate also for x so small that 1 + x == 1 in floating-point accuracy.
         self.label_existed, view_existed = False, False
 
         # personalized
         try:
-            group_list = list(self.adata.uns['category_dict'].keys()) # null too
+            group_list = list(self.adata.uns['category_dict'].keys()) 
             #  uns can get any kinds of data type like dict or list
             if main_plot == None:
                 self.label_existed = True
         except:
             self.adata.uns['category_dict'] = dict()  
             # initialize the null category_dict     
-            group_list = list(self.adata.obs.columns) # its null hhh 
+            group_list = list(self.adata.obs.columns) 
 
-            # list of object
-            if group_list != [] and main_plot == None: ## ?? ##     # this is breaked no result because group_list == []
+            if group_list != [] and main_plot == None:
                 self.label_existed = True
                 for group in group_list: # every single obs
                     self.adata.uns['category_dict'][group] = pandas.DataFrame(columns=['class_name','color','cell_num']) # 2d matrix with new add columns
@@ -75,10 +89,26 @@ class FlowPlot:
 
                     
         self.adata.obs['ind'] = pandas.Series(np.array(range(self.data_df.shape[0])).astype(int).tolist(), index=self.data_df.index)  
+        '''
+        data_df.shape[0]: 15839
+        AAACCTGAGACAAAGG-1        0
+        AAACCTGAGACAAGCC-1        1
+        AAACCTGAGAGGTTGC-1        2
+        AAACCTGAGAGTGAGA-1        3
+        AAACCTGAGCCCAACC-1        4
+                            ...
+        TTTGTCATCCCGGATG-1    15834
+        TTTGTCATCCCTTGCA-1    15835
+        TTTGTCATCCTGCAGG-1    15836
+        TTTGTCATCCTTGGTC-1    15837
+        TTTGTCATCGTTTGCC-1    15838
+        Name: ind, Length: 15839, dtype: int64
+        '''
         self.data_columns = self.data_df.columns.values.tolist()
-        
+        '''
+        ['CD154_TotalA', 'CD4_TotalA', 'CD56_TotalA', 'CD3_TotalA', 'CD19_TotalA', 'CD14_TotalA', 'CD11c_TotalA', 'CD8a_TotalA', 'CD16_TotalA', 'CD127_TotalA']
+        '''
         self.data_df['color'] = pandas.Series(d3['Category20c'][20][0], index=self.data_df.index)
-        
         self.data_log['color'] = pandas.Series(d3['Category20c'][20][0], index=self.data_df.index)
         self.data_df['hl_gene'] = pandas.Series(np.full(self.data_df.shape[0], 3), index=self.data_df.index)    
         self.source = ColumnDataSource(data=self.data_df[self.data_columns[0:2]+['color']+['hl_gene']])                             
@@ -109,8 +139,23 @@ class FlowPlot:
         self.choose_panel.on_change('value',lambda attr, old, new :self.change_view_list())
         self.p.xaxis.axis_label = self.data_columns[x_init_idx]
         self.p.yaxis.axis_label = self.data_columns[y_init_idx]
+        # plot cell 
         self.r = self.p.circle(self.data_columns[x_init_idx], self.data_columns[y_init_idx],  source=self.source, view=self.view, fill_alpha=1,fill_color=color_map,line_color=None )
-        self.p.legend.click_policy="hide"
+
+        # add quad
+        pdata = pandas.read_csv('./data/'+filename, index_col=0)
+        # pdata[self.data_columns[x_init_idx]].describe()
+        hist, edges = np.histogram(pdata[self.data_columns[x_init_idx]],bins = int(10/0.05),range = [0, 10])
+        hist2, edges2 = np.histogram(pdata[self.data_columns[y_init_idx]],bins = int(10/0.05),range = [0, 10])
+        amount = pandas.DataFrame({'pdata': np.log(hist),'left': edges[:-1],'right': edges[1:]})
+        amount2 = pandas.DataFrame({'pdata': np.log(hist2),'left': edges2[:-1],'right': edges2[1:]})
+        self.q1 = self.p.quad(bottom=0,top=amount['pdata'],left=amount['left'],right=amount['right'],line_color=None,fill_color="#c3f4b2",fill_alpha=0.3,legend_label='qx')
+        self.l1 = self.p.line(x=np.linspace(0, 10, 200), y=amount['pdata'], line_color="#3333cc", line_width=2, alpha=0.3, legend_label="lx")
+        self.q2 = self.p.quad(bottom=amount2['left'],top=amount2['right'],left=0,right=amount2['pdata'],line_color=None,fill_color='#FFC125',fill_alpha=0.3,legend_label='qy')
+        self.l2 = self.p.line(x=amount2['pdata'], y=np.linspace(0, 10, 200), line_color="#ff8888", line_width=2, alpha=0.3, legend_label="ly")
+        self.p.legend.location = "center_right"
+        self.p.legend.click_policy = "hide"
+
         self.s_x = AutocompleteInput(title="x axis:", value=self.data_columns[x_init_idx], completions=self.data_columns, min_characters=1)
         self.s_y = AutocompleteInput(title="y axis:", value=self.data_columns[y_init_idx], completions=self.data_columns, min_characters=1)
         # Attach reaction
@@ -128,6 +173,8 @@ class FlowPlot:
 
         # Show gene list
         self.show_gene_list = Div(text='Gene/Marker List: '+str(self.data_columns[0:10]))
+        # Show plot
+        self.show_plot = Div(text="", name='Show_plot') 
         # Log
         self.log_axis = CheckboxGroup(labels=['Log-scaled axis'],active=[])
         self.log_axis.on_change('active',lambda attr, old, new: self.log_cb())
@@ -259,9 +306,12 @@ class FlowPlot:
             self.hl_filt_button.on_click(self.hl_filter)
             # Comfirm to change the selected dots in main view
             self.hl_comfirm = Button(label='Change Selected')
-            self.hl_comfirm.on_click(lambda event: self.change_select(main_plot))
+            self.hl_comfirm.on_click(lambda event: self.change_select(main_plot))        
 
-
+        '''
+        放入数据进行绘画
+        用rbokeh ly_density 去拟合柱状图
+        '''
 
 
     def refresh(self):
@@ -714,8 +764,8 @@ class CreateTool:
     def base_tool(self):        
         Figure = FlowPlot(data=self.adata, color_map='color')
         module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
-        module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_checkbox')
-        layout=row(column(Figure.p, Figure.show_gene_list, Figure.para_color, Figure.trigger_color, module_checkbox, module_select), # module_checkbox added
+        module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select')
+        layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, module_select), # module_checkbox added
             column(Figure.choose_panel,Figure.s_x, Figure.s_y, Figure.log_axis, Figure.color_selection, Figure.gate_button, Figure.remove_button, Figure.showall_button, Figure.export_button),
             column(Figure.group, Figure.group_name, Figure.create_group, Figure.rename_group, Figure.delete_group,
              Figure.class_name, Figure.new_class, Figure.checkbox_color, Figure.class_checkbox),
@@ -942,9 +992,6 @@ def load_module(active):
             if but != None and but.visible == True:
                 continue
             sys.path = [path_] + sys.path
-            print('++++ -------')
-            print(path_)
-            print('++++ -------')
             module_name = 'extension.' + name + '.module'
             try:
                 new_class = module_name.new_layout()
@@ -988,13 +1035,10 @@ def clear_cb(ind):
 def upload_callback(event): 
 
     global path_
-    global file_name
+    global file_name, filename
     global mycursor
 
     path_, file_name = fetch()
-
-    print(path_,"-=====-",file_name)
-
     loading_remind = Div(text='Loading data……')
     curdoc().add_root(loading_remind) 
     print('===loading finished=====')
@@ -1027,6 +1071,7 @@ def upload_callback(event):
         curdoc().remove_root(loading_remind)
         curdoc().add_root(tab)
 
+
     curdoc().add_next_tick_callback(load)
 
 
@@ -1043,17 +1088,9 @@ def main(doc):
     doc.add_root(upload_button) # 这就是那个按钮
 
     
-    
 if __name__ == "main":
     main()
 
-'''
-
-qt.py 要单独放另一个文件, 不能在server里面跑application, 套娃了就
-
-在 qt.py 的application 也打不开 qt_button 的 application, 只能思考怎么跨文件传全局变量了
-
-'''
 
 def myconnect():
     global mydb,mycursor

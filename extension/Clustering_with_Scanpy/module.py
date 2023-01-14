@@ -41,7 +41,7 @@ class new_layout:
 
 def pca():
     layout = curdoc().get_model_by_name('Clustering_with_Scanpy')
-    change = connection()
+    change = connection() 
     adata = change.get_anndata()
 
     sc.tl.pca(adata, svd_solver='arpack')

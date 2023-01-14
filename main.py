@@ -17,13 +17,14 @@ def run():
     
     server.io_loop.start()
 
+    server.show()
+
 
 def app():
     global p1
     if qt.main() == 'app closed':
-        print('what?')
         p1.terminate()
-        print('ended')
+        print('app ended')
     
 
 if __name__ == '__main__':
