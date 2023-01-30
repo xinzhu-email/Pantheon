@@ -19,11 +19,9 @@ import scanpy as sc
 import os, sys
 import importlib
 from PyQt5.QtWidgets import *
-from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QUrl, pyqtSlot
 from bokeh.events import ButtonClick
-from PyQt5 import QtCore, QtGui, QtWidgets,QtWebEngineWidgets
 import mysql.connector
+import time
 
 
 TOOLTIPS = [
@@ -32,7 +30,7 @@ TOOLTIPS = [
 ]
 class FlowPlot:
     global filename
-    def __init__(self, data=None, color_map=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
+    def __init__(self, data=None, color_map=None, extension=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
         self.adata = data
         self.data_df = self.adata.to_df()
         """
@@ -277,10 +275,16 @@ class FlowPlot:
         # Change Color
         self.change_class_color = Button(label='Change Color')
         self.change_class_color.on_click(self.change_color)
+
+        # Button disabled list, remember to append in each button func
+        self.button_group = [self.gate_button,self.export_button,self.remove_button,self.showall_button,self.create_group,self.rename_group,self.delete_group,
+                            self.show_selected_class,self.checkbox_color,self.new_class,self.merge_class,self.rename_class,self.delete_class,self.add_to,
+                            self.remove_from,self.update_class,self.change_class_color,extension]
+        print(self.button_group)
+        
         if self.label_existed:
             self.update_checkbox()
             self.show_color()
-
 
         ###### Highlight Gene #######
         if main_plot != None:
@@ -306,13 +310,25 @@ class FlowPlot:
             self.hl_filt_button.on_click(self.hl_filter)
             # Comfirm to change the selected dots in main view
             self.hl_comfirm = Button(label='Change Selected')
-            self.hl_comfirm.on_click(lambda event: self.change_select(main_plot))        
+            self.hl_comfirm.on_click(lambda event: self.change_select(main_plot))     
 
-        '''
-        放入数据进行绘画
-        用rbokeh ly_density 去拟合柱状图
-        '''
+    #由手动添加装换成读取layout    
+    '''
+    关键是layout在Createtools那里, 而函数button callback函数在Flowplot里
+    还是说, 就直接读取Flowplot里所有的button
+    但是extension里的button又该如何处理
 
+    目的: 一个包含所有button.disabled的函数, 然后在所有callback里调用该函数
+    '''       
+    # Button disabled func
+    def button_disabled(self):
+        for self.b in self.button_group:
+            self.b.disabled = True
+        
+
+    def button_abled(self):
+        for self.b in self.button_group:
+            self.b.disabled = False
 
     def refresh(self):
         self.r.selection_glyph.fill_color = self.cur_color
@@ -332,12 +348,14 @@ class FlowPlot:
         print(column_list)
 
     def save_profile(self):
+        self.button_disabled()
         path = 'result/'
         self.adata.write(path+'result.h5ad')
         self.adata.obs.to_csv(path+'cluster.csv')
         # for cate in list(self.adata.uns['category_dict'].keys()):
         #     self.adata.obs[cate].to_csv(path+'%s.csv'%cate)
         #adata.uns['category_dict']('cluster name.csv') 
+        self.button_abled()
 
     def tag_func(self, selector, effector, attr, plot):
         axis = getattr(plot, attr + "axis")
@@ -388,20 +406,26 @@ class FlowPlot:
 
     # Show all, gate, and remove function
     def gate_func(self):
+        self.button_disabled()
         if len(self.view.filters) != 0:
             indices = list(set(self.source.selected.indices)&set(self.view.filters[0].indices))
         else:
             indices = self.source.selected.indices
         self.view.filters = [IndexFilter(indices)]
+        self.button_abled()
 
     def remove_func(self):
+        self.button_disabled()
         if len(self.view.filters) == 0:
             self.view.filters = [IndexFilter(np.object_(range(self.data_df.shape[0])))]
         remain_indices = [x for x in self.view.filters[0].indices if x not in self.source.selected.indices]
         self.view.filters = [IndexFilter(remain_indices)]
+        self.button_abled()
 
     def showall_func(self):
+        self.button_disabled()
         self.view.filters = list([])
+        self.button_abled()
 
     # Show the saved color of dots
     def correct_func(self):
@@ -423,6 +447,7 @@ class FlowPlot:
 
     # New Category
     def new_category(self):
+        self.button_disabled()
         if self.group_name.value == '':
             marker = str(self.p.xaxis.axis_label) + '+' + str(self.p.yaxis.axis_label)
         else:
@@ -433,9 +458,11 @@ class FlowPlot:
         self.group.value = marker
         self.group_name.value = ''
         #print('new group',self.group.value, marker,self.group.options, '=')
+        self.button_abled()
 
     # Rename category
     def edit_category(self):   
+        self.button_disabled()
         old_name = self.group.value
         new_name = self.group_name.value
         self.adata.obs[new_name] = self.adata.obs.pop(old_name)
@@ -443,9 +470,11 @@ class FlowPlot:
         self.group.options = list(self.adata.uns['category_dict'].keys())
         self.group.value = new_name
         print(self.adata.uns['category_dict'])
+        self.button_abled()
 
     # Delete category
     def del_category(self):
+        self.button_disabled()
         del self.adata.uns['category_dict'][self.group.value]   
         del self.adata.obs[self.group.value]
         self.group.options = list(self.adata.uns['category_dict'].keys())
@@ -453,6 +482,7 @@ class FlowPlot:
             self.group.value = ''
         else:
             self.group.value = self.group.options[0]
+        self.button_abled()
 
 
     #### Class Callback Function #####
@@ -474,14 +504,17 @@ class FlowPlot:
         #self.text_color()
 
     def show_checked(self):
+        self.button_disabled()
         group = self.group.value
         group_list = self.adata.uns['category_dict'][group]['class_name']
         #source.selected.indices = temp[temp[cat_opt.value]==str(self.class_checkbox.active[0])].index
         self.source.selected.indices = list(self.adata.obs[self.adata.obs[group].isin(list(group_list[i] for i in self.class_checkbox.active))]['ind'])
         self.show_color()
+        self.button_abled()
 
     # Show color on checkbox
     def text_color(self):
+        self.button_disabled()
         color_js = ''
         try:
             length = len(self.adata.uns['category_dict'][self.group.value]['color']) 
@@ -494,6 +527,7 @@ class FlowPlot:
             self.para_color.text = str(color_list[18])
         self.trigger_color.text = self.trigger_color.text + '1'
         #print('CALL',color_js)
+        self.button_abled()
 
 
     # Save change of classes
@@ -519,6 +553,8 @@ class FlowPlot:
 
     # New Class
     def add_entry(self):
+        self.button_disabled()
+        time.sleep(8)
         xaxis = str(self.p.xaxis.axis_label)
         yaxis = str(self.p.yaxis.axis_label)
         #if str(cat_opt.value) != xaxis+'+'+yaxis and str(cat_opt.value) != yaxis+'+'+xaxis:
@@ -531,10 +567,11 @@ class FlowPlot:
         self.adata.uns['category_dict'][self.group.value].loc[len(self.adata.uns['category_dict'][self.group.value])] = {'class_name':self.class_name.value,'color':self.cur_color,'cell_num':cell_num}
         self.save_class(self.group.value, self.class_name.value, self.cur_color, 0)
         self.class_name.value = ''
-        
+        self.button_abled()
 
     # Merge checked classes
     def merge(self):
+        self.button_disabled()
         group = self.group.value
         if self.class_name.value == '':
             toclass = self.adata.uns['category_dict'][group]['class_name'][self.class_checkbox.active[0]]
@@ -568,10 +605,12 @@ class FlowPlot:
         self.class_checkbox.active = []
         col_list = [color if self.source.data['color'][i] in checked_color else self.source.data['color'][i] for i in range(self.data_df.shape[0])]
         self.source.data['color'] = col_list
-        #self.text_color()
+        # self.text_color()
+        self.button_abled()
 
     # Delete Class
     def del_class(self):
+        self.button_disabled()
         group = self.group.value
         cluster_list = self.adata.uns['category_dict'][group]['class_name']
         self.adata.obs.loc[self.adata.obs[group].isin([cluster_list[i] for i in self.class_checkbox.active]),group] = np.nan
@@ -587,7 +626,9 @@ class FlowPlot:
         self.adata.uns['category_dict'][group] = pandas.DataFrame(self.adata.uns['category_dict'][group], index=list(range(self.adata.uns['category_dict'][group].shape[0])))
         col_list = [color_list[18] if self.source.data['color'][i] in checked_color else self.source.data['color'][i] for i in range(self.data_df.shape[0])]
         self.source.data['color'] = col_list
-        #self.text_color()
+        # self.text_color()
+        time.sleep(3)
+        self.button_abled()
 
     # Rename class
     def rename(self):
@@ -611,14 +652,17 @@ class FlowPlot:
 
     # Add dots to cluster
     def save_cls_button(self):
+        self.button_disabled()
         class_name = self.adata.uns['category_dict'][self.group.value]['class_name'][self.class_checkbox.active[0]]
         color = self.adata.uns['category_dict'][self.group.value]['color'][self.class_checkbox.active[0]]
         cell_num = len(self.source.selected.indices)
         self.save_class(self.group.value, class_name, color, cell_num)
         print(self.adata.uns['category_dict'][self.group.value])
+        self.button_abled()
 
     # Remove dots from cluster
     def remove_dot(self):
+        self.button_disabled()
         cl_label = self.adata.obs[self.group.value]
         checked_list = list(self.adata.uns['category_dict'][self.group.value].loc[[j for j in self.class_checkbox.active],'class_name'])
         print(checked_list)
@@ -628,9 +672,11 @@ class FlowPlot:
         self.adata.obs[self.group.value] = cl_label
         self.update_checkbox()
         self.show_color()
+        self.button_abled()
 
     # Update class
     def update_clus(self):
+        self.button_disabled()
         ind = self.class_checkbox.active[0]
         #adata.obs[adata.obs[cat_opt.value]==str(ind)].loc[cat_opt.value] = pandas.Series(index=[0],dtype=object)[0]
         cl_label = self.adata.obs[self.group.value]
@@ -642,9 +688,11 @@ class FlowPlot:
         self.update_checkbox()
         self.show_color()
         #self.text_color()
+        self.button_abled()
 
     # change color of class
     def change_color(self):
+        self.button_disabled()
         color_l = self.source.data['color']
         self.show_checked()
         for i in self.source.selected.indices:
@@ -653,6 +701,7 @@ class FlowPlot:
         self.adata.uns['category_dict'][self.group.value]['color'][[i for i in self.class_checkbox.active]] = self.cur_color
         self.text_color()
         #print(hide.value,now_color)
+        self.button_abled()
 
     #### Highly variable gene functions #####
     def show_colorbar(self, marker):
@@ -762,9 +811,10 @@ class CreateTool:
         setattr(effector, attr, value)
         
     def base_tool(self):        
-        Figure = FlowPlot(data=self.adata, color_map='color')
         module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
-        module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select')
+        module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
+        Figure = FlowPlot(data=self.adata, color_map='color', extension=module_select)
+
         layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, module_select), # module_checkbox added
             column(Figure.choose_panel,Figure.s_x, Figure.s_y, Figure.log_axis, Figure.color_selection, Figure.gate_button, Figure.remove_button, Figure.showall_button, Figure.export_button),
             column(Figure.group, Figure.group_name, Figure.create_group, Figure.rename_group, Figure.delete_group,
@@ -959,11 +1009,12 @@ class plot_function:
 
 # change path = os.path.dirname(os.path.abspath(__file__)) directly into global variable path_
 
+# get extensions 
 def load_options():
     global path_
     try:
-        print(path_)
         name_list = os.listdir(path_+'/extension')
+        print('namelist:', name_list)
         # listdir: list of file under the path
     except:
         name_list = []
@@ -976,9 +1027,9 @@ def load_module(active):
     try:
         name_list = os.listdir(path_+'/extension')
     except:
-        return 
+        return     
     layouts = column()
-    print('active',active)
+    print('active:',active) # ex => active: Clustering_with_Scanpy
     ind = 0
     for name in name_list:
         but = curdoc().get_model_by_name(name)
