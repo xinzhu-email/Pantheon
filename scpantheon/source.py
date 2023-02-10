@@ -29,7 +29,7 @@ TOOLTIPS = [
         ("color", "@color"),
 ]
 class FlowPlot:
-    global filename
+    global file_name
     def __init__(self, data=None, color_map=None, module=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
         self.adata = data
         self.data_df = self.adata.to_df()
@@ -140,8 +140,8 @@ class FlowPlot:
         # plot cell 
         self.r = self.p.circle(self.data_columns[x_init_idx], self.data_columns[y_init_idx],  source=self.source, view=self.view, fill_alpha=1,fill_color=color_map,line_color=None )
 
-        # add quad
-        pdata = pandas.read_csv('./data/'+filename, index_col=0)
+        '''# add quad (-> extensions)
+        pdata = pandas.read_csv(file_name, index_col=0)
         # pdata[self.data_columns[x_init_idx]].describe()
         hist, edges = np.histogram(pdata[self.data_columns[x_init_idx]],bins = int(10/0.05),range = [0, 10])
         hist2, edges2 = np.histogram(pdata[self.data_columns[y_init_idx]],bins = int(10/0.05),range = [0, 10])
@@ -152,7 +152,7 @@ class FlowPlot:
         self.q2 = self.p.quad(bottom=amount2['left'],top=amount2['right'],left=0,right=amount2['pdata'],line_color=None,fill_color='#FFC125',fill_alpha=0.3,legend_label='qy')
         self.l2 = self.p.line(x=amount2['pdata'], y=np.linspace(0, 10, 200), line_color="#ff8888", line_width=2, alpha=0.3, legend_label="ly")
         self.p.legend.location = "center_right"
-        self.p.legend.click_policy = "hide"
+        self.p.legend.click_policy = "hide"'''
 
         self.s_x = AutocompleteInput(title="x axis:", value=self.data_columns[x_init_idx], completions=self.data_columns, min_characters=1)
         self.s_y = AutocompleteInput(title="y axis:", value=self.data_columns[y_init_idx], completions=self.data_columns, min_characters=1)
@@ -314,14 +314,6 @@ class FlowPlot:
             self.hl_comfirm = Button(label='Change Selected')
             self.hl_comfirm.on_click(lambda event: self.change_select(main_plot))     
 
-    #由手动添加装换成读取layout    
-    '''
-    关键是layout在Createtools那里, 而函数button callback函数在Flowplot里
-    还是说, 就直接读取Flowplot里所有的button
-    但是extension里的button又该如何处理
-
-    目的: 一个包含所有button.disabled的函数, 然后在所有callback里调用该函数
-    '''       
     # Button disabled func
     def button_disabled(self):
         for self.b in self.button_group:
@@ -823,15 +815,6 @@ class CreateTool:
              Figure.class_name, Figure.new_class, Figure.checkbox_color, Figure.class_checkbox),
             column(Figure.show_selected_class, Figure.add_to, Figure.remove_from, Figure.update_class, 
              Figure.rename_class,  Figure.merge_class, Figure.delete_class))
-        layout.children.disabled = True
-        print(layout.children)
-        module_select.disabled = True
-        print('ybbb!!!')
-        for child in layout.children:
-            child.disabled = True
-            for kits in child.children:
-                kits.disabled = False
-            print('child:',child,'\nchild_state:',child.disabled)
 
         # attr refers to the changed attribute’s name, and old and new refer to the previous and updated values of the attribute
         module_checkbox.on_change('active', lambda attr, old, new: load_module(list(module_checkbox.active))) 
@@ -869,9 +852,9 @@ color_list = d3['Category20c'][20]
 Main_plot = FlowPlot
 
 class connection:
+    global file_name
     def __init__(self):
         self.Figure = Main_plot
-        print('===========',Main_plot.adata)
     
     def get_attributes(self):
         if self.Figure.view.filters == []:
@@ -979,7 +962,9 @@ class connection:
         self.Figure.choose_panel.value = view_list[-2]
         self.Figure.s_x.value = view_list[-2] + str(0)
         self.Figure.s_y.value = view_list[-2] + str(1)
-        
+    
+    def get_data_file(self):
+        return file_name
 
 
 class plot_function:
@@ -991,6 +976,9 @@ class plot_function:
 
     def change_checkbox_color(self):
         self.Figure.text_color()
+
+    def get_figure(self):
+        return self.Figure.p
 
 
 
@@ -1026,7 +1014,7 @@ class plot_function:
 def load_options():
     global path_
     try:
-        name_list = os.listdir(path_+'/extension')
+        name_list = os.listdir(path_)
         # listdir: list of file under the path
     except:
         name_list = []
@@ -1037,7 +1025,7 @@ def load_module(active):
     global path_
     buttons = curdoc().get_model_by_name('module_buttons')
     try:
-        name_list = os.listdir(path_+'/extension')
+        name_list = os.listdir(path_)
     except:
         return     
     layouts = column()
@@ -1087,7 +1075,7 @@ def load_module(active):
     buttons = layouts
     if curdoc().get_model_by_name('module_buttons') == None:
         buttons.name = 'module_buttons'
-    #curdoc().add_root(buttons)
+    # curdoc().add_root(buttons)
     
 
 def clear_cb(ind):
@@ -1104,14 +1092,15 @@ def clear_cb(ind):
     # models.visible = False
     # module_checkbox.active.remove(int(ind))
 
-def upload_callback(event): 
+def upload_callback(): 
 
     global path_
-    global file_name, filename
-    global mycursor
+    global file_name
+    global mycursor, Main_plot
 
-    path_, file_name = fetch()
+    # path_, file_name = fetch()
     loading_remind = Div(text='Loading data……')
+    print('curdoc:',curdoc())
     curdoc().add_root(loading_remind) 
     print('===loading finished=====')
     filename = os.path.split(file_name)[1]      
@@ -1120,17 +1109,17 @@ def upload_callback(event):
         filetype = os.path.splitext(filename)[-1][1:] # split the filename and the type
                                                       # [-1] means the last tuple: the type 
         if filetype == 'csv':
-            adata = anndata.read_csv(path_+'/data/'+filename) 
+            adata = anndata.read_csv(file_name) 
             print('csv')
         elif filetype == 'h5ad':
-            adata = anndata.read(path_+'/data/'+filename)
+            adata = anndata.read(file_name)
             print('h5ad')
         elif filetype == 'mtx':
             adata = sc.read_10x_mtx(
                 'data/hg19/',  # the directory with the `.mtx` file
                 var_names='gene_symbols',                # use gene symbols for the variable names (variables-axis index)
                 cache=True)                              # write a cache file for faster subsequent reading
-        print(filename)
+        print(file_name)
         # Figure, layout
         mainplot, panel1 = CreateTool(adata=adata).base_tool() # Mainplot: figure, layout
         print('===mainplot finished=====')
@@ -1142,26 +1131,36 @@ def upload_callback(event):
         print('====tab====')
         curdoc().remove_root(loading_remind)
         curdoc().add_root(tab)
-
+        print('===finish===')
 
     curdoc().add_next_tick_callback(load)
 
 
 def main(doc):
-    global Main_plot
+    global Main_plot, path_, file_name, mycursor
+    print('curdoc:',curdoc(),'\ndoc:', doc)
     try: myconnect()
     except:
         try: creatbase()
         except: ()
     try: creatable()
     except: ()
-    upload_button = Button(label="Press me")
+    try:
+        path_, file_name = fetch()
+    except:
+        print('Please Choose your Extensions and Data paths\n')
+        Error_remind = Div(text='Please Choose your Extensions and Data path...')
+        doc.add_root(Error_remind)
+    
+    '''upload_button = Button(label="Show")
     upload_button.on_event(ButtonClick, upload_callback)
-    doc.add_root(upload_button) # 这就是那个按钮
+    curdoc().add_root(upload_button) # 这就是那个按钮'''
+
+    doc.add_next_tick_callback(upload_callback)
 
     
 if __name__ == "main":
-    main()
+    main(curdoc())
 
 
 def myconnect():

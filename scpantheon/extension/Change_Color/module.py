@@ -5,9 +5,9 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 try:
-    from scpantheon.source import connection, plot_function
-except:
     from source import connection, plot_function
+except:
+    from scpantheon.source import connection, plot_function
 
 class new_layout:
     def __init__(self):

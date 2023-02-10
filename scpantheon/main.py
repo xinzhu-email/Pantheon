@@ -5,7 +5,6 @@ import source
 
 from bokeh.server.server import Server
 import multiprocessing
-import threading,time
 import qt
 
 def run():
