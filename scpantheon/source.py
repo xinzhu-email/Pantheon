@@ -19,7 +19,6 @@ import scanpy as sc
 import os, sys
 import importlib
 from PyQt5.QtWidgets import *
-from bokeh.events import ButtonClick
 import mysql.connector
 import time
 
