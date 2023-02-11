@@ -20,32 +20,52 @@ except:
 
 class new_layout:
     def __init__(self):
-        self.new_button = Button(label='Show Histogram')
-        self.new_button.on_click(check_histogram) 
+        self.show_button = Button(label='Show Histogram')
+        self.show_button.on_click(check_histogram) 
+        self.remove_button = Button(label='Remove')
+        self.remove_button.on_click(remove)
     
     def add(self):
-        return self.new_button
+        return column(self.show_button, self.remove_button)
 
 def check_histogram():
+    global plotlist, p, glylist
+
     layout = curdoc().get_model_by_name('Check_Histogram')
     change = connection()
     data_file = change.get_data_file()
     pdata = pandas.read_csv(data_file, index_col=0)
     plot = plot_function()
     p = plot.get_figure()
+    x, y = plot.get_x_y()
+    glylist = plot.get_glyph_list()
+
+    if len(glylist) <= 1:
+        # pdata[self.data_columns[x_init_idx]].describe()
+        hist, edges = np.histogram(pdata[x],bins = int(10/0.05),range = [0, 10])
+        hist2, edges2 = np.histogram(pdata[y],bins = int(10/0.05),range = [0, 10])
+        amount = pandas.DataFrame({'pdata': np.log(hist),'left': edges[:-1],'right': edges[1:]})
+        amount2 = pandas.DataFrame({'pdata': np.log(hist2),'left': edges2[:-1],'right': edges2[1:]})
+        q1 = p.quad(bottom=0,top=amount['pdata'],left=amount['left'],right=amount['right'],line_color=None,fill_color="#c3f4b2",fill_alpha=0.3,legend_label='qx')
+        l1 = p.line(x=np.linspace(0, 10, 200), y=amount['pdata'], line_color="#3333cc", line_width=2, alpha=0.3, legend_label="lx")
+        q2 = p.quad(bottom=amount2['left'],top=amount2['right'],left=0,right=amount2['pdata'],line_color=None,fill_color='#FFC125',fill_alpha=0.3,legend_label='qy')
+        l2 = p.line(x=amount2['pdata'], y=np.linspace(0, 10, 200), line_color="#ff8888", line_width=2, alpha=0.3, legend_label="ly")
+        plotlist = [q1, q2, l1, l2]
+        glylist.extend(plotlist)
+        p.legend.location = "center_right"
+        p.legend.click_policy = "hide"
+    else:
+        print('Histogram already existed')
 
 
-    # pdata[self.data_columns[x_init_idx]].describe()
-
-    '''the column won't change as the view changes
-    still bugs..'''
-    hist, edges = np.histogram(pdata[column[0]],bins = int(10/0.05),range = [0, 10])
-    hist2, edges2 = np.histogram(pdata[column[1]],bins = int(10/0.05),range = [0, 10])
-    amount = pandas.DataFrame({'pdata': np.log(hist),'left': edges[:-1],'right': edges[1:]})
-    amount2 = pandas.DataFrame({'pdata': np.log(hist2),'left': edges2[:-1],'right': edges2[1:]})
-    q1 = p.quad(bottom=0,top=amount['pdata'],left=amount['left'],right=amount['right'],line_color=None,fill_color="#c3f4b2",fill_alpha=0.3,legend_label='qx')
-    l1 = p.line(x=np.linspace(0, 10, 200), y=amount['pdata'], line_color="#3333cc", line_width=2, alpha=0.3, legend_label="lx")
-    q2 = p.quad(bottom=amount2['left'],top=amount2['right'],left=0,right=amount2['pdata'],line_color=None,fill_color='#FFC125',fill_alpha=0.3,legend_label='qy')
-    l2 = p.line(x=amount2['pdata'], y=np.linspace(0, 10, 200), line_color="#ff8888", line_width=2, alpha=0.3, legend_label="ly")
-    p.legend.location = "center_right"
-    p.legend.click_policy = "hide"
+def remove():
+    global glylist
+    if len(glylist) > 1:
+        for plot in plotlist:
+            glylist.remove(plot)
+    else:
+        print('Histogram already deleted')
+    for glygh in plotlist:
+        try:
+            p.renderers.remove(glygh)
+        except: print('no glyph')

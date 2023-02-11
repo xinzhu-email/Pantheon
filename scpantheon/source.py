@@ -140,6 +140,8 @@ class FlowPlot:
         # plot cell 
         self.r = self.p.circle(self.data_columns[x_init_idx], self.data_columns[y_init_idx],  source=self.source, view=self.view, fill_alpha=1,fill_color=color_map,line_color=None )
 
+        # glygh list
+        self.glylist = [self.r,]
         '''# add quad (-> extensions)
         pdata = pandas.read_csv(file_name, index_col=0)
         # pdata[self.data_columns[x_init_idx]].describe()
@@ -979,6 +981,12 @@ class plot_function:
 
     def get_figure(self):
         return self.Figure.p
+    
+    def get_x_y(self):
+        return self.Figure.p.xaxis.axis_label, self.Figure.p.yaxis.axis_label
+    
+    def get_glyph_list(self):
+        return self.Figure.glylist
 
 
 
