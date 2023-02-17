@@ -43,7 +43,11 @@ class new_layout:
         certain_gene = Button(label='Compare genes acros clusters', button_type='success')
         certain_gene.on_click(lambda: compare(gene_list=gene_list.value,group=group))
 
-        self.de = column(row(method,gene_num),rank_genes,violin_figure,gene_list,certain_gene)
+        self.de = column(row(method,gene_num),
+                        rank_genes,
+                        violin_figure,
+                        gene_list,
+                        certain_gene)
 
     def add(self):
         return self.de

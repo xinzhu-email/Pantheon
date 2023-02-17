@@ -29,7 +29,7 @@ TOOLTIPS = [
 ]
 class FlowPlot:
     global file_name
-    def __init__(self, data=None, color_map=None, module=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
+    def __init__(self, data=None, color_map=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
         self.adata = data
         self.data_df = self.adata.to_df()
         """
@@ -278,12 +278,9 @@ class FlowPlot:
         self.change_class_color.on_click(self.change_color)
 
         # Button disabled list, remember to append in each button func
-        self.button_group = [self.gate_button,self.export_button,self.remove_button,self.showall_button,self.create_group,self.rename_group,self.delete_group,
+        self.buttons_group = [self.gate_button,self.export_button,self.remove_button,self.showall_button,self.create_group,self.rename_group,self.delete_group,
                             self.show_selected_class,self.checkbox_color,self.new_class,self.merge_class,self.rename_class,self.delete_class,self.add_to,
                             self.remove_from,self.update_class,self.change_class_color]
-
-        if(module):
-            self.button_group.append(module.references())
         
         if self.label_existed:
             self.update_checkbox()
@@ -317,12 +314,12 @@ class FlowPlot:
 
     # Button disabled func
     def button_disabled(self):
-        for self.b in self.button_group:
+        for self.b in self.buttons_group:
             self.b.disabled = True
         
-
+ 
     def button_abled(self):
-        for self.b in self.button_group:
+        for self.b in self.buttons_group:
             self.b.disabled = False
 
     def refresh(self):
@@ -808,7 +805,7 @@ class CreateTool:
     def base_tool(self):        
         module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
         module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
-        Figure = FlowPlot(data=self.adata, color_map='color', module=module_select)
+        Figure = FlowPlot(data=self.adata, color_map='color')
 
         layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, module_select), # module_checkbox added
             column(Figure.choose_panel,Figure.s_x, Figure.s_y, Figure.log_axis, Figure.color_selection, Figure.gate_button, Figure.remove_button, Figure.showall_button, Figure.export_button),
@@ -824,7 +821,7 @@ class CreateTool:
         return Figure, layout
     
     def highlight_gene(self, main_plot):
-        hl_figure = FlowPlot(data=self.adata, color_map=self.hl_gene_map, module=None, main_plot=main_plot,title='Highlight Gene Plot') # input main_plot
+        hl_figure = FlowPlot(data=self.adata, color_map=self.hl_gene_map, main_plot=main_plot,title='Highlight Gene Plot') # input main_plot
         #hl_figure.p.visible = False
         #hl_figure.marker_choice()
         layout = row(hl_figure.p, 
@@ -1030,6 +1027,8 @@ def load_options():
     
 def load_module(active):
     global path_
+    plot = plot_function()
+    p = plot.get_figure()
     buttons = curdoc().get_model_by_name('module_buttons')
     try:
         name_list = os.listdir(path_)
@@ -1058,22 +1057,22 @@ def load_module(active):
                 new_class = mod.new_layout()
             clear = Button(label='Clear the figures!', button_type='warning', name=str(ind))
             clear.on_click(lambda: clear_cb(clear.name))
-
-            # print('new_class:', new_class)
-            '''
-            new_buttons: column(sc_cluster_step1,
-                                column(row(cl_input1, cl_input2 ,cl_input3),sc_cluster_step2))
-            '''
             new_buttons = column(new_class.add(), clear)
-            '''
-            对column的无限套娃咋办
-            '''
             print('new_buttons:', new_buttons)
             new_buttons.sizing_mode = 'scale_height'
             new_buttons.name = name
             new_buttons.children.append(div)
             curdoc().add_root(new_buttons)
             layouts = column(layouts, new_buttons)
+            for child in new_buttons.children:
+                try:
+                    p.buttons_group.append(child)
+                except:
+                    while(child.children):
+                        p.buttons_group.append(child.children)
+            for x in p.buttons_group:
+                print(x)
+
 # D:\anaconda\Lib\site-packages\scpantheon\sourceqt.py
         else:
             if but != None:

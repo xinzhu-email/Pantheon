@@ -39,11 +39,15 @@ class new_layout:
         sc_pp_step4 = Button(label='Step4: Indentify highly variable genes', button_type='primary')
         sc_pp_step4.on_click(lambda: hvg(input6.value, input7.value, input8.value))
 
+        # layout format changed: delete the inner column
         self.scanpy_functions = column(sc_pp_step0,
-                                       column(row(input1, input2),sc_pp_step1),
+                                       row(input1, input2),
+                                       sc_pp_step1,
                                        sc_pp_step2,
-                                       column(row(input3, input4, input5),sc_pp_step3),
-                                       column(row(input6, input7, input8),sc_pp_step4))
+                                       row(input3, input4, input5),
+                                       sc_pp_step3,
+                                       row(input6, input7, input8),
+                                       sc_pp_step4)
         # self.scanpy_functions.name = 'Preprocessing_with_Scanpy'
 
     def add(self):

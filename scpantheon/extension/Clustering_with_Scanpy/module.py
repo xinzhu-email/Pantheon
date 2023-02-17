@@ -29,9 +29,10 @@ class new_layout:
         sc_cluster_step2 = Button(label='Step2: Clustering with Neighborhood Graph', button_type='success')
         sc_cluster_step2.on_click(lambda: neighborhood_graph(cl_input1.value, cl_input2.value, cl_input3.value))
         
-        
+        # layout format changed: delete the inner column
         self.scanpy_cluster = column(sc_cluster_step1,
-                                     column(row(cl_input1, cl_input2 ,cl_input3),sc_cluster_step2))
+                                     row(cl_input1, cl_input2 ,cl_input3),
+                                     sc_cluster_step2)
         # self.scanpy_cluster.name = 'Clustering_with_Scanpy'
 
     def add(self):

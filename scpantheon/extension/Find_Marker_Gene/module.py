@@ -37,7 +37,10 @@ class new_layout:
         violin_figure = Button(label='Show violin plot', button_type='success')
         violin_figure.on_click(lambda: violin(cluster_list=cluster_list, gene_num=int(rank_n_genes.value)))
 
-        self.marker = column(row(test_method, rank_n_genes),marker,violin_figure)
+        # layout format changed: delete the inner column
+        self.marker = column(row(test_method, rank_n_genes),
+                            marker,
+                            violin_figure)
         # self.marker.name = 'Find_Marker_Gene'
 
     def add(self):

@@ -24,9 +24,10 @@ class new_layout:
         self.show_button.on_click(check_histogram) 
         self.remove_button = Button(label='Remove')
         self.remove_button.on_click(remove)
-    
+
     def add(self):
-        return column(self.show_button, self.remove_button)
+        return column(self.show_button, 
+                      self.remove_button)
 
 def check_histogram():
     global plotlist, p, glylist
