@@ -32,27 +32,7 @@ class FlowPlot:
     def __init__(self, data=None, color_map=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
         self.adata = data
         self.data_df = self.adata.to_df()
-        """
-        where obs_names are the rownames, and var_names the columns names. 
-        """
-
         self.data_log = np.log1p(self.data_df)    
-        '''
-                            CD154_TotalA  CD4_TotalA  CD56_TotalA  CD3_TotalA  CD19_TotalA  CD14_TotalA  CD11c_TotalA  CD8a_TotalA  CD16_TotalA  CD127_TotalA
-        AAACCTGAGACAAAGG-1      2.564949    3.496508     1.791759    4.882802     2.833213     2.833213      3.332205     7.114769     3.258096      3.850147
-        AAACCTGAGACAAGCC-1      2.995732    3.583519     2.397895    5.017280     2.772589     3.044523      3.178054     7.459915     2.890372      2.772589
-        AAACCTGAGAGGTTGC-1      2.944439    4.060443     2.397895    5.204007     2.564949     2.772589      2.772589     7.307202     3.555348      3.737670
-        AAACCTGAGAGTGAGA-1      2.772589    6.289716     2.397895    3.258096     2.890372     2.639057      2.890372     3.988984     3.135494      3.332205
-        AAACCTGAGCCCAACC-1      3.044523    6.028278     2.397895    5.968708     2.944439     2.995732      3.433987     7.516433     3.610918      3.295837
-        ...                          ...         ...          ...         ...          ...          ...           ...          ...          ...           ...
-        TTTGTCATCCCGGATG-1      1.386294    6.280396     1.609438    5.337538     2.484907     2.890372      2.564949     3.871201     3.135494      2.833213
-        TTTGTCATCCCTTGCA-1      3.258096    6.327937     2.302585    5.777652     6.821107     4.700480      5.389072     4.317488     3.135494      2.995732
-        TTTGTCATCCTGCAGG-1      2.995732    6.352629     2.564949    4.682131     3.091043     2.708050      2.772589     6.886532     2.944439      2.944439
-        TTTGTCATCCTTGGTC-1      2.639057    4.174387     2.484907    2.639057     2.772589     3.401197      5.356586     3.713572     7.049255      1.609438
-        TTTGTCATCGTTTGCC-1      2.302585    3.806663     1.791759    5.153292     2.639057     2.833213      3.135494     7.501082     3.135494      2.708050
-
-        [15839 rows x 10 columns]
-        ''' 
         # For real-valued input, log1p is accurate also for x so small that 1 + x == 1 in floating-point accuracy.
         self.label_existed, view_existed = False, False
 
@@ -86,25 +66,7 @@ class FlowPlot:
 
                     
         self.adata.obs['ind'] = pandas.Series(np.array(range(self.data_df.shape[0])).astype(int).tolist(), index=self.data_df.index)  
-        '''
-        data_df.shape[0]: 15839
-        AAACCTGAGACAAAGG-1        0
-        AAACCTGAGACAAGCC-1        1
-        AAACCTGAGAGGTTGC-1        2
-        AAACCTGAGAGTGAGA-1        3
-        AAACCTGAGCCCAACC-1        4
-                            ...
-        TTTGTCATCCCGGATG-1    15834
-        TTTGTCATCCCTTGCA-1    15835
-        TTTGTCATCCTGCAGG-1    15836
-        TTTGTCATCCTTGGTC-1    15837
-        TTTGTCATCGTTTGCC-1    15838
-        Name: ind, Length: 15839, dtype: int64
-        '''
         self.data_columns = self.data_df.columns.values.tolist()
-        '''
-        ['CD154_TotalA', 'CD4_TotalA', 'CD56_TotalA', 'CD3_TotalA', 'CD19_TotalA', 'CD14_TotalA', 'CD11c_TotalA', 'CD8a_TotalA', 'CD16_TotalA', 'CD127_TotalA']
-        '''
         self.data_df['color'] = pandas.Series(d3['Category20c'][20][0], index=self.data_df.index)
         self.data_log['color'] = pandas.Series(d3['Category20c'][20][0], index=self.data_df.index)
         self.data_df['hl_gene'] = pandas.Series(np.full(self.data_df.shape[0], 3), index=self.data_df.index)    
@@ -141,20 +103,6 @@ class FlowPlot:
 
         # glygh list
         self.glylist = [self.r,]
-        '''# add quad (-> extensions)
-        pdata = pandas.read_csv(file_name, index_col=0)
-        # pdata[self.data_columns[x_init_idx]].describe()
-        hist, edges = np.histogram(pdata[self.data_columns[x_init_idx]],bins = int(10/0.05),range = [0, 10])
-        hist2, edges2 = np.histogram(pdata[self.data_columns[y_init_idx]],bins = int(10/0.05),range = [0, 10])
-        amount = pandas.DataFrame({'pdata': np.log(hist),'left': edges[:-1],'right': edges[1:]})
-        amount2 = pandas.DataFrame({'pdata': np.log(hist2),'left': edges2[:-1],'right': edges2[1:]})
-        self.q1 = self.p.quad(bottom=0,top=amount['pdata'],left=amount['left'],right=amount['right'],line_color=None,fill_color="#c3f4b2",fill_alpha=0.3,legend_label='qx')
-        self.l1 = self.p.line(x=np.linspace(0, 10, 200), y=amount['pdata'], line_color="#3333cc", line_width=2, alpha=0.3, legend_label="lx")
-        self.q2 = self.p.quad(bottom=amount2['left'],top=amount2['right'],left=0,right=amount2['pdata'],line_color=None,fill_color='#FFC125',fill_alpha=0.3,legend_label='qy')
-        self.l2 = self.p.line(x=amount2['pdata'], y=np.linspace(0, 10, 200), line_color="#ff8888", line_width=2, alpha=0.3, legend_label="ly")
-        self.p.legend.location = "center_right"
-        self.p.legend.click_policy = "hide"'''
-
         self.s_x = AutocompleteInput(title="x axis:", value=self.data_columns[x_init_idx], completions=self.data_columns, min_characters=1)
         self.s_y = AutocompleteInput(title="y axis:", value=self.data_columns[y_init_idx], completions=self.data_columns, min_characters=1)
         # Attach reaction
@@ -281,6 +229,7 @@ class FlowPlot:
         self.buttons_group = [self.gate_button,self.export_button,self.remove_button,self.showall_button,self.create_group,self.rename_group,self.delete_group,
                             self.show_selected_class,self.checkbox_color,self.new_class,self.merge_class,self.rename_class,self.delete_class,self.add_to,
                             self.remove_from,self.update_class,self.change_class_color]
+        self.buttons_amount = len(self.buttons_group)
         
         if self.label_existed:
             self.update_checkbox()
@@ -546,20 +495,22 @@ class FlowPlot:
     # New Class
     def add_entry(self):
         self.button_disabled()
-        time.sleep(8)
-        xaxis = str(self.p.xaxis.axis_label)
-        yaxis = str(self.p.yaxis.axis_label)
-        #if str(cat_opt.value) != xaxis+'+'+yaxis and str(cat_opt.value) != yaxis+'+'+xaxis:
-        if self.group.value == ' ':
-            print(str(self.group.value),xaxis+'+'+yaxis)
-            #self.class_checkbox.labels = ['no cluster: color=' + color_list[18] + ', cell_nums=' + str(self.data_df.shape[0])]
-            self.new_category()       
-        cell_num = len(self.source.selected.indices)
-        print('add cluster',self.group.value)
-        self.adata.uns['category_dict'][self.group.value].loc[len(self.adata.uns['category_dict'][self.group.value])] = {'class_name':self.class_name.value,'color':self.cur_color,'cell_num':cell_num}
-        self.save_class(self.group.value, self.class_name.value, self.cur_color, 0)
-        self.class_name.value = ''
-        self.button_abled()
+        def next_add_entry():
+            time.sleep(2)
+            xaxis = str(self.p.xaxis.axis_label)
+            yaxis = str(self.p.yaxis.axis_label)
+            #if str(cat_opt.value) != xaxis+'+'+yaxis and str(cat_opt.value) != yaxis+'+'+xaxis:
+            if self.group.value == ' ':
+                print(str(self.group.value),xaxis+'+'+yaxis)
+                #self.class_checkbox.labels = ['no cluster: color=' + color_list[18] + ', cell_nums=' + str(self.data_df.shape[0])]
+                self.new_category()       
+            cell_num = len(self.source.selected.indices)
+            print('add cluster',self.group.value)
+            self.adata.uns['category_dict'][self.group.value].loc[len(self.adata.uns['category_dict'][self.group.value])] = {'class_name':self.class_name.value,'color':self.cur_color,'cell_num':cell_num}
+            self.save_class(self.group.value, self.class_name.value, self.cur_color, 0)
+            self.class_name.value = ''
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_add_entry)
 
     # Merge checked classes
     def merge(self):
@@ -803,7 +754,7 @@ class CreateTool:
         setattr(effector, attr, value)
         
     def base_tool(self):        
-        module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
+        # module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
         module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
         Figure = FlowPlot(data=self.adata, color_map='color')
 
@@ -811,11 +762,11 @@ class CreateTool:
             column(Figure.choose_panel,Figure.s_x, Figure.s_y, Figure.log_axis, Figure.color_selection, Figure.gate_button, Figure.remove_button, Figure.showall_button, Figure.export_button),
             column(Figure.group, Figure.group_name, Figure.create_group, Figure.rename_group, Figure.delete_group,
              Figure.class_name, Figure.new_class, Figure.checkbox_color, Figure.class_checkbox),
-            column(Figure.show_selected_class, Figure.add_to, Figure.remove_from, Figure.update_class, 
+            column(Figure.show_selected_class, Figure.add_to, Figure.remove_from, Figure.update_class,
              Figure.rename_class,  Figure.merge_class, Figure.delete_class))
 
         # attr refers to the changed attribute’s name, and old and new refer to the previous and updated values of the attribute
-        module_checkbox.on_change('active', lambda attr, old, new: load_module(list(module_checkbox.active))) 
+        # module_checkbox.on_change('active', lambda attr, old, new: load_module(list(module_checkbox.active))) 
         # active: The list of indices of selected check boxes.
         module_select.on_change('value', lambda attr, old, new: load_module(module_select.value)) 
         return Figure, layout
@@ -983,6 +934,11 @@ class plot_function:
     
     def get_glyph_list(self):
         return self.Figure.glylist
+    
+    def get_buttons_group(self):
+        return self.Figure.buttons_group, self.Figure.buttons_amount
+    def tweak_buttons_group(self, buttons_g):
+        self.Figure.buttons_group = buttons_g
 
 
 
@@ -1028,7 +984,10 @@ def load_options():
 def load_module(active):
     global path_
     plot = plot_function()
-    p = plot.get_figure()
+    buttons_g, buttons_n = plot.get_buttons_group() # buttons group, buttons number
+    # delete last extended buttons
+    for i in range(buttons_n, len(buttons_g)):
+        buttons_g.pop()
     buttons = curdoc().get_model_by_name('module_buttons')
     try:
         name_list = os.listdir(path_)
@@ -1041,13 +1000,6 @@ def load_module(active):
         but = curdoc().get_model_by_name(name)
         div = Div(text='')
         if name == active:
-            if but != None and but.visible == False:
-                but.visible = True
-                
-                but.children.append(div)
-                continue
-            if but != None and but.visible == True:
-                continue
             sys.path = [path_] + sys.path
             module_name = 'extension.' + name + '.module'
             try:
@@ -1058,20 +1010,27 @@ def load_module(active):
             clear = Button(label='Clear the figures!', button_type='warning', name=str(ind))
             clear.on_click(lambda: clear_cb(clear.name))
             new_buttons = column(new_class.add(), clear)
+            # append extended buttons
+            buttons_g = find_buttons(new_buttons, buttons_g)
+            '''
+            print('after append=====')
+            for i in range(buttons_n, len(buttons_g)):
+                print(buttons_g[i])
+            '''
+            plot.tweak_buttons_group(buttons_g)
+            if but != None and but.visible == False:
+                but.visible = True # already created model
+                
+                but.children.append(div)
+                continue
+            if but != None and but.visible == True:
+                continue
             print('new_buttons:', new_buttons)
             new_buttons.sizing_mode = 'scale_height'
             new_buttons.name = name
             new_buttons.children.append(div)
             curdoc().add_root(new_buttons)
             layouts = column(layouts, new_buttons)
-            for child in new_buttons.children:
-                try:
-                    p.buttons_group.append(child)
-                except:
-                    while(child.children):
-                        p.buttons_group.append(child.children)
-            for x in p.buttons_group:
-                print(x)
 
 # D:\anaconda\Lib\site-packages\scpantheon\sourceqt.py
         else:
@@ -1082,7 +1041,15 @@ def load_module(active):
     if curdoc().get_model_by_name('module_buttons') == None:
         buttons.name = 'module_buttons'
     # curdoc().add_root(buttons)
-    
+
+def find_buttons(buttons, buttons_g):
+    for child in buttons.children:
+        try:
+            find_buttons(child, buttons_g)
+        except:
+            buttons_g.append(child)
+
+    return buttons_g
 
 def clear_cb(ind):
     module_checkbox = curdoc().get_model_by_name('modules_checkbox')
@@ -1106,7 +1073,6 @@ def upload_callback():
 
     # path_, file_name = fetch()
     loading_remind = Div(text='Loading data……')
-    print('curdoc:',curdoc())
     curdoc().add_root(loading_remind) 
     print('===loading finished=====')
     filename = os.path.split(file_name)[1]      

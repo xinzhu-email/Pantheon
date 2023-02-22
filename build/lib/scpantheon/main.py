@@ -1,3 +1,12 @@
+import warnings
+class customWarning(Warning):
+    def __init__(self, message):
+        self.message = message
+    def __str__(self):
+        return repr(self.message)
+if True:
+    warnings.warn('YOU HAVE TO INSTALL PyQt5',customWarning)
+
 from multiprocessing import freeze_support
 freeze_support()
 

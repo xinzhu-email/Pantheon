@@ -1,6 +1,0 @@
-bokeh
-pandas
-anndata
-colorcet
-scanpy
-numpy

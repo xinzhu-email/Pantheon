@@ -1,10 +1,7 @@
 import os, sys
-import importlib
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QUrl, pyqtSlot
-from bokeh.events import ButtonClick
-from PyQt5 import QtCore, QtGui, QtWidgets,QtWebEngineWidgets
+from PyQt5 import QtCore, QtGui
 import mysql.connector
 
 def myconnect():
