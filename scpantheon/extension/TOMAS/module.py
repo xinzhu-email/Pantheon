@@ -58,136 +58,175 @@ class new_layout:
     def add(self):
         return self.tomas_layout
 
+
+def button_disabled(buttons_group):
+    for b in buttons_group:
+        b.disabled = True
+
+def button_abled(buttons_group):
+    for b in buttons_group:
+        b.disabled = False
+
+
 def get_attr():
-    api = connection()
-    to_json = api.get_attributes()
-    data_dict = json.loads(to_json)
-    group = data_dict['selected_group']
-    cluster_list = api.get_group_dict()[group]
+    global buttons_group
+
+    plot = plot_function()
+    buttons_group, b = plot.get_buttons_group()
+    button_disabled(buttons_group)
+    def next_get():
+        global group, cluster_list
+        api = connection()
+        to_json = api.get_attributes()
+        data_dict = json.loads(to_json)
+        group = data_dict['selected_group']
+        cluster_list = api.get_group_dict()[group]
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_get)    
     return group, cluster_list
 
 def tomas_callback1(group, show_clusters):
-    layout = curdoc().get_model_by_name('TOMAS')
-    api = connection()
-    adata = api.get_anndata()
-    adata.obs['total_UMIs'] = np.ravel(adata.X.sum(1))
-    adata.obs['log10_totUMIs'] = np.log10(adata.obs['total_UMIs'])
-
-    figure1 = tm.vis.UMI_hist(adata,
-                x_hist='log10_totUMIs',
-                groupby=group,
-                show_groups=show_clusters,
-                return_fig=True)
-    # Save it to a temporary buffer.
-    buf = BytesIO()
-    figure1.savefig(buf, format="png")
-    # Embed the result in the html output.
-    output1 = base64.b64encode(buf.getbuffer()).decode("ascii")
-    div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output1))
-    layout.children.append(div)
-    api.set_obs(adata.obs)
-
-def tomas_callback2(group, show_clusters):
-    layout = curdoc().get_model_by_name('TOMAS')
-    api = connection()
-    adata = api.get_anndata()
-    tm.fit.logN_para(adata,
-                 logUMIby='log10_totUMIs',
-                 groupby=group,
-                 groups=show_clusters,
-                 inplace=True)
-    r1 = 10**(adata.uns['logUMI_para'].loc[show_clusters[0],'mean']-adata.uns['logUMI_para'].loc[show_clusters[0],'mean'])
-    r2 = 10**(adata.uns['logUMI_para'].loc[show_clusters[2],'mean']-adata.uns['logUMI_para'].loc[show_clusters[0],'mean'])
-    string = 'With raw UMIs, total UMI ratio of<br/>'+'&nbsp;&nbsp;'+show_clusters[1]+' : '+show_clusters[0] +' = '+str(r1)+',<br>&nbsp;&nbsp;Hetero-doublet : '+show_clusters[0] +' = '+str(r2)+'<br/>'
-    div = Div(text=string)
-    layout.children.append(div)
-    api.set_obs(adata.obs)
-    api.set_uns(adata.uns)
-
-def tomas_callback3(group, show_clusters):
-    layout = curdoc().get_model_by_name('TOMAS')
-    div = Div(text='This may take a long time. Please wait...', name='Reminder')
-    #div = Div(text='<img src="images/loading.gif">')
-    layout.children.append(div)
-    def process():       
-        api = connection()
-        adata = api.get_anndata()
-        print(os.getcwd())
-        size = os.path.getsize('./output/Tcells')
-        if size == 0:
-            tm.fit.dmn(adata,
-                    groupby=group,
-                    groups=show_clusters[0:2], 
-                    c_version=True,
-                    #subset=100,
-                    output='./output/Tcells')
-        else:
-            p = pd.read_csv('./output/Tcells/alpha.csv',index_col=0)
-            print(p)
-            adata.varm['para_diri'] = pd.read_csv('./output/Tcells/alpha.csv',index_col=0)
-        figure2 = tm.vis.dmn_convergence(show_clusters[0],output='./output/Tcells',return_fig=True)
-        figure3 = tm.vis.dmn_convergence(show_clusters[1],output='./output/Tcells',return_fig=True)
-        div = curdoc().get_model_by_name('Reminder')
-        layout.children.remove(div)
-        # Save it to a temporary buffer.
-        buf = BytesIO()
-        figure2.savefig(buf, format="png")
-        output2 = base64.b64encode(buf.getbuffer()).decode("ascii")
-        figure3.savefig(buf, format="png")
-        output3 = base64.b64encode(buf.getbuffer()).decode("ascii")
-        div1 = Div(text='<b>'+show_clusters[0]+'</b>')
-        div2 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output2))
-        layout.children.append(column(div1, div2))
-        div3 = Div(text='<b>'+show_clusters[1]+'</b>')
-        div4 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output3))
-        layout.children.append(column(div3, div4))
-        api.set_obs(adata.obs)
-        api.set_varm(adata.varm)    
-    curdoc().add_next_tick_callback(process)
-
-def tomas_callback4(group,show_cluster):
-    layout = curdoc().get_model_by_name('TOMAS')
-    div = Div(text='<b>This may take a long time. Please wait...</b>', name='Reminder')
-    layout.children.append(div)
-    def process():
+    button_disabled(buttons_group)
+    def next_tomas():
         layout = curdoc().get_model_by_name('TOMAS')
         api = connection()
         adata = api.get_anndata()
-        tm.auxi.cal_KL_bc(adata,groups=show_cluster[0:2])
-        adata_dbl_mg = tm.auxi.get_dbl_mg_bc(adata,
-                                            groupby = group,
-                                            groups = show_cluster,
-                                            save_path = './output/Tcells') #'./prepareForRepo/re_test/test')
-        try:
-            r_list = np.loadtxt('./output/Tcells/Homo-naive_Homo-activated_dbl_Rest.txt')
-        except:
-            r_list = tm.infer.ratio_2types(adata_dbl_mg, output='./output/Tcells')#'./prepareForRepo/re_test/test')        
-            np.savetxt('./output/Tcells/Homo-naive_Homo-activated_dbl_Rest.txt',r_list)
-        figure5 = tm.vis.logRatio_dist(r_list, return_fig=True)
+        adata.obs['total_UMIs'] = np.ravel(adata.X.sum(1))
+        adata.obs['log10_totUMIs'] = np.log10(adata.obs['total_UMIs'])
+
+        figure1 = tm.vis.UMI_hist(adata,
+                    x_hist='log10_totUMIs',
+                    groupby=group,
+                    show_groups=show_clusters,
+                    return_fig=True)
+        # Save it to a temporary buffer.
         buf = BytesIO()
-        figure5.savefig(buf, format="png")
-        output5 = base64.b64encode(buf.getbuffer()).decode("ascii")
-        div5 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output5))
-        div1 = Div(text='<b>Estimate R with synthetic droplets</b>')
-        layout.children.remove(div)
-        layout.children.append(column(div1,div5))        
-    curdoc().add_next_tick_callback(process)
+        figure1.savefig(buf, format="png")
+        # Embed the result in the html output.
+        output1 = base64.b64encode(buf.getbuffer()).decode("ascii")
+        div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output1))
+        layout.children.append(div)
+        api.set_obs(adata.obs)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_tomas)
+
+def tomas_callback2(group, show_clusters):
+    button_disabled(buttons_group)
+    def next_tomas2():
+        layout = curdoc().get_model_by_name('TOMAS')
+        api = connection()
+        adata = api.get_anndata()
+        tm.fit.logN_para(adata,
+                    logUMIby='log10_totUMIs',
+                    groupby=group,
+                    groups=show_clusters,
+                    inplace=True)
+        r1 = 10**(adata.uns['logUMI_para'].loc[show_clusters[0],'mean']-adata.uns['logUMI_para'].loc[show_clusters[0],'mean'])
+        r2 = 10**(adata.uns['logUMI_para'].loc[show_clusters[2],'mean']-adata.uns['logUMI_para'].loc[show_clusters[0],'mean'])
+        string = 'With raw UMIs, total UMI ratio of<br/>'+'&nbsp;&nbsp;'+show_clusters[1]+' : '+show_clusters[0] +' = '+str(r1)+',<br>&nbsp;&nbsp;Hetero-doublet : '+show_clusters[0] +' = '+str(r2)+'<br/>'
+        div = Div(text=string)
+        layout.children.append(div)
+        api.set_obs(adata.obs)
+        api.set_uns(adata.uns)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_tomas2)
+
+def tomas_callback3(group, show_clusters):
+    button_abled(buttons_group)
+    def next_tomas3():
+        layout = curdoc().get_model_by_name('TOMAS')
+        div = Div(text='This may take a long time. Please wait...', name='Reminder')
+        #div = Div(text='<img src="images/loading.gif">')
+        layout.children.append(div)
+        def process():       
+            api = connection()
+            adata = api.get_anndata()
+            print(os.getcwd())
+            size = os.path.getsize('./output/Tcells')
+            if size == 0:
+                tm.fit.dmn(adata,
+                        groupby=group,
+                        groups=show_clusters[0:2], 
+                        c_version=True,
+                        #subset=100,
+                        output='./output/Tcells')
+            else:
+                p = pd.read_csv('./output/Tcells/alpha.csv',index_col=0)
+                print(p)
+                adata.varm['para_diri'] = pd.read_csv('./output/Tcells/alpha.csv',index_col=0)
+            figure2 = tm.vis.dmn_convergence(show_clusters[0],output='./output/Tcells',return_fig=True)
+            figure3 = tm.vis.dmn_convergence(show_clusters[1],output='./output/Tcells',return_fig=True)
+            div = curdoc().get_model_by_name('Reminder')
+            layout.children.remove(div)
+            # Save it to a temporary buffer.
+            buf = BytesIO()
+            figure2.savefig(buf, format="png")
+            output2 = base64.b64encode(buf.getbuffer()).decode("ascii")
+            figure3.savefig(buf, format="png")
+            output3 = base64.b64encode(buf.getbuffer()).decode("ascii")
+            div1 = Div(text='<b>'+show_clusters[0]+'</b>')
+            div2 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output2))
+            layout.children.append(column(div1, div2))
+            div3 = Div(text='<b>'+show_clusters[1]+'</b>')
+            div4 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output3))
+            layout.children.append(column(div3, div4))
+            api.set_obs(adata.obs)
+            api.set_varm(adata.varm)    
+        curdoc().add_next_tick_callback(process)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_tomas3)
+
+def tomas_callback4(group,show_cluster):
+    button_disabled(buttons_group)
+    def next_tomas4():
+        layout = curdoc().get_model_by_name('TOMAS')
+        div = Div(text='<b>This may take a long time. Please wait...</b>', name='Reminder')
+        layout.children.append(div)
+        def process():
+            layout = curdoc().get_model_by_name('TOMAS')
+            api = connection()
+            adata = api.get_anndata()
+            tm.auxi.cal_KL_bc(adata,groups=show_cluster[0:2])
+            adata_dbl_mg = tm.auxi.get_dbl_mg_bc(adata,
+                                                groupby = group,
+                                                groups = show_cluster,
+                                                save_path = './output/Tcells') #'./prepareForRepo/re_test/test')
+            try:
+                r_list = np.loadtxt('./output/Tcells/Homo-naive_Homo-activated_dbl_Rest.txt')
+            except:
+                r_list = tm.infer.ratio_2types(adata_dbl_mg, output='./output/Tcells')#'./prepareForRepo/re_test/test')        
+                np.savetxt('./output/Tcells/Homo-naive_Homo-activated_dbl_Rest.txt',r_list)
+            figure5 = tm.vis.logRatio_dist(r_list, return_fig=True)
+            buf = BytesIO()
+            figure5.savefig(buf, format="png")
+            output5 = base64.b64encode(buf.getbuffer()).decode("ascii")
+            div5 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output5))
+            div1 = Div(text='<b>Estimate R with synthetic droplets</b>')
+            layout.children.remove(div)
+            layout.children.append(column(div1,div5))        
+        curdoc().add_next_tick_callback(process)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_tomas4)
 
 def tomas_callback5(group, show_cluster):
-    layout = curdoc().get_model_by_name('TOMAS')
-    api = connection()
-    adata = api.get_anndata()
-    figure6 = tm.vis.corrected_UMI_hist(adata,
-                                        groupby = group,
-                                        groups = show_cluster,
-                                        reference = show_cluster[0],
-                                        logUMIby = 'log10_totUMIs',
-                                        ratios = [1,4.3,5.3],
-                                        return_fig=True)
-    buf = BytesIO()
-    figure6.savefig(buf, format="png")
-    output6 = base64.b64encode(buf.getbuffer()).decode("ascii")
-    div6 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output6))
-    div1 = Div(text='<b>The total UMI distribution</b>')
-    layout.children.append(div1)
-    layout.children.append(div6)
+    button_disabled(buttons_group)
+    def next_tomas5():
+        layout = curdoc().get_model_by_name('TOMAS')
+        api = connection()
+        adata = api.get_anndata()
+        figure6 = tm.vis.corrected_UMI_hist(adata,
+                                            groupby = group,
+                                            groups = show_cluster,
+                                            reference = show_cluster[0],
+                                            logUMIby = 'log10_totUMIs',
+                                            ratios = [1,4.3,5.3],
+                                            return_fig=True)
+        buf = BytesIO()
+        figure6.savefig(buf, format="png")
+        output6 = base64.b64encode(buf.getbuffer()).decode("ascii")
+        div6 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output6))
+        div1 = Div(text='<b>The total UMI distribution</b>')
+        layout.children.append(div1)
+        layout.children.append(div6)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_tomas5)

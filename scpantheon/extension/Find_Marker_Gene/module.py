@@ -47,52 +47,77 @@ class new_layout:
         return self.marker
 
 
+def button_disabled(buttons_group):
+    for b in buttons_group:
+        b.disabled = True
+
+def button_abled(buttons_group):
+    for b in buttons_group:
+        b.disabled = False
+
+
 def get_attr():
-    api = connection()
-    to_json = api.get_attributes()
-    data_dict = json.loads(to_json)
-    group = data_dict['selected_group']
-    cluster_list = api.get_group_dict()[group]
-    return group, cluster_list
+    global buttons_group
+
+    plot = plot_function()
+    buttons_group, b = plot.get_buttons_group()
+    button_disabled(buttons_group)
+    def next_get():
+        api = connection()
+        to_json = api.get_attributes()
+        data_dict = json.loads(to_json)
+        group = data_dict['selected_group']
+        cluster_list = api.get_group_dict()[group]
+        return group, cluster_list
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_get)
 
 def find_marker(test_method='t-test',rank_n_genes=25):
-    layout = curdoc().get_model_by_name('Find_Marker_Gene')
-    group, cluster_list = get_attr()
-    api = connection()
-    to_json = api.get_attributes()
-    data_dict = json.loads(to_json)
-    group = data_dict['selected_group']            
-    adata = api.get_anndata()
+    button_disabled(buttons_group)
+    def next_find():
+        layout = curdoc().get_model_by_name('Find_Marker_Gene')
+        group, cluster_list = get_attr()
+        api = connection()
+        to_json = api.get_attributes()
+        data_dict = json.loads(to_json)
+        group = data_dict['selected_group']            
+        adata = api.get_anndata()
 
-    sc.tl.rank_genes_groups(adata, group, method=test_method)
-    sc.pl.rank_genes_groups(adata, n_genes=rank_n_genes, sharey=False, save='.png')
+        sc.tl.rank_genes_groups(adata, group, method=test_method)
+        sc.pl.rank_genes_groups(adata, n_genes=rank_n_genes, sharey=False, save='.png')
 
-    name = 'figures/rank_genes_groups_' + group + '.png'
-    img = open(name,'rb')
-    img_base64 = base64.b64encode(img.read()).decode("ascii")
-    div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
-    layout.children.append(div)
-    api.set_obsm(adata.obsm)
-
-def violin(cluster_list,gene_num):
-    layout = curdoc().get_model_by_name('Find_Marker_Gene')
-    group, cluster_list = get_attr()
-    api = connection()
-    to_json = api.get_attributes()
-    data_dict = json.loads(to_json)
-    group = data_dict['selected_group']            
-    adata = api.get_anndata()
-
-    sc.pl.rank_genes_groups_violin(adata, groups=cluster_list[1:], n_genes=gene_num, save='.png')
-
-    img = open('figures/violin.png','rb')
-    img_base64 = base64.b64encode(img.read()).decode("ascii")
-    div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
-    layout.children.append(div)
-
-    for cluster in cluster_list[1:]:
-        name = 'figures/rank_genes_groups_' + group + '_' + cluster + '.png'
+        name = 'figures/rank_genes_groups_' + group + '.png'
         img = open(name,'rb')
         img_base64 = base64.b64encode(img.read()).decode("ascii")
         div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
         layout.children.append(div)
+        api.set_obsm(adata.obsm)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_find)
+
+def violin(cluster_list,gene_num):
+    button_disabled(buttons_group)
+    def next_violin():
+        layout = curdoc().get_model_by_name('Find_Marker_Gene')
+        group, cluster_list = get_attr()
+        api = connection()
+        to_json = api.get_attributes()
+        data_dict = json.loads(to_json)
+        group = data_dict['selected_group']            
+        adata = api.get_anndata()
+
+        sc.pl.rank_genes_groups_violin(adata, groups=cluster_list[1:], n_genes=gene_num, save='.png')
+
+        img = open('figures/violin.png','rb')
+        img_base64 = base64.b64encode(img.read()).decode("ascii")
+        div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
+        layout.children.append(div)
+
+        for cluster in cluster_list[1:]:
+            name = 'figures/rank_genes_groups_' + group + '_' + cluster + '.png'
+            img = open(name,'rb')
+            img_base64 = base64.b64encode(img.read()).decode("ascii")
+            div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
+            layout.children.append(div)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_violin)

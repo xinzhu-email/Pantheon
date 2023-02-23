@@ -53,63 +53,90 @@ class new_layout:
         return self.de
 
 
+def button_disabled(buttons_group):
+    for b in buttons_group:
+        b.disabled = True
+
+def button_abled(buttons_group):
+    for b in buttons_group:
+        b.disabled = False
+
 
 def get_attr():
-    api = connection()
-    to_json = api.get_attributes()
-    data_dict = json.loads(to_json)
-    group = data_dict['selected_group']
-    cluster_list = api.get_group_dict()[group]
-    return group, cluster_list
+    global buttons_group
+
+    plot = plot_function()
+    buttons_group, b = plot.get_buttons_group()
+    button_disabled(buttons_group)
+    def next_get():
+        api = connection()
+        to_json = api.get_attributes()
+        data_dict = json.loads(to_json)
+        group = data_dict['selected_group']
+        cluster_list = api.get_group_dict()[group]
+        return group, cluster_list
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_get)
 
 
 def rank(method,gene_num):
-    layout = curdoc().get_model_by_name('Differential_Expression_Analysis')
-    api = connection()
-    to_json = api.get_attributes()
-    data_dict = json.loads(to_json)
-    group = data_dict['selected_group']
-    cluster_list = list(api.get_group_dict()[group]['class_name'])
-    adata = api.get_anndata()
-    print(cluster_list)
-    sc.tl.rank_genes_groups(adata, group, groups=cluster_list[1:], reference=cluster_list[0], method=method)
-    sc.pl.rank_genes_groups(adata, groups=cluster_list[1:], n_genes=gene_num, save='.png')
+    button_disabled(buttons_group)
+    def next_rank():
+        layout = curdoc().get_model_by_name('Differential_Expression_Analysis')
+        api = connection()
+        to_json = api.get_attributes()
+        data_dict = json.loads(to_json)
+        group = data_dict['selected_group']
+        cluster_list = list(api.get_group_dict()[group]['class_name'])
+        adata = api.get_anndata()
+        print(cluster_list)
+        sc.tl.rank_genes_groups(adata, group, groups=cluster_list[1:], reference=cluster_list[0], method=method)
+        sc.pl.rank_genes_groups(adata, groups=cluster_list[1:], n_genes=gene_num, save='.png')
 
-    name = 'figures/rank_genes_groups_' + group + '.png'
-    img = open(name,'rb')
-    img_base64 = base64.b64encode(img.read()).decode("ascii")
-    div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
-    layout.children.append(div)
-    api.set_uns(adata.uns)
-
-
-def violin(gene_num):
-    layout = curdoc().get_model_by_name('Differential_Expression_Analysis')
-    api = connection()
-    to_json = api.get_attributes()
-    data_dict = json.loads(to_json)
-    group = data_dict['selected_group']
-    cluster_list = list(api.get_group_dict()[group]['class_name'])
-    adata = api.get_anndata()
-
-    sc.pl.rank_genes_groups_violin(adata, groups=cluster_list[1:], n_genes=gene_num, save='.png')
-
-    for cluster in cluster_list[1:]:
-        name = 'figures/rank_genes_groups_' + group + '_' + cluster + '.png'
+        name = 'figures/rank_genes_groups_' + group + '.png'
         img = open(name,'rb')
         img_base64 = base64.b64encode(img.read()).decode("ascii")
         div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
         layout.children.append(div)
+        api.set_uns(adata.uns)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_rank)
+
+def violin(gene_num):
+    button_disabled(buttons_group)
+    def next_violin():
+        layout = curdoc().get_model_by_name('Differential_Expression_Analysis')
+        api = connection()
+        to_json = api.get_attributes()
+        data_dict = json.loads(to_json)
+        group = data_dict['selected_group']
+        cluster_list = list(api.get_group_dict()[group]['class_name'])
+        adata = api.get_anndata()
+
+        sc.pl.rank_genes_groups_violin(adata, groups=cluster_list[1:], n_genes=gene_num, save='.png')
+
+        for cluster in cluster_list[1:]:
+            name = 'figures/rank_genes_groups_' + group + '_' + cluster + '.png'
+            img = open(name,'rb')
+            img_base64 = base64.b64encode(img.read()).decode("ascii")
+            div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
+            layout.children.append(div)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_violin)
 
 def compare(gene_list,group):
-    layout = curdoc().get_model_by_name('Differential_Expression_Analysis')
-    api = connection()
+    button_disabled(buttons_group)
+    def next_compare():
+        layout = curdoc().get_model_by_name('Differential_Expression_Analysis')
+        api = connection()
 
-    adata = api.get_anndata()
+        adata = api.get_anndata()
 
-    sc.pl.violin(adata, gene_list, groupby=group, save='.png')
+        sc.pl.violin(adata, gene_list, groupby=group, save='.png')
 
-    img = open('figures/violin.png','rb')
-    img_base64 = base64.b64encode(img.read()).decode("ascii")
-    div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
-    layout.children.append(div)
+        img = open('figures/violin.png','rb')
+        img_base64 = base64.b64encode(img.read()).decode("ascii")
+        div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
+        layout.children.append(div)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_compare)

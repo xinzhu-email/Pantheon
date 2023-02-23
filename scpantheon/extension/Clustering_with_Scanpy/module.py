@@ -38,32 +38,51 @@ class new_layout:
     def add(self):
         return self.scanpy_cluster
 
+
+def button_disabled(buttons_group):
+    for b in buttons_group:
+        b.disabled = True
+
+def button_abled(buttons_group):
+    for b in buttons_group:
+        b.disabled = False
     
 
 def pca():
-    layout = curdoc().get_model_by_name('Clustering_with_Scanpy')
-    change = connection()
-    adata = change.get_anndata()
+    global buttons_group
+    plot = plot_function()
+    buttons_group, b = plot.get_buttons_group()
+    button_disabled(buttons_group)
+    def next_pca():
+        layout = curdoc().get_model_by_name('Clustering_with_Scanpy')
+        change = connection()
+        adata = change.get_anndata()
 
-    sc.tl.pca(adata, svd_solver='arpack')
-    sc.pl.pca_variance_ratio(adata, log=True, save='.png')
+        sc.tl.pca(adata, svd_solver='arpack')
+        sc.pl.pca_variance_ratio(adata, log=True, save='.png')
 
-    img = open('figures/pca_variance_ratio.png','rb')
-    img_base64 = base64.b64encode(img.read()).decode("ascii")
-    div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
-    layout.children.append(div)
-    change.set_obsm(adata.obsm)
+        img = open('figures/pca_variance_ratio.png','rb')
+        img_base64 = base64.b64encode(img.read()).decode("ascii")
+        div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
+        layout.children.append(div)
+        change.set_obsm(adata.obsm)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_pca)
 
 def neighborhood_graph(neighbor_num, pc_num, resolution):
-    layout = curdoc().get_model_by_name('Clustering_with_Scanpy')
-    change = connection()
-    adata = change.get_anndata()
+    button_disabled(buttons_group)
+    def next_neighbor():
+        layout = curdoc().get_model_by_name('Clustering_with_Scanpy')
+        change = connection()
+        adata = change.get_anndata()
 
-    adata = sc.pp.neighbors(adata, n_neighbors=int(neighbor_num), n_pcs=int(pc_num), copy=True)
-    sc.tl.umap(adata)
-    sc.tl.leiden(adata, resolution=float(resolution))
-    print('new')
+        adata = sc.pp.neighbors(adata, n_neighbors=int(neighbor_num), n_pcs=int(pc_num), copy=True)
+        sc.tl.umap(adata)
+        sc.tl.leiden(adata, resolution=float(resolution))
+        print('new')
 
-    change.set_obsm(adata.obsm)
-    change.set_uns(adata.uns)
-    change.set_obs(adata.obs, set_group_name=['leiden'])
+        change.set_obsm(adata.obsm)
+        change.set_uns(adata.uns)
+        change.set_obs(adata.obs, set_group_name=['leiden'])
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_neighbor)

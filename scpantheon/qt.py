@@ -3,6 +3,13 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5 import QtCore, QtGui
 import mysql.connector
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+try:
+    from source import connection
+except:
+    from scpantheon.source import connection
 
 def myconnect():
     global mydb,mycursor
@@ -64,12 +71,11 @@ class Ui_Dialog(QWidget, object):
         self.layout2 = QVBoxLayout(Dialog)
         self.layout2.setObjectName("Layout2")
 
-
         # render website inside qt application
         self.centralwidget = QWidget(Dialog)
         self.centralwidget.setObjectName("centralwidget")
         self.webEngineView = QWebEngineView(self.centralwidget)
-        self.webEngineView.load(QtCore.QUrl.fromLocalFile("D:/anaconda/Lib/site-packages/Pantheon/scpantheon/embed.html"))
+        self.loadPage()
         self.layout2.addWidget(self.webEngineView)
 
 
@@ -88,6 +94,10 @@ class Ui_Dialog(QWidget, object):
         self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
+    def loadPage(self):
+        with open('embed.html', 'r') as f:
+            html = f.read()
+            self.webEngineView.setHtml(html)
 
     def slot_btn_Extensions(self):
         Extensions = QFileDialog.getExistingDirectory(self,"Choose Extensions",self.cwd) # 起始路径

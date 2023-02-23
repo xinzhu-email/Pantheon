@@ -52,88 +52,122 @@ class new_layout:
 
     def add(self):
         return self.scanpy_functions
+        
+
+def button_disabled(buttons_group):
+    for b in buttons_group:
+        b.disabled = True
+
+def button_abled(buttons_group):
+    for b in buttons_group:
+        b.disabled = False
 
 
 def show_gene_percentage():
-    layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
-    change = connection()
-    adata = change.get_anndata()
-    figure = sc.pl.highest_expr_genes(adata, n_top=20, show=False )
-    buf = BytesIO()
-    figure.get_figure().savefig(buf, format="png")
-    output1 = base64.b64encode(buf.getbuffer()).decode("ascii")
-    div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output1))
-    layout.children.append(div)
+    global buttons_group
+
+    plot = plot_function()
+    buttons_group, b = plot.get_buttons_group()
+    button_disabled(buttons_group)
+    def next_show():
+        layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
+        change = connection()
+        adata = change.get_anndata()
+        figure = sc.pl.highest_expr_genes(adata, n_top=20, show=False )
+        buf = BytesIO()
+        figure.get_figure().savefig(buf, format="png")
+        output1 = base64.b64encode(buf.getbuffer()).decode("ascii")
+        div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output1))
+        layout.children.append(div)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_show)
 
 def basic_filter_callback(input1, input2):
-    change = connection()
-    adata = change.get_anndata()
-    sc.pp.filter_cells(adata, min_genes=int(input1.value))
-    sc.pp.filter_genes(adata, min_cells=int(input2.value))
-    cells = list(adata.obs.index)    
-    raw_adata = connection().get_anndata()    
-    indices = raw_adata.obs[raw_adata.obs.index.isin(cells)]['ind']
-    
-    data_dict = json.loads(change.get_attributes())
-    indices = list(set(indices)&set(data_dict['showing_indices']))
-    data_dict['showing_indices'] = list(indices)
-    change.set_attributes(data_dict)
-    change.set_anndata(adata)
+    button_disabled(buttons_group)
+    def next_filter():
+        change = connection()
+        adata = change.get_anndata()
+        sc.pp.filter_cells(adata, min_genes=int(input1.value))
+        sc.pp.filter_genes(adata, min_cells=int(input2.value))
+        cells = list(adata.obs.index)    
+        raw_adata = connection().get_anndata()    
+        indices = raw_adata.obs[raw_adata.obs.index.isin(cells)]['ind']
+        
+        data_dict = json.loads(change.get_attributes())
+        indices = list(set(indices)&set(data_dict['showing_indices']))
+        data_dict['showing_indices'] = list(indices)
+        change.set_attributes(data_dict)
+        change.set_anndata(adata)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_filter)
 
 def mitochondrial_genes():
-    layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
-    change = connection()
-    adata = change.get_anndata()
+    button_disabled(buttons_group)
+    def next_mit():
+        layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
+        change = connection()
+        adata = change.get_anndata()
 
-    adata.var['mt'] = adata.var_names.str.startswith('MT-')
-    sc.pp.calculate_qc_metrics(adata, qc_vars=['mt'], percent_top=None, log1p=False, inplace=True)
-    print(adata.obs['pct_counts_mt'])
-    figure1 = sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts', 'pct_counts_mt'], jitter=0.4, multi_panel=True, show=False)
-    figure2 = sc.pl.scatter(adata, x='total_counts', y='pct_counts_mt', show=False)
-    figure3 = sc.pl.scatter(adata, x='total_counts', y='n_genes_by_counts', show=False)
+        adata.var['mt'] = adata.var_names.str.startswith('MT-')
+        sc.pp.calculate_qc_metrics(adata, qc_vars=['mt'], percent_top=None, log1p=False, inplace=True)
+        print(adata.obs['pct_counts_mt'])
+        figure1 = sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts', 'pct_counts_mt'], jitter=0.4, multi_panel=True, show=False)
+        figure2 = sc.pl.scatter(adata, x='total_counts', y='pct_counts_mt', show=False)
+        figure3 = sc.pl.scatter(adata, x='total_counts', y='n_genes_by_counts', show=False)
 
-    buf1, buf2, buf3 = BytesIO(), BytesIO(), BytesIO()
-    figure1.savefig(buf1, format="png")
-    output1 = base64.b64encode(buf1.getbuffer()).decode("ascii")
-    div1 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output1))
-    layout.children.append(div1)
-    figure2.get_figure().savefig(buf2, format="png")
-    output2 = base64.b64encode(buf2.getbuffer()).decode("ascii")
-    div2 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output2))
-    layout.children.append(div2)
-    figure3.get_figure().savefig(buf3, format="png")
-    output3 = base64.b64encode(buf3.getbuffer()).decode("ascii")
-    div3 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output3))    
-    layout.children.append(div3)
-    change.set_anndata(adata)
+        buf1, buf2, buf3 = BytesIO(), BytesIO(), BytesIO()
+        figure1.savefig(buf1, format="png")
+        output1 = base64.b64encode(buf1.getbuffer()).decode("ascii")
+        div1 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output1))
+        layout.children.append(div1)
+        figure2.get_figure().savefig(buf2, format="png")
+        output2 = base64.b64encode(buf2.getbuffer()).decode("ascii")
+        div2 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output2))
+        layout.children.append(div2)
+        figure3.get_figure().savefig(buf3, format="png")
+        output3 = base64.b64encode(buf3.getbuffer()).decode("ascii")
+        div3 = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output3))    
+        layout.children.append(div3)
+        change.set_anndata(adata)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_mit)
 
 def filter_norm_log(gene_counts, mt_pct, target_sum):
-    layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
-    change = connection()
-    adata = change.get_anndata()
+    button_disabled(buttons_group)
+    def next_filter():
+        layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
+        change = connection()
+        adata = change.get_anndata()
 
-    adata = adata[adata.obs.n_genes_by_counts < float(gene_counts), :]
-    adata = adata[adata.obs.pct_counts_mt < float(mt_pct), :]
-    sc.pp.normalize_total(adata, target_sum=float(target_sum))
-    sc.pp.log1p(adata)
-    
-    div1 = Div(text='<b>Cells are filtered with max counts of genes and max percentage of mitochondrial genes.<br/>Data is normalized and logarithmize.</b>')
-    layout.children.append(div1)
-    change.set_anndata(adata)
+        adata = adata[adata.obs.n_genes_by_counts < float(gene_counts), :]
+        adata = adata[adata.obs.pct_counts_mt < float(mt_pct), :]
+        sc.pp.normalize_total(adata, target_sum=float(target_sum))
+        sc.pp.log1p(adata)
+        
+        div1 = Div(text='<b>Cells are filtered with max counts of genes and max percentage of mitochondrial genes.<br/>Data is normalized and logarithmize.</b>')
+        layout.children.append(div1)
+        change.set_anndata(adata)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_filter)
 
 def hvg(min_mean, max_mean, min_disp):
-    layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
-    change = connection()
-    adata = change.get_anndata()
+    button_disabled(buttons_group)
+    def next_hvg():
+        layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
+        change = connection()
+        adata = change.get_anndata()
 
-    sc.pp.highly_variable_genes(adata, min_mean=float(min_mean), max_mean=float(max_mean), min_disp=float(min_disp))
-    figure = sc.pl.highly_variable_genes(adata, show=False)
+        sc.pp.highly_variable_genes(adata, min_mean=float(min_mean), max_mean=float(max_mean), min_disp=float(min_disp))
+        figure = sc.pl.highly_variable_genes(adata, show=False)
 
-    buf = BytesIO()
-    figure.figure.savefig(buf, format="png")
-    output1 = base64.b64encode(buf.getbuffer()).decode("ascii")
-    div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output1))
-    layout.children.append(div)
+        buf = BytesIO()
+        figure.figure.savefig(buf, format="png")
+        output1 = base64.b64encode(buf.getbuffer()).decode("ascii")
+        div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(output1))
+        layout.children.append(div)
+        button_abled(buttons_group)
+    curdoc().add_next_tick_callback(next_hvg)
+
 
 
 
