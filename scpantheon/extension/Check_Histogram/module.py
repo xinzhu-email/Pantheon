@@ -9,7 +9,7 @@ from pathlib import Path
 from bokeh.io import curdoc
 from bokeh.models import FileInput, Button, TextInput, Div, Select
 from bokeh.layouts import row, column
-import pandas
+import pandas, anndata
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -42,18 +42,34 @@ def check_histogram():
     global buttons_group
 
     plot = plot_function()
-    buttons_group, b = plot.get_buttons_group()
+    buttons_group, b = plot.get_buttons_group() # group and the original amount
     button_disabled(buttons_group)
     def next_check():
         global plotlist, p, glylist
         layout = curdoc().get_model_by_name('Check_Histogram')
         change = connection()
-        data_file = change.get_data_file()
-        pdata = pandas.read_csv(data_file, index_col=0)
+        #pdata = change.get_pandata()
+        adata = change.get_anndata()
         plot = plot_function()
         p = plot.get_figure()
         x, y = plot.get_x_y()
         glylist = plot.get_glyph_list()
+
+        # get the x and y of plot
+        cnt = 0
+        for axis in adata.var.index:
+            if(x == axis): x = cnt
+            if(y == axis): y = cnt
+            cnt += 1
+        
+        def ad_to_pd():
+            global pdata
+            X = adata.X
+            obs_df = adata.obs
+            var_df = adata.var
+            pdata = pandas.concat([obs_df, var_df, pandas.DataFrame(X.T)], axis=1)
+            pdata = pdata.T
+        ad_to_pd()
 
         if len(glylist) <= 1:
             # pdata[self.data_columns[x_init_idx]].describe()
