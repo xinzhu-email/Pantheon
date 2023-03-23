@@ -29,33 +29,13 @@ TOOLTIPS = [
 ]
 class FlowPlot:
     global file_name
-    def __init__(self, data=None, color_map=None, module=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
+    def __init__(self, data=None, pdata=None, color_map=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
         self.adata = data
+        self.pdata = pdata
         self.data_df = self.adata.to_df()
-        """
-        where obs_names are the rownames, and var_names the columns names. 
-        """
-
         self.data_log = np.log1p(self.data_df)    
-        '''
-                            CD154_TotalA  CD4_TotalA  CD56_TotalA  CD3_TotalA  CD19_TotalA  CD14_TotalA  CD11c_TotalA  CD8a_TotalA  CD16_TotalA  CD127_TotalA
-        AAACCTGAGACAAAGG-1      2.564949    3.496508     1.791759    4.882802     2.833213     2.833213      3.332205     7.114769     3.258096      3.850147
-        AAACCTGAGACAAGCC-1      2.995732    3.583519     2.397895    5.017280     2.772589     3.044523      3.178054     7.459915     2.890372      2.772589
-        AAACCTGAGAGGTTGC-1      2.944439    4.060443     2.397895    5.204007     2.564949     2.772589      2.772589     7.307202     3.555348      3.737670
-        AAACCTGAGAGTGAGA-1      2.772589    6.289716     2.397895    3.258096     2.890372     2.639057      2.890372     3.988984     3.135494      3.332205
-        AAACCTGAGCCCAACC-1      3.044523    6.028278     2.397895    5.968708     2.944439     2.995732      3.433987     7.516433     3.610918      3.295837
-        ...                          ...         ...          ...         ...          ...          ...           ...          ...          ...           ...
-        TTTGTCATCCCGGATG-1      1.386294    6.280396     1.609438    5.337538     2.484907     2.890372      2.564949     3.871201     3.135494      2.833213
-        TTTGTCATCCCTTGCA-1      3.258096    6.327937     2.302585    5.777652     6.821107     4.700480      5.389072     4.317488     3.135494      2.995732
-        TTTGTCATCCTGCAGG-1      2.995732    6.352629     2.564949    4.682131     3.091043     2.708050      2.772589     6.886532     2.944439      2.944439
-        TTTGTCATCCTTGGTC-1      2.639057    4.174387     2.484907    2.639057     2.772589     3.401197      5.356586     3.713572     7.049255      1.609438
-        TTTGTCATCGTTTGCC-1      2.302585    3.806663     1.791759    5.153292     2.639057     2.833213      3.135494     7.501082     3.135494      2.708050
-
-        [15839 rows x 10 columns]
-        ''' 
         # For real-valued input, log1p is accurate also for x so small that 1 + x == 1 in floating-point accuracy.
         self.label_existed, view_existed = False, False
-
         # personalized
         try:
             group_list = list(self.adata.uns['category_dict'].keys()) 
@@ -86,25 +66,7 @@ class FlowPlot:
 
                     
         self.adata.obs['ind'] = pandas.Series(np.array(range(self.data_df.shape[0])).astype(int).tolist(), index=self.data_df.index)  
-        '''
-        data_df.shape[0]: 15839
-        AAACCTGAGACAAAGG-1        0
-        AAACCTGAGACAAGCC-1        1
-        AAACCTGAGAGGTTGC-1        2
-        AAACCTGAGAGTGAGA-1        3
-        AAACCTGAGCCCAACC-1        4
-                            ...
-        TTTGTCATCCCGGATG-1    15834
-        TTTGTCATCCCTTGCA-1    15835
-        TTTGTCATCCTGCAGG-1    15836
-        TTTGTCATCCTTGGTC-1    15837
-        TTTGTCATCGTTTGCC-1    15838
-        Name: ind, Length: 15839, dtype: int64
-        '''
         self.data_columns = self.data_df.columns.values.tolist()
-        '''
-        ['CD154_TotalA', 'CD4_TotalA', 'CD56_TotalA', 'CD3_TotalA', 'CD19_TotalA', 'CD14_TotalA', 'CD11c_TotalA', 'CD8a_TotalA', 'CD16_TotalA', 'CD127_TotalA']
-        '''
         self.data_df['color'] = pandas.Series(d3['Category20c'][20][0], index=self.data_df.index)
         self.data_log['color'] = pandas.Series(d3['Category20c'][20][0], index=self.data_df.index)
         self.data_df['hl_gene'] = pandas.Series(np.full(self.data_df.shape[0], 3), index=self.data_df.index)    
@@ -136,25 +98,13 @@ class FlowPlot:
         self.choose_panel.on_change('value',lambda attr, old, new :self.change_view_list())
         self.p.xaxis.axis_label = self.data_columns[x_init_idx]
         self.p.yaxis.axis_label = self.data_columns[y_init_idx]
+        self.x = x_init_idx
+        self.y = y_init_idx
         # plot cell 
         self.r = self.p.circle(self.data_columns[x_init_idx], self.data_columns[y_init_idx],  source=self.source, view=self.view, fill_alpha=1,fill_color=color_map,line_color=None )
 
         # glygh list
         self.glylist = [self.r,]
-        '''# add quad (-> extensions)
-        pdata = pandas.read_csv(file_name, index_col=0)
-        # pdata[self.data_columns[x_init_idx]].describe()
-        hist, edges = np.histogram(pdata[self.data_columns[x_init_idx]],bins = int(10/0.05),range = [0, 10])
-        hist2, edges2 = np.histogram(pdata[self.data_columns[y_init_idx]],bins = int(10/0.05),range = [0, 10])
-        amount = pandas.DataFrame({'pdata': np.log(hist),'left': edges[:-1],'right': edges[1:]})
-        amount2 = pandas.DataFrame({'pdata': np.log(hist2),'left': edges2[:-1],'right': edges2[1:]})
-        self.q1 = self.p.quad(bottom=0,top=amount['pdata'],left=amount['left'],right=amount['right'],line_color=None,fill_color="#c3f4b2",fill_alpha=0.3,legend_label='qx')
-        self.l1 = self.p.line(x=np.linspace(0, 10, 200), y=amount['pdata'], line_color="#3333cc", line_width=2, alpha=0.3, legend_label="lx")
-        self.q2 = self.p.quad(bottom=amount2['left'],top=amount2['right'],left=0,right=amount2['pdata'],line_color=None,fill_color='#FFC125',fill_alpha=0.3,legend_label='qy')
-        self.l2 = self.p.line(x=amount2['pdata'], y=np.linspace(0, 10, 200), line_color="#ff8888", line_width=2, alpha=0.3, legend_label="ly")
-        self.p.legend.location = "center_right"
-        self.p.legend.click_policy = "hide"'''
-
         self.s_x = AutocompleteInput(title="x axis:", value=self.data_columns[x_init_idx], completions=self.data_columns, min_characters=1)
         self.s_y = AutocompleteInput(title="y axis:", value=self.data_columns[y_init_idx], completions=self.data_columns, min_characters=1)
         # Attach reaction
@@ -278,12 +228,10 @@ class FlowPlot:
         self.change_class_color.on_click(self.change_color)
 
         # Button disabled list, remember to append in each button func
-        self.button_group = [self.gate_button,self.export_button,self.remove_button,self.showall_button,self.create_group,self.rename_group,self.delete_group,
+        self.buttons_group = [self.gate_button,self.export_button,self.remove_button,self.showall_button,self.create_group,self.rename_group,self.delete_group,
                             self.show_selected_class,self.checkbox_color,self.new_class,self.merge_class,self.rename_class,self.delete_class,self.add_to,
                             self.remove_from,self.update_class,self.change_class_color]
-
-        if(module):
-            self.button_group.append(module.references())
+        self.buttons_amount = len(self.buttons_group)
         
         if self.label_existed:
             self.update_checkbox()
@@ -317,12 +265,12 @@ class FlowPlot:
 
     # Button disabled func
     def button_disabled(self):
-        for self.b in self.button_group:
+        for self.b in self.buttons_group:
             self.b.disabled = True
         
-
+ 
     def button_abled(self):
-        for self.b in self.button_group:
+        for self.b in self.buttons_group:
             self.b.disabled = False
 
     def refresh(self):
@@ -344,83 +292,104 @@ class FlowPlot:
 
     def save_profile(self):
         self.button_disabled()
-        path = 'result/'
-        self.adata.write(path+'result.h5ad')
-        self.adata.obs.to_csv(path+'cluster.csv')
-        # for cate in list(self.adata.uns['category_dict'].keys()):
-        #     self.adata.obs[cate].to_csv(path+'%s.csv'%cate)
-        #adata.uns['category_dict']('cluster name.csv') 
-        self.button_abled()
+        def next_save():
+            path = 'result/'
+            self.adata.write(path+'result.h5ad')
+            self.adata.obs.to_csv(path+'cluster.csv')
+            # for cate in list(self.adata.uns['category_dict'].keys()):
+            #     self.adata.obs[cate].to_csv(path+'%s.csv'%cate)
+            #adata.uns['category_dict']('cluster name.csv') 
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_save)
 
     def tag_func(self, selector, effector, attr, plot):
-        axis = getattr(plot, attr + "axis")
-        old_name = axis.axis_label
-        data = pandas.DataFrame(self.source.data) 
-        if plot.xaxis.axis_label != plot.yaxis.axis_label:           
-            data.drop(labels=old_name, axis=1, inplace=True)
-        axis.axis_label = selector.value
-        if len(data) != len(self.data_df):
-            if type(data['index']) == 'str':
-                data = data[data['index'].isin(list(self.adata.obs['ind']))]
-                print('int=====',data['index'],'====')
+        self.button_disabled()
+        def tag():
+            axis = getattr(plot, attr + "axis")
+            old_name = axis.axis_label
+            print('axis_label=====', axis.axis_label)
+            data = pandas.DataFrame(self.source.data) 
+            if plot.xaxis.axis_label != plot.yaxis.axis_label:           
+                data.drop(labels=old_name, axis=1, inplace=True)
+            axis.axis_label = selector.value
+            if len(data) != len(self.data_df):
+                if type(data['index']) == 'str':
+                    data = data[data['index'].isin(list(self.adata.obs['ind']))]
+                    print('int=====',data['index'],'====')
+                else:
+                    data = data[data['index'].isin(list(self.data_df.index))]
+                    print('str=====',data['index'],'====')
+            if self.log_axis.active == []:
+                data.loc[:,selector.value] = pandas.Series(list(self.data_df[selector.value]), index=data.index) 
             else:
-                data = data[data['index'].isin(list(self.data_df.index))]
-                print('str=====',data['index'],'====')
-        if self.log_axis.active == []:
-            data.loc[:,selector.value] = pandas.Series(list(self.data_df[selector.value]), index=data.index) 
-        else:
-            data.loc[:,selector.value] = pandas.Series(list(self.data_log[selector.value]), index=data.index) 
-        
-        data.drop(labels='index', axis=1, inplace=True)
-        print(data)
-        self.source.data = data
-        setattr(effector, attr, selector.value)
+                data.loc[:,selector.value] = pandas.Series(list(self.data_log[selector.value]), index=data.index) 
+            
+            data.drop(labels='index', axis=1, inplace=True)
+            print(data)
+            self.source.data = data
+            setattr(effector, attr, selector.value)
+            self.button_abled()
+        curdoc().add_next_tick_callback(tag)
 
     # Log
     def log_cb(self):
-        data = pandas.DataFrame(self.source.data) 
-        data.drop(labels='index', axis=1, inplace=True)
-        axis_label = data.columns
-        names = []
-        for name in axis_label:
-            if name not in ['color', 'hl_gene']:
-                names = names + [name]
-                if self.log_axis.active == []:
-                    data[name] = pandas.DataFrame(list(self.data_df[name]), index=data.index) 
-                else:
-                    data[name] = pandas.DataFrame(list(self.data_log[name]), index=data.index) 
-        self.source.data = data
+        self.button_disabled()
+        def log():
+            data = pandas.DataFrame(self.source.data) 
+            data.drop(labels='index', axis=1, inplace=True)
+            axis_label = data.columns
+            names = []
+            for name in axis_label:
+                if name not in ['color', 'hl_gene']:
+                    names = names + [name]
+                    if self.log_axis.active == []:
+                        data[name] = pandas.DataFrame(list(self.data_df[name]), index=data.index) 
+                    else:
+                        data[name] = pandas.DataFrame(list(self.data_log[name]), index=data.index) 
+            self.source.data = data
+            self.button_abled()
+        curdoc().add_next_tick_callback(log)
 
     # Callback of colorpicker(selection), update the selected dots with picked color
     def select_color_func(self):
-        self.cur_color = self.color_selection.color
-        self.r.selection_glyph.fill_color = self.cur_color
-        # Just to trigger plot update 
-        self.source.data["color"] = self.source.data["color"]
-        print('now color',self.r.selection_glyph.fill_color)
+        self.button_disabled()
+        def select():
+            self.cur_color = self.color_selection.color
+            self.r.selection_glyph.fill_color = self.cur_color
+            # Just to trigger plot update 
+            self.source.data["color"] = self.source.data["color"]
+            print('now color',self.r.selection_glyph.fill_color)
+            self.button_abled()
+        curdoc().add_next_tick_callback(select)
 
     # Show all, gate, and remove function
     def gate_func(self):
         self.button_disabled()
-        if len(self.view.filters) != 0:
-            indices = list(set(self.source.selected.indices)&set(self.view.filters[0].indices))
-        else:
-            indices = self.source.selected.indices
-        self.view.filters = [IndexFilter(indices)]
-        self.button_abled()
+        def next_gate():
+            if len(self.view.filters) != 0:
+                indices = list(set(self.source.selected.indices)&set(self.view.filters[0].indices))
+            else:
+                indices = self.source.selected.indices
+            self.view.filters = [IndexFilter(indices)]
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_gate)
 
     def remove_func(self):
         self.button_disabled()
-        if len(self.view.filters) == 0:
-            self.view.filters = [IndexFilter(np.object_(range(self.data_df.shape[0])))]
-        remain_indices = [x for x in self.view.filters[0].indices if x not in self.source.selected.indices]
-        self.view.filters = [IndexFilter(remain_indices)]
-        self.button_abled()
+        def next_remove():
+            if len(self.view.filters) == 0:
+                self.view.filters = [IndexFilter(np.object_(range(self.data_df.shape[0])))]
+            remain_indices = [x for x in self.view.filters[0].indices if x not in self.source.selected.indices]
+            self.view.filters = [IndexFilter(remain_indices)]
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_remove)
 
     def showall_func(self):
         self.button_disabled()
-        self.view.filters = list([])
-        self.button_abled()
+        def next_showall():
+            self.view.filters = list([])
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_showall)
 
     # Show the saved color of dots
     def correct_func(self):
@@ -429,201 +398,225 @@ class FlowPlot:
 
     # Select class group
     def choose_cat(self):
-        try: 
-            self.adata.uns['category_dict'][self.group.value]['class_name'][0]
-            self.update_checkbox()
-            print(self.adata.uns['category_dict'][self.group.value])
-            self.class_checkbox.active = [0]
-            self.show_color()
-        except:
-            self.class_checkbox.labels = ['Unassigned: color=grey, cell_nums=' + str(self.data_df.shape[0])]
-            self.class_checkbox.active = []
-        #self.text_color()
+        self.button_disabled()
+        def cat():
+            try: 
+                self.adata.uns['category_dict'][self.group.value]['class_name'][0]
+                self.update_checkbox()
+                print(self.adata.uns['category_dict'][self.group.value])
+                self.class_checkbox.active = [0]
+                self.show_color()
+            except:
+                self.class_checkbox.labels = ['Unassigned: color=grey, cell_nums=' + str(self.data_df.shape[0])]
+                self.class_checkbox.active = []
+            #self.text_color()
+            self.button_abled()
+        curdoc().add_next_tick_callback(cat)
 
     # New Category
     def new_category(self):
         self.button_disabled()
-        if self.group_name.value == '':
-            marker = str(self.p.xaxis.axis_label) + '+' + str(self.p.yaxis.axis_label)
-        else:
-            marker = self.group_name.value
-        self.adata.uns['category_dict'][marker] = pandas.DataFrame(columns=['class_name','color','cell_num'])
-        self.adata.obs[marker] = pandas.Series(index=self.data_df.index,dtype=object)
-        self.group.options = list(self.adata.uns['category_dict'].keys())
-        self.group.value = marker
-        self.group_name.value = ''
-        #print('new group',self.group.value, marker,self.group.options, '=')
-        self.button_abled()
+        def next_category():
+            if self.group_name.value == '':
+                marker = str(self.p.xaxis.axis_label) + '+' + str(self.p.yaxis.axis_label)
+            else:
+                marker = self.group_name.value
+            self.adata.uns['category_dict'][marker] = pandas.DataFrame(columns=['class_name','color','cell_num'])
+            self.adata.obs[marker] = pandas.Series(index=self.data_df.index,dtype=object)
+            self.group.options = list(self.adata.uns['category_dict'].keys())
+            self.group.value = marker
+            self.group_name.value = ''
+            #print('new group',self.group.value, marker,self.group.options, '=')
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_category)
 
     # Rename category
     def edit_category(self):   
         self.button_disabled()
-        old_name = self.group.value
-        new_name = self.group_name.value
-        self.adata.obs[new_name] = self.adata.obs.pop(old_name)
-        self.adata.uns['category_dict'][new_name] = self.adata.uns['category_dict'].pop(old_name)
-        self.group.options = list(self.adata.uns['category_dict'].keys())
-        self.group.value = new_name
-        print(self.adata.uns['category_dict'])
-        self.button_abled()
+        def next_edit():
+            old_name = self.group.value
+            new_name = self.group_name.value
+            self.adata.obs[new_name] = self.adata.obs.pop(old_name)
+            self.adata.uns['category_dict'][new_name] = self.adata.uns['category_dict'].pop(old_name)
+            self.group.options = list(self.adata.uns['category_dict'].keys())
+            self.group.value = new_name
+            print(self.adata.uns['category_dict'])
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_edit)
 
     # Delete category
     def del_category(self):
         self.button_disabled()
-        del self.adata.uns['category_dict'][self.group.value]   
-        del self.adata.obs[self.group.value]
-        self.group.options = list(self.adata.uns['category_dict'].keys())
-        if len(self.group.options) == 0:
-            self.group.value = ''
-        else:
-            self.group.value = self.group.options[0]
-        self.button_abled()
-
+        def next_del():
+            del self.adata.uns['category_dict'][self.group.value]   
+            del self.adata.obs[self.group.value]
+            self.group.options = list(self.adata.uns['category_dict'].keys())
+            if len(self.group.options) == 0:
+                self.group.value = ''
+            else:
+                self.group.value = self.group.options[0]
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_del)
 
     #### Class Callback Function #####
     # Update the label of class checkbox
     def update_checkbox(self):
-        cate = self.group.value
-        group_list = self.adata.uns['category_dict'][cate]['class_name']
-        #print('=====', group_list[0],group_list[1])
-        cls_label = []
-        num = 0
-        for i in range(self.adata.uns['category_dict'][cate].shape[0]):
-            class_name = group_list[i]
-            cell_num = len(self.data_df[self.adata.obs[cate]==group_list[i]])       
-            s = str(class_name) +  ': cell_nums=' + str(cell_num)
-            cls_label = np.append(cls_label,s)
-            num = num + cell_num
-        cls_label = np.append(cls_label,str('Unassigned: color=grey, cell_nums=' + str(self.data_df.shape[0]-num))) 
-        self.class_checkbox.labels = list(cls_label)
-        #self.text_color()
+        self.button_disabled()
+        def updata():
+            cate = self.group.value
+            group_list = self.adata.uns['category_dict'][cate]['class_name']
+            #print('=====', group_list[0],group_list[1])
+            cls_label = []
+            num = 0
+            for i in range(self.adata.uns['category_dict'][cate].shape[0]):
+                class_name = group_list[i]
+                cell_num = len(self.data_df[self.adata.obs[cate]==group_list[i]])       
+                s = str(class_name) +  ': cell_nums=' + str(cell_num)
+                cls_label = np.append(cls_label,s)
+                num = num + cell_num
+            cls_label = np.append(cls_label,str('Unassigned: color=grey, cell_nums=' + str(self.data_df.shape[0]-num))) 
+            self.class_checkbox.labels = list(cls_label)
+            #self.text_color()
+            self.button_abled()
+        curdoc().add_next_tick_callback(updata)
 
     def show_checked(self):
         self.button_disabled()
-        group = self.group.value
-        group_list = self.adata.uns['category_dict'][group]['class_name']
-        #source.selected.indices = temp[temp[cat_opt.value]==str(self.class_checkbox.active[0])].index
-        self.source.selected.indices = list(self.adata.obs[self.adata.obs[group].isin(list(group_list[i] for i in self.class_checkbox.active))]['ind'])
-        self.show_color()
-        self.button_abled()
+        def next_show():
+            group = self.group.value
+            group_list = self.adata.uns['category_dict'][group]['class_name']
+            #source.selected.indices = temp[temp[cat_opt.value]==str(self.class_checkbox.active[0])].index
+            self.source.selected.indices = list(self.adata.obs[self.adata.obs[group].isin(list(group_list[i] for i in self.class_checkbox.active))]['ind'])
+            self.show_color()
+            self.button_abled()
+            curdoc().add_next_tick_callback(next_show)
 
     # Show color on checkbox
     def text_color(self):
         self.button_disabled()
-        color_js = ''
-        try:
-            length = len(self.adata.uns['category_dict'][self.group.value]['color']) 
-            for i in range(length):
-                color_js = color_js + self.adata.uns['category_dict'][self.group.value]['color'][i] + ' '
-            self.para_color.text = color_js + color_list[18]
-        except:
-            length = 1
-            #color_js = [color_list[18]]
-            self.para_color.text = str(color_list[18])
-        self.trigger_color.text = self.trigger_color.text + '1'
-        #print('CALL',color_js)
-        self.button_abled()
-
+        def next_text():
+            color_js = ''
+            try:
+                length = len(self.adata.uns['category_dict'][self.group.value]['color']) 
+                for i in range(length):
+                    color_js = color_js + self.adata.uns['category_dict'][self.group.value]['color'][i] + ' '
+                self.para_color.text = color_js + color_list[18]
+            except:
+                length = 1
+                #color_js = [color_list[18]]
+                self.para_color.text = str(color_list[18])
+            self.trigger_color.text = self.trigger_color.text + '1'
+            #print('CALL',color_js)
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_text)
 
     # Save change of classes
     def save_class(self, cate, class_name, color, n):
-        if n == 0:
-            ind = len(self.class_checkbox.labels)-1
-        else:
-            ind = self.class_checkbox.active[0]  
-        class_label = list(self.adata.obs[cate])
-        group_list = self.adata.uns['category_dict'][cate]['class_name']
-        print(group_list)
-        for i in self.source.selected.indices:
-            class_label[i] = group_list[ind]
-            #print('i:',i)
-        self.adata.obs[cate] = class_label
-        #print(class_label)
-        cate = self.group.value
-        self.update_checkbox()
-        self.class_checkbox.active = [ind]
-        self.show_color()
-        self.correct_func()
-        #self.text_color()
+        self.button_disabled()
+        def save():
+            if n == 0:
+                ind = len(self.class_checkbox.labels)-1
+            else:
+                ind = self.class_checkbox.active[0]  
+            class_label = list(self.adata.obs[cate])
+            group_list = self.adata.uns['category_dict'][cate]['class_name']
+            print(group_list)
+            for i in self.source.selected.indices:
+                class_label[i] = group_list[ind]
+                #print('i:',i)
+            self.adata.obs[cate] = class_label
+            #print(class_label)
+            cate = self.group.value
+            self.update_checkbox()
+            self.class_checkbox.active = [ind]
+            self.show_color()
+            self.correct_func()
+            #self.text_color()
+            self.button_disabled()
+        curdoc().add_next_tick_callback(save)
 
     # New Class
     def add_entry(self):
         self.button_disabled()
-        time.sleep(8)
-        xaxis = str(self.p.xaxis.axis_label)
-        yaxis = str(self.p.yaxis.axis_label)
-        #if str(cat_opt.value) != xaxis+'+'+yaxis and str(cat_opt.value) != yaxis+'+'+xaxis:
-        if self.group.value == ' ':
-            print(str(self.group.value),xaxis+'+'+yaxis)
-            #self.class_checkbox.labels = ['no cluster: color=' + color_list[18] + ', cell_nums=' + str(self.data_df.shape[0])]
-            self.new_category()       
-        cell_num = len(self.source.selected.indices)
-        print('add cluster',self.group.value)
-        self.adata.uns['category_dict'][self.group.value].loc[len(self.adata.uns['category_dict'][self.group.value])] = {'class_name':self.class_name.value,'color':self.cur_color,'cell_num':cell_num}
-        self.save_class(self.group.value, self.class_name.value, self.cur_color, 0)
-        self.class_name.value = ''
-        self.button_abled()
+        def next_add_entry():
+            xaxis = str(self.p.xaxis.axis_label)
+            yaxis = str(self.p.yaxis.axis_label)
+            #if str(cat_opt.value) != xaxis+'+'+yaxis and str(cat_opt.value) != yaxis+'+'+xaxis:
+            if self.group.value == ' ':
+                print(str(self.group.value),xaxis+'+'+yaxis)
+                #self.class_checkbox.labels = ['no cluster: color=' + color_list[18] + ', cell_nums=' + str(self.data_df.shape[0])]
+                self.new_category()       
+            cell_num = len(self.source.selected.indices)
+            print('add cluster',self.group.value)
+            self.adata.uns['category_dict'][self.group.value].loc[len(self.adata.uns['category_dict'][self.group.value])] = {'class_name':self.class_name.value,'color':self.cur_color,'cell_num':cell_num}
+            self.save_class(self.group.value, self.class_name.value, self.cur_color, 0)
+            self.class_name.value = ''
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_add_entry)
 
     # Merge checked classes
     def merge(self):
         self.button_disabled()
-        group = self.group.value
-        if self.class_name.value == '':
-            toclass = self.adata.uns['category_dict'][group]['class_name'][self.class_checkbox.active[0]]
-            color = self.adata.uns['category_dict'][group]['color'][self.class_checkbox.active[0]]
-        else:
-            toclass = self.class_name.value
-            color = self.cur_color
-        
-        cluster_list = self.adata.uns['category_dict'][group]['class_name']
-        try:
-            for i in self.class_checkbox.active:
-                self.adata.obs[self.group.value] = self.adata.obs[self.group.value].cat.rename_categories({cluster_list[i]: toclass})
-        except:
-            self.adata.obs.loc[self.adata.obs[group].isin([cluster_list[i] for i in self.class_checkbox.active]), group] = toclass
-        count = sum([self.adata.uns['category_dict'][group].loc[i,'cell_num'] for i in self.class_checkbox.active])
-        checked_color = [self.adata.uns['category_dict'][group].loc[i,'color'] for i in self.class_checkbox.active]
-        self.adata.uns['category_dict'][group].drop(index=self.class_checkbox.active,inplace=True)
-        temp = self.adata.uns['category_dict'][group]
-        self.adata.uns['category_dict'][group] = pandas.DataFrame(columns=['class_name','color','cell_num'],index=list(range(self.adata.uns['category_dict'][group].shape[0])))
-        self.adata.uns['category_dict'][group]['class_name'] = pandas.Series(list(temp['class_name'])) 
-        self.adata.uns['category_dict'][group]['color'] = pandas.Series(list(temp['color'])) 
-        self.adata.uns['category_dict'][group]['cell_num'] = pandas.Series(list(temp['cell_num'])) 
-        self.adata.uns['category_dict'][group].loc[self.adata.uns['category_dict'][group].shape[0]] = {'class_name':toclass,'color':color,'cell_num':count}
-        del_list2 = self.class_checkbox.labels
-        for i in range(len(self.class_checkbox.active)):
-            del del_list2[self.class_checkbox.active[i]-i]
-        tt = del_list2[-1]
-        del_list2[-1] = str(toclass+ ': cell_nums='+ str(count))
-        del_list2 = del_list2 + [tt]
-        self.class_checkbox.labels = del_list2
-        self.class_checkbox.active = []
-        col_list = [color if self.source.data['color'][i] in checked_color else self.source.data['color'][i] for i in range(self.data_df.shape[0])]
-        self.source.data['color'] = col_list
-        # self.text_color()
-        self.button_abled()
+        def next_merge():
+            group = self.group.value
+            if self.class_name.value == '':
+                toclass = self.adata.uns['category_dict'][group]['class_name'][self.class_checkbox.active[0]]
+                color = self.adata.uns['category_dict'][group]['color'][self.class_checkbox.active[0]]
+            else:
+                toclass = self.class_name.value
+                color = self.cur_color
+            
+            cluster_list = self.adata.uns['category_dict'][group]['class_name']
+            try:
+                for i in self.class_checkbox.active:
+                    self.adata.obs[self.group.value] = self.adata.obs[self.group.value].cat.rename_categories({cluster_list[i]: toclass})
+            except:
+                self.adata.obs.loc[self.adata.obs[group].isin([cluster_list[i] for i in self.class_checkbox.active]), group] = toclass
+            count = sum([self.adata.uns['category_dict'][group].loc[i,'cell_num'] for i in self.class_checkbox.active])
+            checked_color = [self.adata.uns['category_dict'][group].loc[i,'color'] for i in self.class_checkbox.active]
+            self.adata.uns['category_dict'][group].drop(index=self.class_checkbox.active,inplace=True)
+            temp = self.adata.uns['category_dict'][group]
+            self.adata.uns['category_dict'][group] = pandas.DataFrame(columns=['class_name','color','cell_num'],index=list(range(self.adata.uns['category_dict'][group].shape[0])))
+            self.adata.uns['category_dict'][group]['class_name'] = pandas.Series(list(temp['class_name'])) 
+            self.adata.uns['category_dict'][group]['color'] = pandas.Series(list(temp['color'])) 
+            self.adata.uns['category_dict'][group]['cell_num'] = pandas.Series(list(temp['cell_num'])) 
+            self.adata.uns['category_dict'][group].loc[self.adata.uns['category_dict'][group].shape[0]] = {'class_name':toclass,'color':color,'cell_num':count}
+            del_list2 = self.class_checkbox.labels
+            for i in range(len(self.class_checkbox.active)):
+                del del_list2[self.class_checkbox.active[i]-i]
+            tt = del_list2[-1]
+            del_list2[-1] = str(toclass+ ': cell_nums='+ str(count))
+            del_list2 = del_list2 + [tt]
+            self.class_checkbox.labels = del_list2
+            self.class_checkbox.active = []
+            col_list = [color if self.source.data['color'][i] in checked_color else self.source.data['color'][i] for i in range(self.data_df.shape[0])]
+            self.source.data['color'] = col_list
+            # self.text_color()
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_merge)
 
     # Delete Class
     def del_class(self):
         self.button_disabled()
-        group = self.group.value
-        cluster_list = self.adata.uns['category_dict'][group]['class_name']
-        self.adata.obs.loc[self.adata.obs[group].isin([cluster_list[i] for i in self.class_checkbox.active]),group] = np.nan
-        checked_color = [self.adata.uns['category_dict'][group].loc[i,'color'] for i in self.class_checkbox.active]
-        self.adata.uns['category_dict'][group].drop(index=self.class_checkbox.active,inplace=True)
-        
-        del_list2 = self.class_checkbox.labels
-        for i in range(len(self.class_checkbox.active)):
-            del del_list2[self.class_checkbox.active[i]-i]
-        del_list2[-1] = str('unassigned: color=grey, cell_nums=' + str(self.adata.obs.shape[0] - sum(self.adata.uns['category_dict'][group]['cell_num'])))
-        self.class_checkbox.labels = del_list2
-        self.class_checkbox.active = []
-        self.adata.uns['category_dict'][group] = pandas.DataFrame(self.adata.uns['category_dict'][group], index=list(range(self.adata.uns['category_dict'][group].shape[0])))
-        col_list = [color_list[18] if self.source.data['color'][i] in checked_color else self.source.data['color'][i] for i in range(self.data_df.shape[0])]
-        self.source.data['color'] = col_list
-        # self.text_color()
-        time.sleep(3)
-        self.button_abled()
+        def next_del_claass():
+            group = self.group.value
+            cluster_list = self.adata.uns['category_dict'][group]['class_name']
+            self.adata.obs.loc[self.adata.obs[group].isin([cluster_list[i] for i in self.class_checkbox.active]),group] = np.nan
+            checked_color = [self.adata.uns['category_dict'][group].loc[i,'color'] for i in self.class_checkbox.active]
+            self.adata.uns['category_dict'][group].drop(index=self.class_checkbox.active,inplace=True)
+            
+            del_list2 = self.class_checkbox.labels
+            for i in range(len(self.class_checkbox.active)):
+                del del_list2[self.class_checkbox.active[i]-i]
+            del_list2[-1] = str('unassigned: color=grey, cell_nums=' + str(self.adata.obs.shape[0] - sum(self.adata.uns['category_dict'][group]['cell_num'])))
+            self.class_checkbox.labels = del_list2
+            self.class_checkbox.active = []
+            self.adata.uns['category_dict'][group] = pandas.DataFrame(self.adata.uns['category_dict'][group], index=list(range(self.adata.uns['category_dict'][group].shape[0])))
+            col_list = [color_list[18] if self.source.data['color'][i] in checked_color else self.source.data['color'][i] for i in range(self.data_df.shape[0])]
+            self.source.data['color'] = col_list
+            # self.text_color()
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_del_claass)
 
     # Rename class
     def rename(self):
@@ -648,132 +641,164 @@ class FlowPlot:
     # Add dots to cluster
     def save_cls_button(self):
         self.button_disabled()
-        class_name = self.adata.uns['category_dict'][self.group.value]['class_name'][self.class_checkbox.active[0]]
-        color = self.adata.uns['category_dict'][self.group.value]['color'][self.class_checkbox.active[0]]
-        cell_num = len(self.source.selected.indices)
-        self.save_class(self.group.value, class_name, color, cell_num)
-        print(self.adata.uns['category_dict'][self.group.value])
-        self.button_abled()
+        def next_save():
+            class_name = self.adata.uns['category_dict'][self.group.value]['class_name'][self.class_checkbox.active[0]]
+            color = self.adata.uns['category_dict'][self.group.value]['color'][self.class_checkbox.active[0]]
+            cell_num = len(self.source.selected.indices)
+            self.save_class(self.group.value, class_name, color, cell_num)
+            print(self.adata.uns['category_dict'][self.group.value])
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_save)
 
     # Remove dots from cluster
     def remove_dot(self):
         self.button_disabled()
-        cl_label = self.adata.obs[self.group.value]
-        checked_list = list(self.adata.uns['category_dict'][self.group.value].loc[[j for j in self.class_checkbox.active],'class_name'])
-        print(checked_list)
-        for i in self.source.selected.indices:
-            if cl_label[i] in checked_list:
-                cl_label[i] = np.nan
-        self.adata.obs[self.group.value] = cl_label
-        self.update_checkbox()
-        self.show_color()
-        self.button_abled()
+        def next_remove():
+            cl_label = self.adata.obs[self.group.value]
+            checked_list = list(self.adata.uns['category_dict'][self.group.value].loc[[j for j in self.class_checkbox.active],'class_name'])
+            print(checked_list)
+            for i in self.source.selected.indices:
+                if cl_label[i] in checked_list:
+                    cl_label[i] = np.nan
+            self.adata.obs[self.group.value] = cl_label
+            self.update_checkbox()
+            self.show_color()
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_remove)
 
     # Update class
     def update_clus(self):
         self.button_disabled()
-        ind = self.class_checkbox.active[0]
-        #adata.obs[adata.obs[cat_opt.value]==str(ind)].loc[cat_opt.value] = pandas.Series(index=[0],dtype=object)[0]
-        cl_label = self.adata.obs[self.group.value]
-        group_list = self.adata.uns['category_dict'][self.group.value]['class_name']
-        cl_label[self.adata.obs[self.group.value]==group_list[ind]] = np.NAN
-        for i in self.source.selected.indices:
-            cl_label[i] = group_list[ind]
-        self.adata.obs[self.group.value] = cl_label
-        self.update_checkbox()
-        self.show_color()
-        #self.text_color()
-        self.button_abled()
+        def next_update():
+            ind = self.class_checkbox.active[0]
+            #adata.obs[adata.obs[cat_opt.value]==str(ind)].loc[cat_opt.value] = pandas.Series(index=[0],dtype=object)[0]
+            cl_label = self.adata.obs[self.group.value]
+            group_list = self.adata.uns['category_dict'][self.group.value]['class_name']
+            cl_label[self.adata.obs[self.group.value]==group_list[ind]] = np.NAN
+            for i in self.source.selected.indices:
+                cl_label[i] = group_list[ind]
+            self.adata.obs[self.group.value] = cl_label
+            self.update_checkbox()
+            self.show_color()
+            #self.text_color()
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_update)
 
     # change color of class
     def change_color(self):
         self.button_disabled()
-        color_l = self.source.data['color']
-        self.show_checked()
-        for i in self.source.selected.indices:
-            color_l[i] = self.cur_color
-        self.source.data['color'] = color_l
-        self.adata.uns['category_dict'][self.group.value]['color'][[i for i in self.class_checkbox.active]] = self.cur_color
-        self.text_color()
-        #print(hide.value,now_color)
-        self.button_abled()
+        def next_color():
+            color_l = self.source.data['color']
+            self.show_checked()
+            for i in self.source.selected.indices:
+                color_l[i] = self.cur_color
+            self.source.data['color'] = color_l
+            self.adata.uns['category_dict'][self.group.value]['color'][[i for i in self.class_checkbox.active]] = self.cur_color
+            self.text_color()
+            #print(hide.value,now_color)
+            self.button_abled()
+        curdoc().add_next_tick_callback(next_color)
 
     #### Highly variable gene functions #####
     def show_colorbar(self, marker):
-        if marker:
-            updated_color = self.data_df.loc[:,self.ct_marker.value]
-        else:
-            updated_color = self.data_df.loc[:,self.hl_input.value]
-        updated_color = (updated_color-min(updated_color))*(self.hl_bar_map.high - self.hl_bar_map.low)/(max(updated_color)-min(updated_color))
-        self.source.data["hl_gene"] = list(updated_color) 
+        self.button_disabled()
+        def show():
+            if marker:
+                updated_color = self.data_df.loc[:,self.ct_marker.value]
+            else:
+                updated_color = self.data_df.loc[:,self.hl_input.value]
+            updated_color = (updated_color-min(updated_color))*(self.hl_bar_map.high - self.hl_bar_map.low)/(max(updated_color)-min(updated_color))
+            self.source.data["hl_gene"] = list(updated_color) 
+            self.button_abled()
+        curdoc().add_next_tick_callback(show)
     
     def hl_filter(self):
-        if self.view.filters == []:
-            filter_list = list(range(self.data_df.shape[0]))
-        else:
-            print(self.view.filters)
-            filter_list = list(self.view.filters[0].indices)
-        if self.hl_filt.value == 'Gene Expression >':
-            index_list = list(self.adata.obs[self.data_df[self.hl_input.value] > float(self.hl_filt_num.value)]['ind'])
-        elif self.hl_filt.value == 'Gene Expression <':
-            index_list = list(self.adata.obs[self.data_df[self.hl_input.value] < float(self.hl_filt_num.value)]['ind'])
-        else:
-            index_list = list(self.adata.obs[self.data_df[self.hl_input.value] == float(self.hl_filt_num.value)]['ind'])
-        index_list = set(index_list)&set(filter_list)
-        self.source.selected.indices = list(index_list)
-        #new_r = show_colorbar()
-        self.r.selection_glyph = Circle(fill_alpha=1,fill_color='Black')
-        #print(self.source.selected.indices)
+        self.button_disabled()
+        def h1():
+            if self.view.filters == []:
+                filter_list = list(range(self.data_df.shape[0]))
+            else:
+                print(self.view.filters)
+                filter_list = list(self.view.filters[0].indices)
+            if self.hl_filt.value == 'Gene Expression >':
+                index_list = list(self.adata.obs[self.data_df[self.hl_input.value] > float(self.hl_filt_num.value)]['ind'])
+            elif self.hl_filt.value == 'Gene Expression <':
+                index_list = list(self.adata.obs[self.data_df[self.hl_input.value] < float(self.hl_filt_num.value)]['ind'])
+            else:
+                index_list = list(self.adata.obs[self.data_df[self.hl_input.value] == float(self.hl_filt_num.value)]['ind'])
+            index_list = set(index_list)&set(filter_list)
+            self.source.selected.indices = list(index_list)
+            #new_r = show_colorbar()
+            self.r.selection_glyph = Circle(fill_alpha=1,fill_color='Black')
+            #print(self.source.selected.indices)
+            self.button_abled()
+        curdoc().add_next_tick_callback(h1)
 
     def marker_choice(self):
-        print('filename change: ',self.marker_file.filename)
-        if True:
-            marker = pandas.read_csv('data/' + self.marker_file.filename)
+        self.button_abled()
+        def marker():
+            print('filename change: ',self.marker_file.filename)
+            if True:
+                marker = pandas.read_csv('data/' + self.marker_file.filename)
 
-            cell_type = list(set(marker['cell_type']))
-            print(cell_type)
-            self.cell_type.options = ['No cell type'] + cell_type
-            self.cell_type.value = cell_type[0]
-            #self.change_marker_ct()
-
-        else:
-            print('PROBLEM')
-            attention = Div(text='No marker gene list found!')
-            curdoc().add_root(attention)
+                cell_type = list(set(marker['cell_type']))
+                print(cell_type)
+                self.cell_type.options = ['No cell type'] + cell_type
+                self.cell_type.value = cell_type[0]
+                #self.change_marker_ct()
+            else:
+                print('PROBLEM')
+                attention = Div(text='No marker gene list found!')
+                curdoc().add_root(attention)
+            self.button_abled()
+        curdoc().add_next_tick_callback(marker)
 
     def change_marker_ct(self):
-        cell_type = self.cell_type.value
-        marker = pandas.read_csv('data/' + self.marker_file.filename)
-        print('+++++++marker gene')
-        marker_list = list(marker[marker['cell_type']==cell_type].loc[:,'marker_gene'])
-        self.ct_marker.options = marker_list
-        self.ct_marker.value = marker_list[0]
+        self.button_disabled()
+        def ct():
+            cell_type = self.cell_type.value
+            marker = pandas.read_csv('data/' + self.marker_file.filename)
+            print('+++++++marker gene')
+            marker_list = list(marker[marker['cell_type']==cell_type].loc[:,'marker_gene'])
+            self.ct_marker.options = marker_list
+            self.ct_marker.value = marker_list[0]
+            self.button_abled()
+        curdoc().add_next_tick_callback(ct)
 
 
     def change_select(self, main_plot):
         main_plot.source.selected.indices = self.source.selected.indices
 
     def change_view(self,main_plot):
-        self.source.data = dict(main_plot.source.data)
-        self.adata = main_plot.adata
-        self.data_df = main_plot.data_df
-        self.r.glyph.x = main_plot.r.glyph.x
-        self.r.glyph.y = main_plot.r.glyph.y
-        self.p.xaxis.axis_label = main_plot.p.xaxis.axis_label
-        self.p.yaxis.axis_label = main_plot.p.yaxis.axis_label
-        self.view.filters = main_plot.view.filters
+        self.button_disabled()
+        def view():
+            self.source.data = dict(main_plot.source.data)
+            self.adata = main_plot.adata
+            self.pdata = main_plot.pdata
+            self.data_df = main_plot.data_df
+            self.r.glyph.x = main_plot.r.glyph.x
+            self.r.glyph.y = main_plot.r.glyph.y
+            self.p.xaxis.axis_label = main_plot.p.xaxis.axis_label
+            self.p.yaxis.axis_label = main_plot.p.yaxis.axis_label
+            self.view.filters = main_plot.view.filters
+            self.button_abled()
+        curdoc().add_next_tick_callback(view)
 
     #### Other Functions ####
     # Show color of category
     def show_color(self):
-        col_list = [color_list[18] for i in range(self.data_df.shape[0])]
-        #print(col_list)
-        for i in range(len(self.adata.uns['category_dict'][self.group.value])):
-            #print(self.adata.obs.columns)
-            inds = list(self.adata.obs[self.adata.obs[self.group.value]==self.adata.uns['category_dict'][self.group.value]['class_name'][i]]['ind'])
-            color = self.adata.uns['category_dict'][self.group.value]['color'][i]
-            col_list = [color if j in inds else col_list[j] for j in range(len(col_list))] 
-        self.source.data['color'] = col_list
+        self.button_disabled()
+        def color():
+            col_list = [color_list[18] for i in range(self.data_df.shape[0])]
+            #print(col_list)
+            for i in range(len(self.adata.uns['category_dict'][self.group.value])):
+                #print(self.adata.obs.columns)
+                inds = list(self.adata.obs[self.adata.obs[self.group.value]==self.adata.uns['category_dict'][self.group.value]['class_name'][i]]['ind'])
+                color = self.adata.uns['category_dict'][self.group.value]['color'][i]
+                col_list = [color if j in inds else col_list[j] for j in range(len(col_list))] 
+            self.source.data['color'] = col_list
+            self.button_abled()
+        curdoc().add_next_tick_callback(color)
 
 class data_trans():
     def __init__(self,
@@ -798,33 +823,34 @@ class data_trans():
 
 class CreateTool:
     
-    def __init__(self,adata):
+    def __init__(self,adata,pdata):
         self.adata = adata
+        self.pdata = pdata
         self.hl_gene_map = log_cmap('hl_gene', cc.kbc[::-1], low=1, high=20) # color log map
 
     def set_function(self, effector, attr, value):
         setattr(effector, attr, value)
         
     def base_tool(self):        
-        module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
+        # module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
         module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
-        Figure = FlowPlot(data=self.adata, color_map='color', module=module_select)
+        Figure = FlowPlot(data=self.adata, pdata=self.pdata, color_map='color')
 
         layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, module_select), # module_checkbox added
             column(Figure.choose_panel,Figure.s_x, Figure.s_y, Figure.log_axis, Figure.color_selection, Figure.gate_button, Figure.remove_button, Figure.showall_button, Figure.export_button),
             column(Figure.group, Figure.group_name, Figure.create_group, Figure.rename_group, Figure.delete_group,
              Figure.class_name, Figure.new_class, Figure.checkbox_color, Figure.class_checkbox),
-            column(Figure.show_selected_class, Figure.add_to, Figure.remove_from, Figure.update_class, 
+            column(Figure.show_selected_class, Figure.add_to, Figure.remove_from, Figure.update_class,
              Figure.rename_class,  Figure.merge_class, Figure.delete_class))
 
         # attr refers to the changed attribute’s name, and old and new refer to the previous and updated values of the attribute
-        module_checkbox.on_change('active', lambda attr, old, new: load_module(list(module_checkbox.active))) 
+        # module_checkbox.on_change('active', lambda attr, old, new: load_module(list(module_checkbox.active))) 
         # active: The list of indices of selected check boxes.
         module_select.on_change('value', lambda attr, old, new: load_module(module_select.value)) 
         return Figure, layout
     
     def highlight_gene(self, main_plot):
-        hl_figure = FlowPlot(data=self.adata, color_map=self.hl_gene_map, module=None, main_plot=main_plot,title='Highlight Gene Plot') # input main_plot
+        hl_figure = FlowPlot(data=self.adata, pdata=self.pdata, color_map=self.hl_gene_map, main_plot=main_plot,title='Highlight Gene Plot') # input main_plot
         #hl_figure.p.visible = False
         #hl_figure.marker_choice()
         layout = row(hl_figure.p, 
@@ -853,7 +879,7 @@ color_list = d3['Category20c'][20]
 Main_plot = FlowPlot
 
 class connection:
-    global file_name
+    global path_, file_name
     def __init__(self):
         self.Figure = Main_plot
     
@@ -880,6 +906,10 @@ class connection:
     def get_anndata(self):
         adata = self.Figure.adata.copy()
         return adata
+
+    def get_pandata(self):
+        pdata = self.Figure.pdata.copy()
+        return pdata
     
     def set_anndata(self, adata):
         self.Figure.adata = adata
@@ -941,7 +971,6 @@ class connection:
         self.Figure.update_checkbox()
         self.Figure.show_color()
 
-        
 
     def set_varm(self, varm):
         self.Figure.adata.varm = varm
@@ -967,6 +996,9 @@ class connection:
     def get_data_file(self):
         return file_name
 
+    def get_extension_file(self):
+        return path_
+
 
 class plot_function:
     def __init__(self):
@@ -986,6 +1018,11 @@ class plot_function:
     
     def get_glyph_list(self):
         return self.Figure.glylist
+    
+    def get_buttons_group(self):
+        return self.Figure.buttons_group, self.Figure.buttons_amount
+    def tweak_buttons_group(self, buttons_g):
+        self.Figure.buttons_group = buttons_g
 
 
 
@@ -1030,6 +1067,11 @@ def load_options():
     
 def load_module(active):
     global path_
+    plot = plot_function()
+    buttons_g, buttons_n = plot.get_buttons_group() # buttons group, buttons number
+    # delete last extended buttons
+    for i in range(buttons_n, len(buttons_g)):
+        buttons_g.pop()
     buttons = curdoc().get_model_by_name('module_buttons')
     try:
         name_list = os.listdir(path_)
@@ -1042,13 +1084,6 @@ def load_module(active):
         but = curdoc().get_model_by_name(name)
         div = Div(text='')
         if name == active:
-            if but != None and but.visible == False:
-                but.visible = True
-                
-                but.children.append(div)
-                continue
-            if but != None and but.visible == True:
-                continue
             sys.path = [path_] + sys.path
             module_name = 'extension.' + name + '.module'
             try:
@@ -1058,22 +1093,29 @@ def load_module(active):
                 new_class = mod.new_layout()
             clear = Button(label='Clear the figures!', button_type='warning', name=str(ind))
             clear.on_click(lambda: clear_cb(clear.name))
-
-            # print('new_class:', new_class)
-            '''
-            new_buttons: column(sc_cluster_step1,
-                                column(row(cl_input1, cl_input2 ,cl_input3),sc_cluster_step2))
-            '''
             new_buttons = column(new_class.add(), clear)
+            # append extended buttons
+            buttons_g = find_buttons(new_buttons, buttons_g)
             '''
-            对column的无限套娃咋办
+            print('after append=====')
+            for i in range(buttons_n, len(buttons_g)):
+                print(buttons_g[i])
             '''
+            plot.tweak_buttons_group(buttons_g)
+            if but != None and but.visible == False:
+                but.visible = True # already created model
+                
+                but.children.append(div)
+                continue
+            if but != None and but.visible == True:
+                continue
             print('new_buttons:', new_buttons)
             new_buttons.sizing_mode = 'scale_height'
             new_buttons.name = name
             new_buttons.children.append(div)
             curdoc().add_root(new_buttons)
             layouts = column(layouts, new_buttons)
+
 # D:\anaconda\Lib\site-packages\scpantheon\sourceqt.py
         else:
             if but != None:
@@ -1083,7 +1125,15 @@ def load_module(active):
     if curdoc().get_model_by_name('module_buttons') == None:
         buttons.name = 'module_buttons'
     # curdoc().add_root(buttons)
-    
+
+def find_buttons(buttons, buttons_g):
+    for child in buttons.children:
+        try:
+            find_buttons(child, buttons_g)
+        except:
+            buttons_g.append(child)
+
+    return buttons_g
 
 def clear_cb(ind):
     module_checkbox = curdoc().get_model_by_name('modules_checkbox')
@@ -1107,7 +1157,6 @@ def upload_callback():
 
     # path_, file_name = fetch()
     loading_remind = Div(text='Loading data……')
-    print('curdoc:',curdoc())
     curdoc().add_root(loading_remind) 
     print('===loading finished=====')
     filename = os.path.split(file_name)[1]      
@@ -1117,24 +1166,27 @@ def upload_callback():
                                                       # [-1] means the last tuple: the type 
         if filetype == 'csv':
             adata = anndata.read_csv(file_name) 
+            pdata = pandas.read_csv(file_name, index_col=0)
             print('csv')
         elif filetype == 'h5ad':
             adata = anndata.read(file_name)
+            pdata = pandas.read(file_name, index_col=0)
             print('h5ad')
         elif filetype == 'mtx':
             adata = sc.read_10x_mtx(
                 'data/hg19/',  # the directory with the `.mtx` file
                 var_names='gene_symbols',                # use gene symbols for the variable names (variables-axis index)
                 cache=True)                              # write a cache file for faster subsequent reading
+            pdata = adata
         print(file_name)
         # Figure, layout
-        mainplot, panel1 = CreateTool(adata=adata).base_tool() # Mainplot: figure, layout
+        mainplot, panel1 = CreateTool(adata=adata,pdata=pdata).base_tool() # Mainplot: figure, layout
         print('===mainplot finished=====')
         Main_plot = mainplot
         # Highlight Gene Figure,
-        hl_figure, panel2 = CreateTool(adata=adata).highlight_gene(mainplot)
+        hl_figure, panel2 = CreateTool(adata=adata,pdata=pdata).highlight_gene(mainplot)
         print('====highlight finished=====')
-        tab = CreateTool(adata).multi_panel([mainplot,hl_figure], [panel1,panel2], ['Main View', 'Highlight Gene'], update_view=True)
+        tab = CreateTool(adata,pdata).multi_panel([mainplot,hl_figure], [panel1,panel2], ['Main View', 'Highlight Gene'], update_view=True)
         print('====tab====')
         curdoc().remove_root(loading_remind)
         curdoc().add_root(tab)
@@ -1194,8 +1246,8 @@ def creatable():
 def fetch():
     mycursor.execute("SELECT value FROM vlist")
     result = mycursor.fetchall()
-    print("=== test result ===")
-    for x in result:
-        print(x)
+    print("=== mysql test ===")
+    print('extension path:(',result[-2][0],')')
+    print('Data path:(',result[-1][0],')')
     print("=== test finished ===")
     return result[-2][0], result[-1][0]

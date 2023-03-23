@@ -1246,8 +1246,8 @@ def creatable():
 def fetch():
     mycursor.execute("SELECT value FROM vlist")
     result = mycursor.fetchall()
-    print("=== test result ===")
-    for x in result:
-        print(x)
+    print("=== mysql test ===")
+    print('extension path:(',result[-2][0],')')
+    print('Data path:(',result[-1][0],')')
     print("=== test finished ===")
     return result[-2][0], result[-1][0]

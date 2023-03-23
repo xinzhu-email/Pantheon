@@ -88,13 +88,15 @@ class Ui_Dialog(QWidget, object):
         self.layout2.addWidget(self.btn_Extensions)
         self.layout2.addWidget(self.btn_Data)
 
-
         self.retranslateUi(Dialog) 
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def loadPage(self):
+        Func = open("embed.html","w")
+        Func.write("<!doctype html>\n<html>\n<iframe src='http://localhost:5006/'\nname='thumbnails'\nframeborder='0'\nstyle='width: 100%; height: 2000px;'>\n</html>")
+        Func.close()
         with open('embed.html', 'r') as f:
             html = f.read()
             self.webEngineView.setHtml(html)

@@ -1,2 +1,0 @@
-import source
-source.main()

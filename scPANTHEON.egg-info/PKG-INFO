@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: scPANTHEON
+Version: 0.1.1.4.1
+Summary: A graphical interface for single cell analysis.
+Home-page: https://github.com/xinzhu-email/Pantheon
+Author: xinzhu
+Author-email: xinzhu.jiang@sjtu.edu.cn
+License: MIT
+Provides-Extra: tomas
