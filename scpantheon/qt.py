@@ -2,15 +2,16 @@ import os, sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5 import QtCore, QtGui
-import mysql.connector
+# import mysql.connector
 from pathlib import Path
+from appdirs import AppDirs
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 try:
     from source import connection
 except:
     from scpantheon.source import connection
-
+'''
 def myconnect():
     global mydb,mycursor
     mydb = mysql.connector.connect(
@@ -40,7 +41,7 @@ def insert(path): # str -> tuple
     print(thistuple)
     mycursor.execute(insert, thistuple)
     mydb.commit()
-    
+'''
 
 class Ui_Dialog(QWidget, object):
     def setupUi(self, Dialog):
@@ -107,7 +108,8 @@ class Ui_Dialog(QWidget, object):
             print("\nchoose canceled")
             return
 
-        insert(Extensions)
+        # write extension into user_data_dir
+        text_create('extension_path', Extensions)
         print("\nExtensions:",Extensions)
 
     def slot_btn_Data(self):
@@ -117,7 +119,8 @@ class Ui_Dialog(QWidget, object):
             print("\nchoose canceled")
             return
 
-        insert(Data)
+        # write Data into user_data_dir
+        text_create('data_file', Data)
         print("\nData:",Data)
 
 
@@ -126,12 +129,39 @@ class Ui_Dialog(QWidget, object):
         Dialog.setWindowTitle(_translate("ScPantheon", "ScPantheon"))
 
 
+def mkdir(path):
+    isExists = os.path.exists(path)
+    if not isExists:
+        os.makedirs(path)
+        print(path + 'successful creat')
+        return True
+    else:
+        print(path + 'already exist')
+
+
+def text_create(name, msg):
+    path = dir + "\\" + name + '.txt'
+    print("-========- path:", path)
+    file = open(path, 'w')
+    file.write(msg)
+    file.close()
+
+
 def main():
-    # Create mysql database
+    global dir
+    # create the file to write data
+    appname = "scpantheon"
+    appauthor = "xinzhu"
+    version = "0.2.1"
+    dirs = AppDirs(appname, appauthor, version)
+    dir = dirs.user_data_dir
+    mkdir(path=dir)
+    '''# Create mysql database
     try: myconnect()
     except: creatbase()
     try:creatable() # vlist is the table name
-    except: ()
+    except: ()'''
+    
     # create qt app
     app = QApplication(sys.argv)
     '''settings = QtWebEngineWidgets.QWebEngineSettings.defaultSettings()

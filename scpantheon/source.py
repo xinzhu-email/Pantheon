@@ -19,8 +19,10 @@ import scanpy as sc
 import os, sys
 import importlib
 from PyQt5.QtWidgets import *
-import mysql.connector
+# import mysql.connector
 import time
+import scpantheon
+from appdirs import AppDirs
 
 
 TOOLTIPS = [
@@ -28,7 +30,7 @@ TOOLTIPS = [
         ("color", "@color"),
 ]
 class FlowPlot:
-    global file_name
+    global data_file
     def __init__(self, data=None, pdata=None, color_map=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
         self.adata = data
         self.pdata = pdata
@@ -879,7 +881,7 @@ color_list = d3['Category20c'][20]
 Main_plot = FlowPlot
 
 class connection:
-    global path_, file_name
+    global extension_path, data_file
     def __init__(self):
         self.Figure = Main_plot
     
@@ -994,10 +996,10 @@ class connection:
         self.Figure.s_y.value = view_list[-2] + str(1)
     
     def get_data_file(self):
-        return file_name
+        return data_file
 
     def get_extension_file(self):
-        return path_
+        return extension_path
 
 
 class plot_function:
@@ -1056,17 +1058,17 @@ class plot_function:
 
 # get extensions 
 def load_options():
-    global path_
+    global extension_path
     try:
-        name_list = os.listdir(path_)
+        name_list = os.listdir(extension_path)
         # listdir: list of file under the path
     except:
         name_list = []
     return name_list
-    
+
     
 def load_module(active):
-    global path_
+    global extension_path
     plot = plot_function()
     buttons_g, buttons_n = plot.get_buttons_group() # buttons group, buttons number
     # delete last extended buttons
@@ -1074,7 +1076,7 @@ def load_module(active):
         buttons_g.pop()
     buttons = curdoc().get_model_by_name('module_buttons')
     try:
-        name_list = os.listdir(path_)
+        name_list = os.listdir(extension_path)
     except:
         return     
     layouts = column()
@@ -1084,23 +1086,18 @@ def load_module(active):
         but = curdoc().get_model_by_name(name)
         div = Div(text='')
         if name == active:
-            sys.path = [path_] + sys.path
-            module_name = 'extension.' + name + '.module'
+            sys.path.append(extension_path)
+            module_name = name + '.module'
             try:
                 new_class = module_name.new_layout()
             except:            
-                mod = importlib.import_module(module_name)
+                mod = importlib.import_module(module_name) # usual way
                 new_class = mod.new_layout()
             clear = Button(label='Clear the figures!', button_type='warning', name=str(ind))
             clear.on_click(lambda: clear_cb(clear.name))
             new_buttons = column(new_class.add(), clear)
             # append extended buttons
             buttons_g = find_buttons(new_buttons, buttons_g)
-            '''
-            print('after append=====')
-            for i in range(buttons_n, len(buttons_g)):
-                print(buttons_g[i])
-            '''
             plot.tweak_buttons_group(buttons_g)
             if but != None and but.visible == False:
                 but.visible = True # already created model
@@ -1151,26 +1148,26 @@ def clear_cb(ind):
 
 def upload_callback(): 
 
-    global path_
-    global file_name
+    global extension_path
+    global data_file
     global mycursor, Main_plot
 
     # path_, file_name = fetch()
     loading_remind = Div(text='Loading data……')
     curdoc().add_root(loading_remind) 
     print('===loading finished=====')
-    filename = os.path.split(file_name)[1]      
+    filename = os.path.split(data_file)[1]      
     def load():
         global Main_plot
         filetype = os.path.splitext(filename)[-1][1:] # split the filename and the type
                                                       # [-1] means the last tuple: the type 
         if filetype == 'csv':
-            adata = anndata.read_csv(file_name) 
-            pdata = pandas.read_csv(file_name, index_col=0)
+            adata = anndata.read_csv(data_file) 
+            pdata = pandas.read_csv(data_file, index_col=0)
             print('csv')
         elif filetype == 'h5ad':
-            adata = anndata.read(file_name)
-            pdata = pandas.read(file_name, index_col=0)
+            adata = anndata.read(data_file)
+            pdata = pandas.read(data_file, index_col=0)
             print('h5ad')
         elif filetype == 'mtx':
             adata = sc.read_10x_mtx(
@@ -1178,7 +1175,7 @@ def upload_callback():
                 var_names='gene_symbols',                # use gene symbols for the variable names (variables-axis index)
                 cache=True)                              # write a cache file for faster subsequent reading
             pdata = adata
-        print(file_name)
+        print(data_file)
         # Figure, layout
         mainplot, panel1 = CreateTool(adata=adata,pdata=pdata).base_tool() # Mainplot: figure, layout
         print('===mainplot finished=====')
@@ -1195,9 +1192,30 @@ def upload_callback():
     curdoc().add_next_tick_callback(load)
 
 
+def openreadtxt(dir):
+    e_file = open(dir + '/' + 'extension_path.txt', 'r')
+    e_path = e_file.readline()
+    e_file.close()
+    print('-======- e_path:', e_path)
+    d_file = open(dir + '/' + 'data_file.txt', 'r')
+    data = d_file.readline()
+    print('-======- data:', data)
+    d_file.close()
+    return e_path, data
+
+
 def main(doc):
-    global Main_plot, path_, file_name, mycursor
-    print('curdoc:',curdoc(),'\ndoc:', doc)
+    global Main_plot, extension_path, data_file, dir
+    appname = "scpantheon"
+    appauthor = "xinzhu"
+    version = "0.2.1"
+    dirs = AppDirs(appname, appauthor, version)
+    dir = dirs.user_data_dir
+    # read path_ and file from user_data_dir
+    extension_path, data_file = openreadtxt(dir) 
+    
+    '''
+    global mycursor
     try: myconnect()
     except:
         try: creatbase()
@@ -1210,8 +1228,9 @@ def main(doc):
         print('Please Choose your Extensions and Data paths\n')
         Error_remind = Div(text='Please Choose your Extensions and Data path...')
         doc.add_root(Error_remind)
-    
-    '''upload_button = Button(label="Show")
+    '''
+    '''print('curdoc:',curdoc(),'\ndoc:', doc)
+    upload_button = Button(label="Show")
     upload_button.on_event(ButtonClick, upload_callback)
     curdoc().add_root(upload_button) # 这就是那个按钮'''
 
@@ -1221,7 +1240,7 @@ def main(doc):
 if __name__ == "main":
     main(curdoc())
 
-
+'''
 def myconnect():
     global mydb,mycursor
     mydb = mysql.connector.connect(
@@ -1251,3 +1270,4 @@ def fetch():
     print('Data path:(',result[-1][0],')')
     print("=== test finished ===")
     return result[-2][0], result[-1][0]
+'''
