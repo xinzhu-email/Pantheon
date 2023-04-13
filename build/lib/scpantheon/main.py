@@ -21,7 +21,6 @@ except:
 def run():
     global server
     print('Opening Bokeh application on http://localhost:5006/')
-    # sourceqt.qt_button()
     server = Server({'/': source.main},
                     allow_websocket_origin=["localhost:5006"], port=5006, show=False, num_procs=1) 
     server.start()  
@@ -39,7 +38,6 @@ def main():
     p1 = multiprocessing.Process(target=run)
     p1.start()
     app()
-
 
 
 if __name__ == '__main__':

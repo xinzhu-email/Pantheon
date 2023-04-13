@@ -13,12 +13,10 @@ class InstallWarning(Warning):
     def __str__(self):
         return repr(self.message)
 
-import qt, source
-
-'''try: 
+try: 
     from scpantheon import qt, source # import from online
 except:
-    warnings.warn('YOU HAVE TO INSTALL PyQt5',InstallWarning)'''
+    warnings.warn('YOU HAVE TO INSTALL PyQt5',InstallWarning)
 
 def run():
     global server
