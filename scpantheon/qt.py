@@ -8,9 +8,9 @@ from appdirs import AppDirs
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 try:
-    from source import connection
-except:
     from scpantheon.source import connection
+except:
+    from source import connection
 '''
 def myconnect():
     global mydb,mycursor
@@ -133,15 +133,18 @@ def mkdir(path):
     isExists = os.path.exists(path)
     if not isExists:
         os.makedirs(path)
-        print(path + 'successful creat')
+        print(path + ' successful creat')
         return True
     else:
-        print(path + 'already exist')
+        print(path + ' already exist')
 
 
 def text_create(name, msg):
     path = dir + "\\" + name + '.txt'
     print("-========- path:", path)
+    with open(path, "w") as f:
+        f.truncate(0)
+        f.close()
     file = open(path, 'w')
     file.write(msg)
     file.close()

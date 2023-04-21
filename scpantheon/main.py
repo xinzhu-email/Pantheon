@@ -1,5 +1,5 @@
-from multiprocessing import freeze_support
-freeze_support()
+'''from multiprocessing import freeze_support
+freeze_support()'''
 
 import warnings
 
@@ -12,7 +12,7 @@ class InstallWarning(Warning):
         self.message = message
     def __str__(self):
         return repr(self.message)
-
+        
 try: 
     from scpantheon import qt, source # import from online
 except:

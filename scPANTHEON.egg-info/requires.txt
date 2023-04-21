@@ -1,11 +1,11 @@
 bokeh==2.4.3
 pandas
-anndata==0.8.0
+anndata
 colorcet
 scanpy
 numpy
-PyQt5==5.15.9
-PyQtWebEngine==5.15.6
+PyQt5
+PyQtWebEngine
 appdirs==1.4.4
 
 [tomas]
