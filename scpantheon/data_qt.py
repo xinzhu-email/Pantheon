@@ -1,52 +1,16 @@
 import os, sys
 from PyQt5.QtWidgets import *
-from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5 import QtCore, QtGui
 # import mysql.connector
 from pathlib import Path
 from appdirs import AppDirs
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-try:
-    from scpantheon.source import connection
-except:
-    from source import connection
-'''
-def myconnect():
-    global mydb,mycursor
-    mydb = mysql.connector.connect(
-        host="localhost",
-        #  port=3360,
-        user="root",
-        password="1122cccc",
-        database = "mybase"
-    )
-    mycursor = mydb.cursor()
-
-
-def creatbase():
-    global mycursor, mydb
-    mycursor.execute("CREATE DATABASE mybase")
-    mydb.database = "mybase"
-
-def creatable():
-    global mycursor,mydb
-    mycursor.execute("CREATE TABLE vlist (value VARCHAR(255))")
-    mydb.commit()
-
-def insert(path): # str -> tuple
-    global mydb,mycursor
-    insert = "INSERT INTO vlist (value) VALUES (%s)"
-    thistuple = (path,)
-    print(thistuple)
-    mycursor.execute(insert, thistuple)
-    mydb.commit()
-'''
 
 class Ui_Dialog(QWidget, object):
     def setupUi(self, Dialog):
-        Dialog.setObjectName("ScPantheon")
-        Dialog.resize(2000,1200)
+        Dialog.setObjectName("Choose")
+        Dialog.resize(450,300)
         self.cwd = os.getcwd()
         font = QtGui.QFont()
         font.setPointSize(20)
@@ -70,19 +34,10 @@ class Ui_Dialog(QWidget, object):
         self.layout1.addWidget(self.btn_Extensions)
         self.layout1.addWidget(self.btn_Data)
         self.layout2 = QVBoxLayout(Dialog)
-        self.layout2.setObjectName("Layout2")
-
-        # render website inside qt application
-        self.centralwidget = QWidget(Dialog)
-        self.centralwidget.setObjectName("centralwidget")
-        self.webEngineView = QWebEngineView(self.centralwidget)
-        self.loadPage()
-        self.layout2.addWidget(self.webEngineView)
-
+        self.layout2.setObjectName("Layout2")                 
 
         self.buttonBox = QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel)
         self.buttonBox.setObjectName("buttonBox")
         self.layout2.addWidget(self.buttonBox)
 
@@ -94,13 +49,6 @@ class Ui_Dialog(QWidget, object):
         self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
-    def loadPage(self):
-        Func = open("embed.html","w")
-        Func.write("<!doctype html>\n<html>\n<iframe src='http://localhost:5006/'\nname='thumbnails'\nframeborder='0'\nstyle='width: 100%; height: 2000px;'>\n</html>")
-        Func.close()
-        with open('embed.html', 'r') as f:
-            html = f.read()
-            self.webEngineView.setHtml(html)
 
     def slot_btn_Extensions(self):
         Extensions = QFileDialog.getExistingDirectory(self,"Choose Extensions",self.cwd) # 起始路径
@@ -123,10 +71,9 @@ class Ui_Dialog(QWidget, object):
         text_create('data_file', Data)
         print("\nData:",Data)
 
-
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("ScPantheon", "ScPantheon"))
+        Dialog.setWindowTitle(_translate("Choose", "Choose"))
 
 
 def mkdir(path):
@@ -159,6 +106,7 @@ def main():
     dirs = AppDirs(appname, appauthor, version)
     dir = dirs.user_data_dir
     mkdir(path=dir)
+
     '''# Create mysql database
     try: myconnect()
     except: creatbase()
@@ -175,3 +123,6 @@ def main():
     Dialog.show()
     app.exec()
     return 'app closed'
+
+main()
+
