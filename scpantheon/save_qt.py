@@ -12,7 +12,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 class Ui_Dialog(QDialog, QWidget, object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Choose")
-        Dialog.resize(450,300)
+        Dialog.resize(450,180)
         self.cwd = os.getcwd()
         font = QtGui.QFont()
         font.setPointSize(20)
@@ -22,22 +22,14 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.text_brow = QTextBrowser()
 
         # choose path button
-        self.btn_Extensions = QPushButton("Extensions", self)  
-        self.btn_Extensions.setObjectName("btn_Extensions")  
-        self.btn_Extensions.clicked.connect(self.slot_btn_Extensions)
-        self.btn_Extensions.setFont(font)
-        self.btn_Extensions.setFixedWidth(400)
-
-        # choose file button
-        self.btn_Data = QPushButton("Data", self)  
-        self.btn_Data.setObjectName("btn_Data")  
-        self.btn_Data.clicked.connect(self.slot_btn_Data)
-        self.btn_Data.setFont(font)
-        self.btn_Data.setFixedWidth(400)
+        self.btn_save = QPushButton("save", self)  
+        self.btn_save.setObjectName("btn_save")  
+        self.btn_save.clicked.connect(self.slot_btn_save)
+        self.btn_save.setFont(font)
+        self.btn_save.setFixedWidth(400)
         
         self.layout1 = QVBoxLayout()
-        self.layout1.addWidget(self.btn_Extensions)
-        self.layout1.addWidget(self.btn_Data)
+        self.layout1.addWidget(self.btn_save)
         self.layout2 = QVBoxLayout(Dialog)
         self.layout2.setObjectName("Layout2")    
         self.layout2.addWidget(self.text_brow)             
@@ -47,8 +39,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.buttonBox.setObjectName("buttonBox")
         self.layout2.addWidget(self.buttonBox)
 
-        self.layout2.addWidget(self.btn_Extensions)
-        self.layout2.addWidget(self.btn_Data)
+        self.layout2.addWidget(self.btn_save)
 
         self.retranslateUi(Dialog) 
         self.buttonBox.accepted.connect(Dialog.accept)
@@ -59,29 +50,18 @@ class Ui_Dialog(QDialog, QWidget, object):
     def event(self, event):
         if event.type()==QtCore.QEvent.EnterWhatsThisMode:
             QWhatsThis.leaveWhatsThisMode()
-            self.text_brow.setText("Please check your extension\nfor extra required packages\nsuch as tomas\nand pip install them")
+            self.text_brow.setText("Choose the path you want to save your file")
         return QDialog.event(self,event)
 
-    def slot_btn_Extensions(self):
-        Extensions = QFileDialog.getExistingDirectory(self,"Choose Extensions",self.cwd) # 起始路径
-        if Extensions == "":
+    def slot_btn_save(self):
+        save = QFileDialog.getExistingDirectory(self,"Choose save",self.cwd) # 起始路径
+        if save == "":
             print("\nchoose canceled")
             return
 
         # write extension into user_data_dir
-        text_create('extension_path', Extensions)
-        print("\nExtensions:",Extensions)
-
-    def slot_btn_Data(self):
-        Data, file_type = QFileDialog.getOpenFileName(self,"Choose Data", self.cwd)   # 设置文件扩展名过滤,用双分号间隔
-
-        if Data == "":
-            print("\nchoose canceled")
-            return
-
-        # write Data into user_data_dir
-        text_create('data_file', Data)
-        print("\nData:",Data)
+        text_create('save_path', save)
+        print("\nsave:", save) 
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
