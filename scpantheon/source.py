@@ -84,7 +84,7 @@ class FlowPlot:
         #self.source = ColumnDataSource(data=self.adata[:,0:2])
         self.view = CDSView(source=self.source, filters=[IndexFilter([i for i in range(self.data_df.shape[0])])])
         self.cur_color = color_list[0]
-        self.p = figure(width=500, height=500, tools="pan,lasso_select,box_select,tap,wheel_zoom,save,hover",title=title, tooltips=TOOLTIPS)
+        self.p = figure(width=500, height=500, tools="pan,lasso_select,box_select,tap,wheel_zoom,save,hover",title=title, tooltips=TOOLTIPS, output_backend="webgl")
         #self.p.output_backend = "svg"
         #print("backend is ", self.p.output_backend)        
         if view_existed:
@@ -144,8 +144,9 @@ class FlowPlot:
         ### Class Group Functions Buttons ###
         # Select class group
         if self.label_existed:
-            group_list = list(self.adata.uns['category_dict'].keys())
+            group_list = list(self.adata.uns['category_dict'].keys()) 
             self.group = Select(title='Select Cluster Group:', options=group_list, value=group_list[-1])
+            #self.group = Select(title='Select Cluster Group:',options=[' '],value=' ')
             # self.update_checkbox()
             # self.show_color()
         else:
@@ -291,17 +292,20 @@ class FlowPlot:
         print(column_list)
 
     def save_profile(self):
+        global dir
         self.button_disabled()
         def next_save(self):
             if save_qt.main() == 'app closed':
                 print('choosing finished')
             path = get_save_path(dir) + '/'
+            text_cover(dir, path + 'result.h5ad') # write the output anndata to cover the data
+            print("path covered to " + path + "result.h5ad")
             try:
-                self.adata.write(path+'result.h5ad') 
+                self.adata.write_h5ad(path+'result.h5ad') 
                 self.adata.obs.to_csv(path+'cluster.csv')
             except:
                 os.makedirs(path)
-                self.adata.write(path+'result.h5ad') # ??
+                self.adata.write_h5ad(path+'result.h5ad') 
                 self.adata.obs.to_csv(path+'cluster.csv')
             # for cate in list(self.adata.uns['category_dict'].keys()):
             #     self.adata.obs[cate].to_csv(path+'%s.csv'%cate)
@@ -393,7 +397,7 @@ class FlowPlot:
 
     def showall_func(self):
         self.button_disabled()
-        def next_showall():
+        def next_showall(self):
             self.view.filters = list([])
             self.button_abled()
         curdoc().add_next_tick_callback(lambda : next_showall(self))
@@ -1150,7 +1154,7 @@ def upload_callback():
 
     global extension_path
     global data_file
-    global mycursor, Main_plot
+    global Main_plot
 
     # path_, file_name = fetch()
     loading_remind = Div(text='Loading data……')
@@ -1165,7 +1169,8 @@ def upload_callback():
             adata = sc.read_csv(data_file) 
             print('csv')
         elif filetype == 'h5ad':
-            adata = sc.read_h5ad(data_file)
+            # adata = sc.read_h5ad(data_file)
+            adata = anndata.read(data_file, backed='r')
             print('h5ad')
         elif filetype == 'mtx':
             adata = sc.read_10x_mtx(
@@ -1177,7 +1182,7 @@ def upload_callback():
         mainplot, panel1 = CreateTool(adata=adata).base_tool() # Mainplot: figure, layout
         print('===mainplot finished=====')
         Main_plot = mainplot
-        # Highlight Gene Figure,
+        # Highlight Gene Figure
         hl_figure, panel2 = CreateTool(adata=adata).highlight_gene(mainplot)
         print('====highlight finished=====')
         tab = CreateTool(adata).multi_panel([mainplot,hl_figure], [panel1,panel2], ['Main View', 'Highlight Gene'], update_view=True)
@@ -1187,6 +1192,17 @@ def upload_callback():
         print('===finish===')
 
     curdoc().add_next_tick_callback(load)
+
+
+def text_cover(dir, msg):
+    path = dir + '/data_file.txt'
+    print("-========- path:", path)
+    with open(path, "w") as f:
+        f.truncate(0)
+        f.close()
+    file = open(path, 'w')
+    file.write(msg)
+    file.close()
 
 
 def openreadtxt(dir):
@@ -1217,13 +1233,13 @@ def main(doc):
     dirs = AppDirs(appname, appauthor, version)
     dir = dirs.user_data_dir
     # read path_ and file from user_data_dir
-    extension_path, data_file = openreadtxt(dir) 
+    extension_path, data_file = openreadtxt(dir)                                                                                              
     
     '''
     global mycursor
     try: myconnect()
     except:
-        try: creatbase()
+        try: creatbase() 
         except: ()
     try: creatable()
     except: ()

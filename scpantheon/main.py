@@ -14,7 +14,7 @@ class InstallWarning(Warning):
         self.message = message
     def __str__(self):
         return repr(self.message)
-        
+
 try: 
     from scpantheon import source # import from online
 except:

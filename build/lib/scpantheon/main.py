@@ -7,14 +7,16 @@ from bokeh.server.server import Server
 import multiprocessing
 import warnings
 
+from scpantheon import bokeh_qt, data_qt
+
 class InstallWarning(Warning):
     def __init__(self, message):
         self.message = message
     def __str__(self):
         return repr(self.message)
-        
+
 try: 
-    from scpantheon import qt, source # import from online
+    from scpantheon import source # import from online
 except:
     warnings.warn('YOU HAVE TO INSTALL PyQt5',InstallWarning)
 
@@ -28,7 +30,9 @@ def run():
     server.show()
 
 def app():
-    if qt.main() == 'app closed':
+    if data_qt.main() == 'app closed':
+        print('choosing finished')
+    if bokeh_qt.main() == 'app closed':
         p1.terminate()
         print('app ended')
     
