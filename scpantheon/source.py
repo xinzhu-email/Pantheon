@@ -347,6 +347,7 @@ class FlowPlot:
                 folder_name = os.path.basename(module_directory[:-1])
                 try: 
                     shutil.copytree(module_directory, extension_path+'/'+folder_name+'/')
+                    print('Module', folder_name, 'added')
                 except:
                     print('Module', folder_name, 'already exists')
             print('Online packages download finished!')
