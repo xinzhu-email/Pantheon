@@ -300,7 +300,7 @@ class FlowPlot:
             path = get_save_path(dir) + '/'
             text_cover(dir, path + 'result.h5ad') # write the output anndata to cover the data
             print("path covered to " + path + "result.h5ad")
-            try:
+            try: 
                 self.adata.write_h5ad(path+'result.h5ad') 
                 self.adata.obs.to_csv(path+'cluster.csv')
             except:

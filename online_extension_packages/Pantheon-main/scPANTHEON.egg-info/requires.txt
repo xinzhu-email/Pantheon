@@ -1,0 +1,12 @@
+bokeh==2.4.3
+pandas
+anndata
+colorcet
+scanpy
+numpy
+PyQt5
+PyQtWebEngine
+appdirs==1.4.4
+
+[tomas]
+tomas

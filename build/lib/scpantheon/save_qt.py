@@ -22,7 +22,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.text_brow = QTextBrowser()
 
         # choose path button
-        self.btn_save = QPushButton("save", self)  
+        self.btn_save = QPushButton("output", self)  
         self.btn_save.setObjectName("btn_save")  
         self.btn_save.clicked.connect(self.slot_btn_save)
         self.btn_save.setFont(font)

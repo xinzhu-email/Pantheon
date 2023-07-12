@@ -1,4 +1,4 @@
-bokeh==2.4.3
+bokeh
 pandas
 anndata
 colorcet
@@ -6,7 +6,7 @@ scanpy
 numpy
 PyQt5
 PyQtWebEngine
-appdirs==1.4.4
+appdirs
 
 [tomas]
 tomas

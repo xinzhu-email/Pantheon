@@ -7,6 +7,8 @@ from bokeh.palettes import d3
 from bokeh.layouts import row, column, layout
 from bokeh.io import curdoc# current document
 from bokeh.plotting import figure, output_file, save, show
+from bokeh.embed import components, file_html
+from bokeh.resources import CDN
 import pandas 
 import numpy as np
 import anndata
@@ -16,12 +18,13 @@ import scanpy as sc
 # from new_func import new_layout
 # from main3 import change_class_color
 
-import os, sys
+import os, sys, io
 import importlib
 from PyQt5.QtWidgets import *
 # import mysql.connector
-from scpantheon import save_qt
+from front_end import save_qt
 from appdirs import AppDirs
+import requests, zipfile, shutil
 
 
 TOOLTIPS = [
@@ -100,7 +103,7 @@ class FlowPlot:
         self.p.yaxis.axis_label = self.data_columns[y_init_idx]
         self.x = x_init_idx
         self.y = y_init_idx
-        # plot cell 
+        # plot cell get
         self.r = self.p.circle(self.data_columns[x_init_idx], self.data_columns[y_init_idx],  source=self.source, view=self.view, fill_alpha=1,fill_color=color_map,line_color=None )
 
         # glygh list
@@ -119,7 +122,14 @@ class FlowPlot:
         ######################################
         ####### Create panels of plots #######
         ######################################    
-
+        # Input extension url
+        self.extension_url = TextInput(title='Input extension url: ', value='')
+        self.extension_url.js_on_change("value", CustomJS(code="""
+            console.log('text_input: value=' + this.value, this.toString())
+        """))
+        # Import extension zip from online
+        self.import_extension = Button(label="online extension")
+        self.import_extension.on_click(self.import_func)
         # Show gene list
         self.show_gene_list = Div(text='Gene/Marker List: '+str(self.data_columns[0:10]))
         # Show plot
@@ -231,7 +241,7 @@ class FlowPlot:
         # Button disabled list, remember to append in each button func
         self.buttons_group = [self.gate_button,self.export_button,self.remove_button,self.showall_button,self.create_group,self.rename_group,self.delete_group,
                             self.show_selected_class,self.checkbox_color,self.new_class,self.merge_class,self.rename_class,self.delete_class,self.add_to,
-                            self.remove_from,self.update_class,self.change_class_color]
+                            self.remove_from,self.update_class,self.change_class_color,self.import_extension]
         self.buttons_amount = len(self.buttons_group)
         
         if self.label_existed:
@@ -280,6 +290,72 @@ class FlowPlot:
     ##################################
     ####### Call Back Functions ######
     ##################################
+    # Import extension packages from online
+    def import_func(self):
+        self.button_disabled()
+        def import_f(self):
+            if self.extension_url == '':
+                print('please input extension url')
+            else:
+                zip_file_url = self.extension_url.value
+            self.extension_url.value = ''
+            # Download online packages and get the new extensions path
+            # try :
+            print('extension path:', extension_path)
+            r = requests.get(zip_file_url, stream=True)
+            z = zipfile.ZipFile(io.BytesIO(r.content))
+            extract_path = 'C:/Users/23606/Documents/Workspace/Pantheon/online_extension_packages/' 
+            '''print(os.getcwd())
+            extract_path = os.getcwd() + 'online_extension_packages/'
+            extract_path.replace('scpantheon')'''
+
+            # Download online extensions packages to the extract_path
+            z.extractall(extract_path)
+            ''' file_names = z.namelist()
+            for file_name in file_names:
+                # find dir
+                if file_name.endswith('/'):
+                    # get dir name
+                    folder_name = os.path.basename(file_name[:-1])
+                    if folder_name == 'extension':
+                        new_extension_path = extract_path + file_name
+            print('extension from online path:', new_extension_path)'''
+            
+            # Find all the directory from online extension packages that has module.py
+            module_path_list = []
+            def find_module(path):
+                lsdir = os.listdir(path)
+                dirs = [i for i in lsdir if os.path.isdir(os.path.join(path, i))]
+                if dirs:
+                    for i in dirs:
+                        find_module(os.path.join(path, i))
+                files = [i for i in lsdir if os.path.isfile(os.path.join(path,i))]
+                flag = False
+                for f in files:
+                    if f == 'module.py':
+                        flag = True
+                        # module_path_list.append(os.path.join(path, f))
+                if flag: 
+                    module_path_list.append(path)
+
+            find_module(extract_path)
+            print('module path list:\n', module_path_list)
+            
+            # Copy all the extension module to extension path
+            for module_directory in module_path_list:
+                module_directory += '/'
+                folder_name = os.path.basename(module_directory[:-1])
+                try: 
+                    shutil.copytree(module_directory, extension_path+'/'+folder_name+'/')
+                except:
+                    print('Module', folder_name, 'already exists')
+            print('Online packages download finished!')
+
+            '''except:
+                print('please use correct extension package url')'''
+            self.button_abled()
+        curdoc().add_next_tick_callback(lambda : import_f(self))
+
     # Change view list
     def change_view_list(self):
         if self.choose_panel.value != 'generic_columns':
@@ -300,7 +376,7 @@ class FlowPlot:
             path = get_save_path(dir) + '/'
             text_cover(dir, path + 'result.h5ad') # write the output anndata to cover the data
             print("path covered to " + path + "result.h5ad")
-            try:
+            try: 
                 self.adata.write_h5ad(path+'result.h5ad') 
                 self.adata.obs.to_csv(path+'cluster.csv')
             except:
@@ -436,6 +512,8 @@ class FlowPlot:
             self.adata.obs[marker] = pandas.Series(index=self.data_df.index,dtype=object)
             self.group.options = list(self.adata.uns['category_dict'].keys())
             self.group.value = marker
+            print('group:', self.group.value)
+            print('group_name', self.group_name.value)
             self.group_name.value = ''
             #print('new group',self.group.value, marker,self.group.options, '=')
             self.button_abled()
@@ -557,9 +635,21 @@ class FlowPlot:
             if self.group.value == ' ':
                 print(str(self.group.value),xaxis+'+'+yaxis)
                 #self.class_checkbox.labels = ['no cluster: color=' + color_list[18] + ', cell_nums=' + str(self.data_df.shape[0])]
-                self.new_category()       
+                def creat_new_group():
+                    if self.group_name.value == '':
+                        marker = str(self.p.xaxis.axis_label) + '+' + str(self.p.yaxis.axis_label)
+                    else:
+                        marker = self.group_name.value
+                    self.adata.uns['category_dict'][marker] = pandas.DataFrame(columns=['class_name','color','cell_num'])
+                    self.adata.obs[marker] = pandas.Series(index=self.data_df.index,dtype=object)
+                    self.group.options = list(self.adata.uns['category_dict'].keys())
+                    self.group.value = marker
+                    print('group:', self.group.value)
+                    print('group_name', self.group_name.value)
+                    self.group_name.value = '' 
+                creat_new_group()
             cell_num = len(self.source.selected.indices)
-            print('add cluster',self.group.value)
+            print('add cluster: ',self.group.value)
             self.adata.uns['category_dict'][self.group.value].loc[len(self.adata.uns['category_dict'][self.group.value])] = {'class_name':self.class_name.value,'color':self.cur_color,'cell_num':cell_num}
             self.save_class(self.group.value, self.class_name.value, self.cur_color, 0)
             self.class_name.value = ''
@@ -846,7 +936,7 @@ class CreateTool:
         module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
         Figure = FlowPlot(data=self.adata, color_map='color')
 
-        layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, module_select), # module_checkbox added
+        layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, Figure.extension_url, Figure.import_extension, module_select), # module_checkbox added
             column(Figure.choose_panel,Figure.s_x, Figure.s_y, Figure.log_axis, Figure.color_selection, Figure.gate_button, Figure.remove_button, Figure.showall_button, Figure.export_button),
             column(Figure.group, Figure.group_name, Figure.create_group, Figure.rename_group, Figure.delete_group,
              Figure.class_name, Figure.new_class, Figure.checkbox_color, Figure.class_checkbox),
@@ -1101,8 +1191,8 @@ def load_module(active):
             clear.on_click(lambda: clear_cb(clear.name))
             new_buttons = column(new_class.add(), clear)
             # append extended buttons
-            buttons_g = find_buttons(new_buttons, buttons_g)
-            plot.tweak_buttons_group(buttons_g)
+            buttons_group = find_buttons(new_buttons, buttons_group)
+            plot.tweak_buttons_group(buttons_group)
             if but != None and but.visible == False:
                 but.visible = True # already created model
                 
@@ -1160,7 +1250,8 @@ def upload_callback():
     loading_remind = Div(text='Loading data……')
     curdoc().add_root(loading_remind) 
     print('===loading finished=====')
-    filename = os.path.split(data_file)[1]      
+    filename = os.path.split(data_file)[1]   
+
     def load():
         global Main_plot
         filetype = os.path.splitext(filename)[-1][1:] # split the filename and the type
