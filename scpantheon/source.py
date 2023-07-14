@@ -340,7 +340,6 @@ class FlowPlot:
 
             find_module(extract_path)
             print('module path list:\n', module_path_list)
-            
             # Copy all the extension module to extension path
             for module_directory in module_path_list:
                 module_directory += '/'
@@ -351,7 +350,15 @@ class FlowPlot:
                 except:
                     print('Module', folder_name, 'already exists')
             print('Online packages download finished!')
-
+            # pre_module_select = curdoc().get_model_by_name('module_select')
+            # option = pre_module_select.value
+            models = curdoc().get_model_by_id('1234') # pre_module_select = Select(...,id='1234') 
+            # print(models)
+            models.visible = False
+            curdoc().remove_root(models)
+            module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
+            module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
+            curdoc().add_root(module_select)
             '''except:
                 print('please use correct extension package url')'''
             self.button_abled()
@@ -368,6 +375,7 @@ class FlowPlot:
 
         print(column_list)
 
+    # Save the anndata result
     def save_profile(self):
         global dir
         self.button_disabled()
@@ -390,6 +398,7 @@ class FlowPlot:
             self.button_abled()
         curdoc().add_next_tick_callback(lambda : next_save(self))
 
+    # change x, y axis
     def tag_func(self, selector, effector, attr, plot):
         self.button_disabled()
         def tag(self, selector, effector, attr, plot):
@@ -934,7 +943,8 @@ class CreateTool:
         
     def base_tool(self):        
         # module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
-        module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
+        module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select', id='1234') 
+        module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
         Figure = FlowPlot(data=self.adata, color_map='color')
 
         layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, Figure.extension_url, Figure.import_extension, module_select), # module_checkbox added
@@ -947,7 +957,6 @@ class CreateTool:
         # attr refers to the changed attribute’s name, and old and new refer to the previous and updated values of the attribute
         # module_checkbox.on_change('active', lambda attr, old, new: load_module(list(module_checkbox.active))) 
         # active: The list of indices of selected check boxes.
-        module_select.on_change('value', lambda attr, old, new: load_module(module_select.value)) 
         return Figure, layout
     
     def highlight_gene(self, main_plot):
@@ -1008,6 +1017,9 @@ class connection:
         adata = self.Figure.adata.copy()
         return adata
 
+    def get_data_df(self):
+        return self.Figure.data_df
+
     def set_anndata(self, adata):
         self.Figure.adata = adata
         data_df = self.Figure.data_df
@@ -1035,6 +1047,9 @@ class connection:
     
     def get_obs(self):
         return self.Figure.adata.obs
+
+    def get_obsm(self):
+        return self.Figure.adata.obsm
     
     def set_obs(self, group_label, set_group_name=None):
         if not set_group_name:
@@ -1077,6 +1092,7 @@ class connection:
     
     def set_obsm(self, obsm):
         views = list(obsm)
+        print('views:', views)
         for view_name in views:
             if view_name not in self.Figure.choose_panel.options:
                 for i in range(obsm[view_name].shape[1]):
@@ -1111,15 +1127,18 @@ class plot_function:
         return self.Figure.p
     
     def get_x_y(self):
-        return self.Figure.p.xaxis.axis_label, self.Figure.p.yaxis.axis_label
-    
+        return self.Figure.s_x.value, self.Figure.s_y.value
+
+    def get_log_axis(self):
+        return self.Figure.log_axis
+  
     def get_glyph_list(self):
         return self.Figure.glylist
     
     def get_buttons_group(self):
         return self.Figure.buttons_group, self.Figure.buttons_amount
-    def tweak_buttons_group(self, buttons_g):
-        self.Figure.buttons_group = buttons_g
+    def tweak_buttons_group(self, buttons_group):
+        self.Figure.buttons_group = buttons_group
 
 
 
@@ -1165,11 +1184,11 @@ def load_options():
 def load_module(active):
     global extension_path
     plot = plot_function()
-    buttons_g, buttons_n = plot.get_buttons_group() # buttons group, buttons number
+    buttons_group, buttons_n = plot.get_buttons_group() # buttons group, buttons number
     # delete last extended buttons
-    for i in range(buttons_n, len(buttons_g)):
-        buttons_g.pop()
-    buttons = curdoc().get_model_by_name('module_buttons')
+    for i in range(buttons_n, len(buttons_group)):
+        buttons_group.pop()
+    # buttons = curdoc().get_model_by_name('module_buttons')
     try:
         name_list = os.listdir(extension_path)
     except:
@@ -1188,9 +1207,10 @@ def load_module(active):
             except:            
                 mod = importlib.import_module(module_name) # usual way
                 new_class = mod.new_layout()
-            clear = Button(label='Clear the figures!', button_type='warning', name=str(ind))
-            clear.on_click(lambda: clear_cb(clear.name))
-            new_buttons = column(new_class.add(), clear)
+            # clear = Button(label='Clear the figures!', button_type='warning', name=str(ind))
+            # clear.on_click(lambda: clear_cb(clear.name))
+            # new_buttons = column(new_class.add(), clear)
+            new_buttons = column(new_class.add())
             # append extended buttons
             buttons_group = find_buttons(new_buttons, buttons_group)
             plot.tweak_buttons_group(buttons_group)
@@ -1207,8 +1227,6 @@ def load_module(active):
             new_buttons.children.append(div)
             curdoc().add_root(new_buttons)
             layouts = column(layouts, new_buttons)
-
-# D:\anaconda\Lib\site-packages\scpantheon\sourceqt.py
         else:
             if but != None:
                 but.visible = False
@@ -1218,17 +1236,17 @@ def load_module(active):
         buttons.name = 'module_buttons'
     # curdoc().add_root(buttons)
 
-def find_buttons(buttons, buttons_g):
+def find_buttons(buttons, buttons_group):
     for child in buttons.children:
         try:
-            find_buttons(child, buttons_g)
+            find_buttons(child, buttons_group)
         except:
-            buttons_g.append(child)
+            buttons_group.append(child)
 
-    return buttons_g
+    return buttons_group
 
 def clear_cb(ind):
-    module_checkbox = curdoc().get_model_by_name('modules_checkbox')
+    module_checkbox = curdoc().get_model_by_name('modules_checkbox') 
     # options = module_checkbox.labels
     # for i in range(len(options)):
     #     if options[i] == 'Find_Marker_Gene':

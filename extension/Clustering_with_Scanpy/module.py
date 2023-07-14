@@ -54,6 +54,8 @@ def pca():
     buttons_group, b = plot.get_buttons_group()
     button_disabled(buttons_group)
     def next_pca(buttons_group):
+        '''for b in buttons_group:
+            print(b.disabled)'''
         layout = curdoc().get_model_by_name('Clustering_with_Scanpy')
         change = connection()
         adata = change.get_anndata()
@@ -66,6 +68,7 @@ def pca():
         div = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
         layout.children.append(div)
         change.set_obsm(adata.obsm)
+        # change.set_anndata(adata)
         button_abled(buttons_group)
     curdoc().add_next_tick_callback(lambda : next_pca(buttons_group))
 

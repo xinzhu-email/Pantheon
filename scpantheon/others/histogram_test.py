@@ -69,6 +69,7 @@ df = adata.to_df()
 dl = np.log1p(df)
 data_columns = df.columns.values.tolist()
 
+
 '''for c in data_columns:
     print(c)'''
 
@@ -87,19 +88,44 @@ p = figure(width=500, height=500, tools="pan,lasso_select,box_select,tap,wheel_z
 # max_range = pdata.max().max()
 # median_range = pdata.median().median()
 # mean_range = pdata.mean().mean()
+# pdata[self.data_columns[x_init_idx]].describe()
 mean_range = np.mean(adata.X)
-# np.seterr(divide='ignore')
-'''hist, edges = np.histogram(pdata[0], bins = 180, range = [1e-6, max_range])
-hist2, edges2 = np.histogram(pdata[1], bins = 180, range = [1e-6, max_range])'''
-hist, edges = np.histogram(df[data_columns[0]], bins = int(mean_range), range = [0, mean_range * 3])
-hist2, edges2 = np.histogram(df[data_columns[1]], bins = int(mean_range), range = [0, mean_range * 3])
-# amount = pandas.DataFrame({'top': np.log(hist),'left': edges[:-1],'right': edges[1:]})
-# amount2 = pandas.DataFrame({'top': np.log(hist2),'left': edges2[:-1],'right': edges2[1:]})
-q1 = p.quad(bottom=1e-6,top=hist,left=edges[:-1],right=edges[1:],line_color=None,fill_color="#c3f4b2",fill_alpha=0.3,legend_label='qx')
-l1 = p.line(x=np.linspace(0, mean_range * 3, int(mean_range)), y=hist, line_color="#3333cc", line_width=2, alpha=0.3, legend_label="lx")
-q2 = p.quad(bottom=edges2[:-1],top=edges2[1:],left=1e-6,right=hist2,line_color=None,fill_color='#FFC125',fill_alpha=0.3,legend_label='qy')
-l2 = p.line(x=hist2, y=np.linspace(0, mean_range * 3, int(mean_range)), line_color="#ff8888", line_width=2, alpha=0.3, legend_label="ly")
+
+# Show log data according to the checkbox log_axis
+log_axis = plot.get_log_axis()
+def get_df_x_y(df, mean_range):
+    if log_axis.active == []:
+        df_x = df[x]
+        df_y = df[y]
+        mean_range = mean_range
+    else:
+        df_x = np.log1p(df[x])
+        df_y = np.log1p(df[y])
+        mean_range = np.log1p(mean_range)
+        # if mean_range < 200: mean_range = 200
+    return df_x, df_y, mean_range
+
+# Numpy for data modeling
+bins = np.linspace(0, int(mean_range * 6), int(5e4))
+try:
+    df = change.get_data_df()
+except:
+    df = adata.to_df()
+df_x, df_y, mean_range = get_df_x_y(df, mean_range)
+# print('mean_range\n', mean_range)
+# print('hist:\n', hist)
+hist, edges = np.histogram(df_x, bins = bins, range = [0, mean_range * 6])
+hist2, edges2 = np.histogram(df_y, bins = bins, range = [0, mean_range * 6])
+'''q1 = p.quad(bottom=0,top=np.log1p(hist),left=edges[:-1],right=edges[1:],line_color=None,fill_color="#c3f4b2",fill_alpha=0.3,legend_label='qx')
+l1 = p.line(x=np.linspace(0, mean_range * 3, int(mean_range)), y=np.log1p(hist), line_color="#3333cc", line_width=2, alpha=0.3, legend_label="lx")
+q2 = p.quad(bottom=edges2[:-1],top=edges2[1:],left=0,right=np.log1p(hist2),line_color=None,fill_color='#FFC125',fill_alpha=0.3,legend_label='qy')
+l2 = p.line(x=np.log1p(hist2), y=np.linspace(0, mean_range * 3, int(mean_range)), line_color="#ff8888", line_width=2, alpha=0.3, legend_label="ly")'''
+# bins = np.linspace(0, int(mean_range * 6), int(1e4))
+q1 = p.quad(bottom=0,top=hist,left=edges[:-1],right=edges[1:],line_color="#3333cc",fill_color="#c3f4b2",fill_alpha=0.3,legend_label='qx')
+# l1 = p.line(x=bins, y=hist, line_color="#3333cc", line_width=2, alpha=0.3, legend_label="lx")
+q2 = p.quad(bottom=edges2[:-1],top=edges2[1:],left=0,right=hist2,line_color="#ff8888",fill_color='#FFC125',fill_alpha=0.3,legend_label='qy')
+# l2 = p.line(x=hist2, y=bins, line_color="#ff8888", line_width=2, alpha=0.3, legend_label="ly")
+# plotlist = [q1, q2, l1, l2]
+plotlist = [q1, q2]
 p.legend.location = "center_right"
 p.legend.click_policy = "hide"
-
-show(p)

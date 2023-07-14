@@ -147,7 +147,7 @@ def openreadtxt(dir):
 
 def signal_slot(data):
     global check_code
-    print("check code:", data)
+    # print("check code:", data)
     check_code = data
 
 

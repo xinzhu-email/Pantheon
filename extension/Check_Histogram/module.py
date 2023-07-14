@@ -40,12 +40,13 @@ def button_abled(buttons_group):
 
 def check_histogram():
     global buttons_group
-
     plot = plot_function()
     buttons_group, b = plot.get_buttons_group() # group and the original amount
     button_disabled(buttons_group)
-    def next_check(buttons_group):
+    def next_hist(buttons_group):
         global plotlist, p, glylist
+        '''for b in buttons_group:
+            print(b.disabled)'''
         layout = curdoc().get_model_by_name('Check_Histogram')
         change = connection()
         #pdata = change.get_pandata()
@@ -53,15 +54,9 @@ def check_histogram():
         plot = plot_function()
         p = plot.get_figure()
         x, y = plot.get_x_y()
+        print('x:', x, '\ny:', y)
         glylist = plot.get_glyph_list()
-
-        # get the x and y of plot
-        cnt = 0
-        for axis in adata.var.index:
-            if(x == axis): x = cnt
-            if(y == axis): y = cnt
-            cnt += 1
-        
+        # adata.obsm = change.get_obsm()
         def ad_to_pd():
             global pdata
             X = adata.X
@@ -71,30 +66,57 @@ def check_histogram():
             pdata = pdata.T
         ad_to_pd()
 
+
         if len(glylist) <= 1:
             # pdata[self.data_columns[x_init_idx]].describe()
-            hist, edges = np.histogram(pdata[x],bins = int(10/0.05),range = [0, 10])
-            hist2, edges2 = np.histogram(pdata[y],bins = int(10/0.05),range = [0, 10])
-            amount = pandas.DataFrame({'pdata': np.log(hist),'left': edges[:-1],'right': edges[1:]})
-            amount2 = pandas.DataFrame({'pdata': np.log(hist2),'left': edges2[:-1],'right': edges2[1:]})
-            q1 = p.quad(bottom=0,top=amount['pdata'],left=amount['left'],right=amount['right'],line_color=None,fill_color="#c3f4b2",fill_alpha=0.3,legend_label='qx')
-            l1 = p.line(x=np.linspace(0, 10, 200), y=amount['pdata'], line_color="#3333cc", line_width=2, alpha=0.3, legend_label="lx")
-            q2 = p.quad(bottom=amount2['left'],top=amount2['right'],left=0,right=amount2['pdata'],line_color=None,fill_color='#FFC125',fill_alpha=0.3,legend_label='qy')
-            l2 = p.line(x=amount2['pdata'], y=np.linspace(0, 10, 200), line_color="#ff8888", line_width=2, alpha=0.3, legend_label="ly")
-            plotlist = [q1, q2, l1, l2]
+            mean_range = np.mean(adata.X)
+
+            # Show log data according to the checkbox log_axis
+            log_axis = plot.get_log_axis()
+            def get_df_x_y(df, mean_range):
+                if log_axis.active == []:
+                    df_x = df[x]
+                    df_y = df[y]
+                    mean_range = mean_range
+                else:
+                    df_x = np.log1p(df[x])
+                    df_y = np.log1p(df[y])
+                    mean_range = np.log1p(mean_range)
+                    # if mean_range < 200: mean_range = 200
+                return df_x, df_y, mean_range
+
+            # Numpy for data modeling
+            bins = np.linspace(0, int(mean_range * 6), int(1e4))
+            try:
+                df = change.get_data_df()
+            except:
+                df = adata.to_df()
+            df_x, df_y, mean_range = get_df_x_y(df, mean_range)
+            # print('mean_range\n', mean_range)
+            # print('hist:\n', hist)
+            hist, edges = np.histogram(df_x, bins = bins, range = [0, mean_range * 6])
+            hist2, edges2 = np.histogram(df_y, bins = bins, range = [0, mean_range * 6])
+            q1 = p.quad(bottom=0,top=hist,left=edges[:-1],right=edges[1:],line_color="#65E627",line_alpha=0.3,fill_color="#c3f4b2",fill_alpha=0.1,legend_label='qx')
+            # l1 = p.line(x=bins, y=hist, line_color="#3333cc", line_width=2, alpha=0.3, legend_label="lx")
+            q2 = p.quad(bottom=edges2[:-1],top=edges2[1:],left=0,right=hist2,line_color="#E6B666",line_alpha=0.3,fill_color='#FFC125',fill_alpha=0.1,legend_label='qy')
+            # l2 = p.line(x=hist2, y=bins, line_color="#ff8888", line_width=2, alpha=0.3, legend_label="ly")
+            # plotlist = [q1, q2, l1, l2]
+            plotlist = [q1, q2]
             glylist.extend(plotlist)
             p.legend.location = "center_right"
             p.legend.click_policy = "hide"
         else:
             print('Histogram already existed')
         button_abled(buttons_group)
-    curdoc().add_next_tick_callback(lambda : next_check(buttons_group))
+    curdoc().add_next_tick_callback(lambda : next_hist(buttons_group))
 
 
 def remove():
     global glylist
     button_disabled(buttons_group)
     def next_remove(glylist):
+        '''for b in buttons_group:
+            print(b.disabled)'''
         if len(glylist) > 1:
             for plot in plotlist:
                 glylist.remove(plot)
@@ -103,6 +125,6 @@ def remove():
         for glygh in plotlist:
             try:
                 p.renderers.remove(glygh)
-            except: print('no glyph')
-            button_abled(buttons_group)
+            except: print('no graph')
+        button_abled(buttons_group)
     curdoc().add_next_tick_callback(lambda : next_remove(glylist))
