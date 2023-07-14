@@ -22,7 +22,7 @@ import os, sys, io
 import importlib
 from PyQt5.QtWidgets import *
 # import mysql.connector
-from front_end import save_qt
+from scpantheon.front_end import save_qt
 from appdirs import AppDirs
 import requests, zipfile, shutil
 
