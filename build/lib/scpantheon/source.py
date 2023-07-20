@@ -7,6 +7,8 @@ from bokeh.palettes import d3
 from bokeh.layouts import row, column, layout
 from bokeh.io import curdoc# current document
 from bokeh.plotting import figure, output_file, save, show
+from bokeh.embed import components, file_html
+from bokeh.resources import CDN
 import pandas 
 import numpy as np
 import anndata
@@ -16,12 +18,14 @@ import scanpy as sc
 # from new_func import new_layout
 # from main3 import change_class_color
 
-import os, sys
+import os, sys, io
 import importlib
 from PyQt5.QtWidgets import *
 # import mysql.connector
-from scpantheon import save_qt
+try: from scpantheon.front_end import save_qt
+except: from front_end import save_qt
 from appdirs import AppDirs
+import requests, zipfile, shutil
 
 
 TOOLTIPS = [
@@ -100,7 +104,7 @@ class FlowPlot:
         self.p.yaxis.axis_label = self.data_columns[y_init_idx]
         self.x = x_init_idx
         self.y = y_init_idx
-        # plot cell 
+        # plot cell get
         self.r = self.p.circle(self.data_columns[x_init_idx], self.data_columns[y_init_idx],  source=self.source, view=self.view, fill_alpha=1,fill_color=color_map,line_color=None )
 
         # glygh list
@@ -119,7 +123,14 @@ class FlowPlot:
         ######################################
         ####### Create panels of plots #######
         ######################################    
-
+        # Input extension url
+        self.extension_url = TextInput(title='Input extension url: ', value='')
+        self.extension_url.js_on_change("value", CustomJS(code="""
+            console.log('text_input: value=' + this.value, this.toString())
+        """))
+        # Import extension zip from online
+        self.import_extension = Button(label="online extension")
+        self.import_extension.on_click(self.import_func)
         # Show gene list
         self.show_gene_list = Div(text='Gene/Marker List: '+str(self.data_columns[0:10]))
         # Show plot
@@ -231,7 +242,7 @@ class FlowPlot:
         # Button disabled list, remember to append in each button func
         self.buttons_group = [self.gate_button,self.export_button,self.remove_button,self.showall_button,self.create_group,self.rename_group,self.delete_group,
                             self.show_selected_class,self.checkbox_color,self.new_class,self.merge_class,self.rename_class,self.delete_class,self.add_to,
-                            self.remove_from,self.update_class,self.change_class_color]
+                            self.remove_from,self.update_class,self.change_class_color,self.import_extension]
         self.buttons_amount = len(self.buttons_group)
         
         if self.label_existed:
@@ -280,6 +291,80 @@ class FlowPlot:
     ##################################
     ####### Call Back Functions ######
     ##################################
+    # Import extension packages from online
+    def import_func(self):
+        self.button_disabled()
+        def import_f(self):
+            if self.extension_url == '':
+                print('please input extension url')
+            else:
+                zip_file_url = self.extension_url.value
+            self.extension_url.value = ''
+            # Download online packages and get the new extensions path
+            # try :
+            print('extension path:', extension_path)
+            r = requests.get(zip_file_url, stream=True)
+            z = zipfile.ZipFile(io.BytesIO(r.content))
+            extract_path = 'C:/Users/23606/Documents/Workspace/Pantheon/online_extension_packages/' 
+            '''print(os.getcwd())
+            extract_path = os.getcwd() + 'online_extension_packages/'
+            extract_path.replace('scpantheon')'''
+
+            # Download online extensions packages to the extract_path
+            z.extractall(extract_path)
+            ''' file_names = z.namelist()
+            for file_name in file_names:
+                # find dir
+                if file_name.endswith('/'):
+                    # get dir name
+                    folder_name = os.path.basename(file_name[:-1])
+                    if folder_name == 'extension':
+                        new_extension_path = extract_path + file_name
+            print('extension from online path:', new_extension_path)'''
+            
+            # Find all the directory from online extension packages that has module.py
+            module_path_list = []
+            def find_module(path):
+                lsdir = os.listdir(path)
+                dirs = [i for i in lsdir if os.path.isdir(os.path.join(path, i))]
+                if dirs:
+                    for i in dirs:
+                        find_module(os.path.join(path, i))
+                files = [i for i in lsdir if os.path.isfile(os.path.join(path,i))]
+                flag = False
+                for f in files:
+                    if f == 'module.py':
+                        flag = True
+                        # module_path_list.append(os.path.join(path, f))
+                if flag: 
+                    module_path_list.append(path)
+
+            find_module(extract_path)
+            print('module path list:\n', module_path_list)
+            # Copy all the extension module to extension path
+            for module_directory in module_path_list:
+                module_directory += '/'
+                folder_name = os.path.basename(module_directory[:-1])
+                try: 
+                    shutil.copytree(module_directory, extension_path+'/'+folder_name+'/')
+                    print('Module', folder_name, 'added')
+                except:
+                    print('Module', folder_name, 'already exists')
+            print('Online packages download finished!')
+            # pre_module_select = curdoc().get_model_by_name('module_select')
+            # option = pre_module_select.value
+            models = curdoc().get_model_by_id('1234') # pre_module_select = Select(...,id='1234') 
+            # print(models)
+            models.visible = False
+            curdoc().remove_root(models)
+            module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
+            module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
+            curdoc().add_root(module_select)
+            '''except:
+                print('please use correct extension package url')'''
+            self.button_abled()
+        curdoc().add_next_tick_callback(lambda : import_f(self))
+
     # Change view list
     def change_view_list(self):
         if self.choose_panel.value != 'generic_columns':
@@ -291,6 +376,7 @@ class FlowPlot:
 
         print(column_list)
 
+    # Save the anndata result
     def save_profile(self):
         global dir
         self.button_disabled()
@@ -313,6 +399,7 @@ class FlowPlot:
             self.button_abled()
         curdoc().add_next_tick_callback(lambda : next_save(self))
 
+    # change x, y axis
     def tag_func(self, selector, effector, attr, plot):
         self.button_disabled()
         def tag(self, selector, effector, attr, plot):
@@ -436,6 +523,8 @@ class FlowPlot:
             self.adata.obs[marker] = pandas.Series(index=self.data_df.index,dtype=object)
             self.group.options = list(self.adata.uns['category_dict'].keys())
             self.group.value = marker
+            print('group:', self.group.value)
+            print('group_name', self.group_name.value)
             self.group_name.value = ''
             #print('new group',self.group.value, marker,self.group.options, '=')
             self.button_abled()
@@ -557,9 +646,21 @@ class FlowPlot:
             if self.group.value == ' ':
                 print(str(self.group.value),xaxis+'+'+yaxis)
                 #self.class_checkbox.labels = ['no cluster: color=' + color_list[18] + ', cell_nums=' + str(self.data_df.shape[0])]
-                self.new_category()       
+                def creat_new_group():
+                    if self.group_name.value == '':
+                        marker = str(self.p.xaxis.axis_label) + '+' + str(self.p.yaxis.axis_label)
+                    else:
+                        marker = self.group_name.value
+                    self.adata.uns['category_dict'][marker] = pandas.DataFrame(columns=['class_name','color','cell_num'])
+                    self.adata.obs[marker] = pandas.Series(index=self.data_df.index,dtype=object)
+                    self.group.options = list(self.adata.uns['category_dict'].keys())
+                    self.group.value = marker
+                    print('group:', self.group.value)
+                    print('group_name', self.group_name.value)
+                    self.group_name.value = '' 
+                creat_new_group()
             cell_num = len(self.source.selected.indices)
-            print('add cluster',self.group.value)
+            print('add cluster: ',self.group.value)
             self.adata.uns['category_dict'][self.group.value].loc[len(self.adata.uns['category_dict'][self.group.value])] = {'class_name':self.class_name.value,'color':self.cur_color,'cell_num':cell_num}
             self.save_class(self.group.value, self.class_name.value, self.cur_color, 0)
             self.class_name.value = ''
@@ -843,10 +944,11 @@ class CreateTool:
         
     def base_tool(self):        
         # module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
-        module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
+        module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select', id='1234') 
+        module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
         Figure = FlowPlot(data=self.adata, color_map='color')
 
-        layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, module_select), # module_checkbox added
+        layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, Figure.extension_url, Figure.import_extension, module_select), # module_checkbox added
             column(Figure.choose_panel,Figure.s_x, Figure.s_y, Figure.log_axis, Figure.color_selection, Figure.gate_button, Figure.remove_button, Figure.showall_button, Figure.export_button),
             column(Figure.group, Figure.group_name, Figure.create_group, Figure.rename_group, Figure.delete_group,
              Figure.class_name, Figure.new_class, Figure.checkbox_color, Figure.class_checkbox),
@@ -856,7 +958,6 @@ class CreateTool:
         # attr refers to the changed attribute’s name, and old and new refer to the previous and updated values of the attribute
         # module_checkbox.on_change('active', lambda attr, old, new: load_module(list(module_checkbox.active))) 
         # active: The list of indices of selected check boxes.
-        module_select.on_change('value', lambda attr, old, new: load_module(module_select.value)) 
         return Figure, layout
     
     def highlight_gene(self, main_plot):
@@ -917,6 +1018,9 @@ class connection:
         adata = self.Figure.adata.copy()
         return adata
 
+    def get_data_df(self):
+        return self.Figure.data_df
+
     def set_anndata(self, adata):
         self.Figure.adata = adata
         data_df = self.Figure.data_df
@@ -944,6 +1048,9 @@ class connection:
     
     def get_obs(self):
         return self.Figure.adata.obs
+
+    def get_obsm(self):
+        return self.Figure.adata.obsm
     
     def set_obs(self, group_label, set_group_name=None):
         if not set_group_name:
@@ -986,6 +1093,7 @@ class connection:
     
     def set_obsm(self, obsm):
         views = list(obsm)
+        print('views:', views)
         for view_name in views:
             if view_name not in self.Figure.choose_panel.options:
                 for i in range(obsm[view_name].shape[1]):
@@ -1020,15 +1128,18 @@ class plot_function:
         return self.Figure.p
     
     def get_x_y(self):
-        return self.Figure.p.xaxis.axis_label, self.Figure.p.yaxis.axis_label
-    
+        return self.Figure.s_x.value, self.Figure.s_y.value
+
+    def get_log_axis(self):
+        return self.Figure.log_axis
+  
     def get_glyph_list(self):
         return self.Figure.glylist
     
     def get_buttons_group(self):
         return self.Figure.buttons_group, self.Figure.buttons_amount
-    def tweak_buttons_group(self, buttons_g):
-        self.Figure.buttons_group = buttons_g
+    def tweak_buttons_group(self, buttons_group):
+        self.Figure.buttons_group = buttons_group
 
 
 
@@ -1074,18 +1185,18 @@ def load_options():
 def load_module(active):
     global extension_path
     plot = plot_function()
-    buttons_g, buttons_n = plot.get_buttons_group() # buttons group, buttons number
+    buttons_group, buttons_n = plot.get_buttons_group() # buttons group, buttons number
     # delete last extended buttons
-    for i in range(buttons_n, len(buttons_g)):
-        buttons_g.pop()
-    buttons = curdoc().get_model_by_name('module_buttons')
+    for i in range(buttons_n, len(buttons_group)):
+        buttons_group.pop()
+    # buttons = curdoc().get_model_by_name('module_buttons')
     try:
         name_list = os.listdir(extension_path)
     except:
         return     
     layouts = column()
     print('active:',active) # ex => active: Clustering_with_Scanpy
-    ind = 0
+    ind = 0 
     for name in name_list:
         but = curdoc().get_model_by_name(name)
         div = Div(text='')
@@ -1097,12 +1208,13 @@ def load_module(active):
             except:            
                 mod = importlib.import_module(module_name) # usual way
                 new_class = mod.new_layout()
-            clear = Button(label='Clear the figures!', button_type='warning', name=str(ind))
-            clear.on_click(lambda: clear_cb(clear.name))
-            new_buttons = column(new_class.add(), clear)
+            # clear = Button(label='Clear the figures!', button_type='warning', name=str(ind))
+            # clear.on_click(lambda: clear_cb(clear.name))
+            # new_buttons = column(new_class.add(), clear)
+            new_buttons = column(new_class.add()) 
             # append extended buttons
-            buttons_g = find_buttons(new_buttons, buttons_g)
-            plot.tweak_buttons_group(buttons_g)
+            buttons_group = find_buttons(new_buttons, buttons_group)
+            plot.tweak_buttons_group(buttons_group)
             if but != None and but.visible == False:
                 but.visible = True # already created model
                 
@@ -1116,8 +1228,6 @@ def load_module(active):
             new_buttons.children.append(div)
             curdoc().add_root(new_buttons)
             layouts = column(layouts, new_buttons)
-
-# D:\anaconda\Lib\site-packages\scpantheon\sourceqt.py
         else:
             if but != None:
                 but.visible = False
@@ -1127,17 +1237,17 @@ def load_module(active):
         buttons.name = 'module_buttons'
     # curdoc().add_root(buttons)
 
-def find_buttons(buttons, buttons_g):
+def find_buttons(buttons, buttons_group):
     for child in buttons.children:
         try:
-            find_buttons(child, buttons_g)
+            find_buttons(child, buttons_group)
         except:
-            buttons_g.append(child)
+            buttons_group.append(child)
 
-    return buttons_g
+    return buttons_group
 
 def clear_cb(ind):
-    module_checkbox = curdoc().get_model_by_name('modules_checkbox')
+    module_checkbox = curdoc().get_model_by_name('modules_checkbox') 
     # options = module_checkbox.labels
     # for i in range(len(options)):
     #     if options[i] == 'Find_Marker_Gene':
@@ -1160,7 +1270,8 @@ def upload_callback():
     loading_remind = Div(text='Loading data……')
     curdoc().add_root(loading_remind) 
     print('===loading finished=====')
-    filename = os.path.split(data_file)[1]      
+    filename = os.path.split(data_file)[1]   
+
     def load():
         global Main_plot
         filetype = os.path.splitext(filename)[-1][1:] # split the filename and the type

@@ -14,10 +14,7 @@ from bokeh.models import FileInput, Button, TextInput, Div, Select
 from bokeh.layouts import row, column
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-try:
-    from source import connection, plot_function
-except:
-    from scpantheon.source import connection, plot_function
+from scpantheon import source as soc
 
 color_list = d3['Category20c'][20]
 
@@ -26,7 +23,7 @@ class new_layout:
     def __init__(self):
         try:
             group, cluster_list = get_attr()
-            api = connection()
+            api = soc.connection()
             to_json = api.get_attributes()
             data_dict = json.loads(to_json)
             group = data_dict['selected_group']            
@@ -71,12 +68,12 @@ def button_abled(buttons_group):
 def get_attr():
     global buttons_group
 
-    plot = plot_function()
+    plot = soc.plot_function()
     buttons_group, b = plot.get_buttons_group()
     button_disabled(buttons_group)
     def next_get(buttons_group):
         global group, cluster_list
-        api = connection()
+        api = soc.connection()
         to_json = api.get_attributes()
         data_dict = json.loads(to_json)
         group = data_dict['selected_group']
@@ -89,7 +86,7 @@ def tomas_callback1(group, show_clusters):
     button_disabled(buttons_group)
     def next_tomas(buttons_group, group, show_clusters):
         layout = curdoc().get_model_by_name('TOMAS')
-        api = connection()
+        api = soc.connection()
         adata = api.get_anndata()
         adata.obs['total_UMIs'] = np.ravel(adata.X.sum(1))
         adata.obs['log10_totUMIs'] = np.log10(adata.obs['total_UMIs'])
@@ -114,7 +111,7 @@ def tomas_callback2(group, show_clusters):
     button_disabled(buttons_group)
     def next_tomas2(buttons_group, group, show_clusters):
         layout = curdoc().get_model_by_name('TOMAS')
-        api = connection()
+        api = soc.connection()
         adata = api.get_anndata()
         tm.fit.logN_para(adata,
                     logUMIby='log10_totUMIs',
@@ -139,7 +136,7 @@ def tomas_callback3(group, show_clusters):
         #div = Div(text='<img src="images/loading.gif">')
         layout.children.append(div)
         def process(layout, div, group, show_clusters):       
-            api = connection()
+            api = soc.connection()
             adata = api.get_anndata()
             print(os.getcwd())
             size = os.path.getsize('./output/Tcells')
@@ -184,7 +181,7 @@ def tomas_callback4(group,show_cluster):
         layout.children.append(div)
         def process(layout, div, group, show_clusters):
             layout = curdoc().get_model_by_name('TOMAS')
-            api = connection()
+            api = soc.connection()
             adata = api.get_anndata()
             tm.auxi.cal_KL_bc(adata,groups=show_cluster[0:2])
             adata_dbl_mg = tm.auxi.get_dbl_mg_bc(adata,
@@ -212,7 +209,7 @@ def tomas_callback5(group, show_cluster):
     button_disabled(buttons_group)
     def next_tomas5(buttons_group, group, show_cluster):
         layout = curdoc().get_model_by_name('TOMAS')
-        api = connection()
+        api = soc.connection()
         adata = api.get_anndata()
         figure6 = tm.vis.corrected_UMI_hist(adata,
                                             groupby = group,

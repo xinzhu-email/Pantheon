@@ -11,10 +11,7 @@ from bokeh.models import FileInput, Button, TextInput, Div, Select
 from bokeh.layouts import row, column
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-try:
-    from source import connection, plot_function
-except:
-    from scpantheon.source import connection, plot_function
+from scpantheon import source as soc
 
 color_list = d3['Category20c'][20]
 
@@ -50,14 +47,14 @@ def button_abled(buttons_group):
 
 def pca():
     global buttons_group
-    plot = plot_function()
+    plot = soc.plot_function()
     buttons_group, b = plot.get_buttons_group()
     button_disabled(buttons_group)
     def next_pca(buttons_group):
         '''for b in buttons_group:
             print(b.disabled)'''
         layout = curdoc().get_model_by_name('Clustering_with_Scanpy')
-        change = connection()
+        change = soc.connection()
         adata = change.get_anndata()
 
         sc.tl.pca(adata, svd_solver='arpack')
@@ -76,7 +73,7 @@ def neighborhood_graph(neighbor_num, pc_num, resolution):
     button_disabled(buttons_group)
     def next_neighbor(buttons_group, neighbor_num, pc_num, resolution):
         layout = curdoc().get_model_by_name('Clustering_with_Scanpy')
-        change = connection()
+        change = soc.connection()
         adata = change.get_anndata()
 
         adata = sc.pp.neighbors(adata, n_neighbors=int(neighbor_num), n_pcs=int(pc_num), copy=True)

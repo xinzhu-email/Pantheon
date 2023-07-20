@@ -22,7 +22,8 @@ import os, sys, io
 import importlib
 from PyQt5.QtWidgets import *
 # import mysql.connector
-from scpantheon.front_end import save_qt
+try: from scpantheon.front_end import save_qt
+except: from front_end import save_qt
 from appdirs import AppDirs
 import requests, zipfile, shutil
 
@@ -1195,7 +1196,7 @@ def load_module(active):
         return     
     layouts = column()
     print('active:',active) # ex => active: Clustering_with_Scanpy
-    ind = 0
+    ind = 0 
     for name in name_list:
         but = curdoc().get_model_by_name(name)
         div = Div(text='')
@@ -1210,7 +1211,7 @@ def load_module(active):
             # clear = Button(label='Clear the figures!', button_type='warning', name=str(ind))
             # clear.on_click(lambda: clear_cb(clear.name))
             # new_buttons = column(new_class.add(), clear)
-            new_buttons = column(new_class.add())
+            new_buttons = column(new_class.add()) 
             # append extended buttons
             buttons_group = find_buttons(new_buttons, buttons_group)
             plot.tweak_buttons_group(buttons_group)

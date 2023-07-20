@@ -5,10 +5,7 @@ from pathlib import Path
 from bokeh.io import curdoc
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-try:
-    from source import connection, plot_function
-except:
-    from scpantheon.source import connection, plot_function
+from scpantheon import source as soc
 
 class new_layout:
     def __init__(self):
@@ -31,12 +28,12 @@ def button_abled(buttons_group):
 def change_color(): 
     global buttons_group
 
-    plot = plot_function()
+    plot = soc.plot_function()
     buttons_group, b = plot.get_buttons_group()
     button_disabled(buttons_group)
     def next_color(buttons_group):
-        plot_function().show_checked()
-        trans = connection()
+        soc.plot_function().show_checked()
+        trans = soc.connection()
         to_json = trans.get_attributes()
         data_dict = json.loads(to_json)
         color = data_dict['selected_color']
@@ -52,6 +49,6 @@ def change_color():
         # Save change of data into the Figure
         data_dict['data_color'] = data_color
         trans.set_attributes(data_dict)
-        plot_function().change_checkbox_color()
+        soc.plot_function().change_checkbox_color()
         button_abled(buttons_group)
     curdoc().add_next_tick_callback(lambda : next_color(buttons_group))

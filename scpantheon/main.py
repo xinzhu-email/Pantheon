@@ -4,9 +4,12 @@ freeze_support()'''
 from bokeh.server.server import Server
 import multiprocessing
 import warnings
-
-from scpantheon.app import bokeh_qt
-from scpantheon.front_end import data_qt
+try:
+    from scpantheon.app import bokeh_qt
+    from scpantheon.front_end import data_qt
+except:
+    from scpantheon.app import bokeh_qt
+    from scpantheon.front_end import data_qt
 
 class ImportWarning(Warning):
     def __init__(self, message):
@@ -15,8 +18,9 @@ class ImportWarning(Warning):
         return repr(self.message)
 
 try: 
-    from scpantheon import source # import from online
+    from scpantheon import source
 except:
+    from scpantheon import source # import from online
     warnings.warn('source import failed',ImportWarning)
 
 def run():

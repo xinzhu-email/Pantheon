@@ -13,10 +13,7 @@ import pandas, anndata
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-try:
-    from source import connection, plot_function
-except:
-    from scpantheon.source import connection, plot_function
+from scpantheon import source as soc
 
 class new_layout:
     def __init__(self):
@@ -40,7 +37,7 @@ def button_abled(buttons_group):
 
 def check_histogram():
     global buttons_group
-    plot = plot_function()
+    plot = soc.plot_function()
     buttons_group, b = plot.get_buttons_group() # group and the original amount
     button_disabled(buttons_group)
     def next_hist(buttons_group):
@@ -48,10 +45,10 @@ def check_histogram():
         '''for b in buttons_group:
             print(b.disabled)'''
         layout = curdoc().get_model_by_name('Check_Histogram')
-        change = connection()
+        change = soc.connection()
         #pdata = change.get_pandata()
         adata = change.get_anndata()
-        plot = plot_function()
+        plot = soc.plot_function()
         p = plot.get_figure()
         x, y = plot.get_x_y()
         print('x:', x, '\ny:', y)

@@ -11,10 +11,7 @@ from bokeh.models import FileInput, Button, TextInput, Div, Select
 from bokeh.layouts import row, column
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-try:
-    from source import connection, plot_function
-except:
-    from scpantheon.source import connection, plot_function
+from scpantheon import source as soc
 
 color_list = d3['Category20c'][20]
 
@@ -66,12 +63,12 @@ def button_abled(buttons_group):
 def show_gene_percentage():
     global buttons_group
 
-    plot = plot_function()
+    plot = soc.plot_function()
     buttons_group, b = plot.get_buttons_group()
     button_disabled(buttons_group)
     def next_show(buttons_group):
         layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
-        change = connection()
+        change = soc.connection()
         adata = change.get_anndata()
         figure = sc.pl.highest_expr_genes(adata, n_top=20, show=False )
         buf = BytesIO()
@@ -85,12 +82,12 @@ def show_gene_percentage():
 def basic_filter_callback(input1, input2):
     button_disabled(buttons_group)
     def next_filter(buttons_group, input1, input2):
-        change = connection()
+        change = soc.connection()
         adata = change.get_anndata()
         sc.pp.filter_cells(adata, min_genes=int(input1.value))
         sc.pp.filter_genes(adata, min_cells=int(input2.value))
         cells = list(adata.obs.index)    
-        raw_adata = connection().get_anndata()    
+        raw_adata = soc.connection().get_anndata()    
         indices = raw_adata.obs[raw_adata.obs.index.isin(cells)]['ind']
         
         data_dict = json.loads(change.get_attributes())
@@ -105,7 +102,7 @@ def mitochondrial_genes():
     button_disabled(buttons_group)
     def next_mit(buttons_group):
         layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
-        change = connection()
+        change = soc.connection()
         adata = change.get_anndata()
 
         adata.var['mt'] = adata.var_names.str.startswith('MT-')
@@ -136,7 +133,7 @@ def filter_norm_log(gene_counts, mt_pct, target_sum):
     button_disabled(buttons_group)
     def next_filter(buttons_group, gene_counts, mt_pct, target_sum):
         layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
-        change = connection()
+        change = soc.connection()
         adata = change.get_anndata()
 
         adata = adata[adata.obs.n_genes_by_counts < float(gene_counts), :]
@@ -154,7 +151,7 @@ def hvg(min_mean, max_mean, min_disp):
     button_disabled(buttons_group)
     def next_hvg(buttons_group, min_mean, max_mean, min_disp):
         layout = curdoc().get_model_by_name('Preprocessing_with_Scanpy')
-        change = connection()
+        change = soc.connection()
         adata = change.get_anndata()
 
         sc.pp.highly_variable_genes(adata, min_mean=float(min_mean), max_mean=float(max_mean), min_disp=float(min_disp))
