@@ -65,9 +65,12 @@ class Ui_Dialog(QDialog, QWidget, object):
         # self.buttonBox.accepted.connect(self.accepted)
         self.buttonBox.rejected.connect(self.rejected)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
-
-        extension_path, data_file = openreadtxt(dir)  
-        self.text_brow.append('original extensions path:' + extension_path + '\noriginal data path:' + data_file + '\n') 
+        
+        try:
+            extension_path, data_file = openreadtxt(dir)  
+            self.text_brow.append('original extensions path:' + extension_path + '\noriginal data path:' + data_file + '\n')
+        except:
+            print('path not exist') 
 
 
     def event(self, event):

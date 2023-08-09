@@ -1,0 +1,39 @@
+cffi>=1.10.0
+jinja2
+tzlocal
+
+[:platform_system == "Windows"]
+packaging
+
+[:python_version < "3.8"]
+typing-extensions
+
+[:python_version < "3.9"]
+backports.zoneinfo
+
+[all]
+pytest
+ipython
+pandas>=1.3.5
+numpy
+
+[numpy]
+
+[pandas]
+numpy
+pandas>=1.3.5
+
+[test]
+pytest
+ipython
+numpy
+pandas>=1.3.5
+
+[test_minimal]
+pytest
+coverage
+pytest-cov
+
+[types]
+mypy
+types-tzlocal

@@ -77,6 +77,7 @@ class FlowPlot:
         self.source = ColumnDataSource(data=self.data_df[self.data_columns[0:2]+['color']+['hl_gene']])                             
         self.opts = dict(plot_width=500, plot_height=500, min_border=0, tools="pan,lasso_select,box_select,wheel_zoom,save")
         views = list(self.adata.obsm.keys())
+        # print('views:!!!!!!!!!!!', views)
         if views != []:
             for view_name in views:
                 for i in range(self.adata.obsm[view_name].shape[1]):

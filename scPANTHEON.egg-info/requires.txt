@@ -1,12 +1,13 @@
-bokeh==2.4.3
-pandas==1.4.4
-anndata==0.8.0
-colorcet==3.0.0
-scanpy==1.9.1
-numpy==1.21.5
-PyQt5==5.15.9
-PyQtWebEngine==5.15.6
-appdirs==1.4.4
+bokeh
+pandas
+anndata
+colorcet
+scanpy
+numpy
+PyQt5
+PyQtWebEngine
+appdirs
+rpy2
 
 [leidenalg]
 leidenalg

@@ -13,7 +13,6 @@ from bokeh.layouts import row, column
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from scpantheon import source as soc
-
 color_list = d3['Category20c'][20]
 
 
