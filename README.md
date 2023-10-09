@@ -13,4 +13,4 @@ Run in command line: sc-pantheon
 
 ![本地路径](10k-genomics.png "万乘基因")
 
-![本地路径](./others/zhijiang.png.png "之江实验室")
+![本地路径](zhijiang.png "之江实验室")
