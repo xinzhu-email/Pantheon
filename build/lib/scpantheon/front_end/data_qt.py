@@ -24,7 +24,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.text_brow = QTextBrowser()
 
         # Choose path button
-        self.btn_Extensions = QPushButton("Extensions",self)  
+        self.btn_Extensions = QPushButton("Browse for Extensions folder",self)  
         self.btn_Extensions.setObjectName("btn_Extensions")  
         self.btn_Extensions.clicked.connect(self.slot_btn_Extensions)
         self.btn_Extensions.setFont(font)
@@ -32,7 +32,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         # self.btn_Extensions.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Choose file button
-        self.btn_Data = QPushButton("Data",self)  
+        self.btn_Data = QPushButton("Browse for Data files",self)  
         self.btn_Data.setObjectName("btn_Data")  
         self.btn_Data.clicked.connect(self.slot_btn_Data)
         self.btn_Data.setFont(font)
@@ -40,9 +40,9 @@ class Ui_Dialog(QDialog, QWidget, object):
         # self.btn_Data.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Start scpantheon
-        self.btn_Start = QPushButton("Start",self)
+        self.btn_Start = QPushButton("Load last dataset used",self)
         self.btn_Start.setObjectName("btn_Start")
-        self.btn_Start.clicked.connect(lambda : self.rejected(Dialog))
+        self.btn_Start.clicked.connect(lambda : self.Load(Dialog))
         self.btn_Start.setFont(font)
         self.btn_Start.setMinimumSize(750, 100)
         # self.btn_Start.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -65,9 +65,12 @@ class Ui_Dialog(QDialog, QWidget, object):
         # self.buttonBox.accepted.connect(self.accepted)
         self.buttonBox.rejected.connect(self.rejected)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
-
-        extension_path, data_file = openreadtxt(dir)  
-        self.text_brow.append('original extensions path:' + extension_path + '\noriginal data path:' + data_file + '\n') 
+        
+        try:
+            extension_path, data_file = openreadtxt(dir)  
+            self.text_brow.append('original extensions path:' + extension_path + '\noriginal data path:' + data_file + '\n')
+        except:
+            print('please choose your files') 
 
 
     def event(self, event):
@@ -100,8 +103,9 @@ class Ui_Dialog(QDialog, QWidget, object):
         text_create('data_file', Data)
         print("\nData:",Data)
         self.text_brow.append("new data path:"+Data)
+        self.btn_Start.setText("Load new dataset")
 
-    def rejected(self, Dialog):
+    def Load(self, Dialog):
         Dialog.reject()
         check_code = 'app closed'
         self.my_signal.emit(check_code)

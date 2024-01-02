@@ -1,12 +1,12 @@
-'''from multiprocessing import freeze_support
-freeze_support()'''
+from multiprocessing import freeze_support
+freeze_support()
 
 from bokeh.server.server import Server
 import multiprocessing
 import warnings
 try:
     from scpantheon.app import bokeh_qt
-    from scpantheon.front_end import data_qt
+    from front_end import data_qt
 except:
     from scpantheon.app import bokeh_qt
     from scpantheon.front_end import data_qt

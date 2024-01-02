@@ -46,8 +46,11 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
-        output_path = self.get_save_path() + '\\'
-        self.text_brow.append('original output path:' + output_path)
+        try:
+            output_path = self.get_save_path() + '\\'
+            self.text_brow.append('original output path:' + output_path)
+        except: 
+            print('please choose your files') 
 
 
     def event(self, event):

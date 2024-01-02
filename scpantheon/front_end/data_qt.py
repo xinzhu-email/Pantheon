@@ -1,4 +1,5 @@
-import os, sys
+import os, sys, ast, pkgutil, pkg_resources
+import subprocess
 from PyQt5 import QtCore, QtGui
 # import mysql.connector
 from pathlib import Path
@@ -24,7 +25,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.text_brow = QTextBrowser()
 
         # Choose path button
-        self.btn_Extensions = QPushButton("Extensions",self)  
+        self.btn_Extensions = QPushButton("Browse for Extensions folder",self)  
         self.btn_Extensions.setObjectName("btn_Extensions")  
         self.btn_Extensions.clicked.connect(self.slot_btn_Extensions)
         self.btn_Extensions.setFont(font)
@@ -32,7 +33,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         # self.btn_Extensions.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Choose file button
-        self.btn_Data = QPushButton("Data",self)  
+        self.btn_Data = QPushButton("Browse for Data files",self)  
         self.btn_Data.setObjectName("btn_Data")  
         self.btn_Data.clicked.connect(self.slot_btn_Data)
         self.btn_Data.setFont(font)
@@ -40,9 +41,9 @@ class Ui_Dialog(QDialog, QWidget, object):
         # self.btn_Data.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Start scpantheon
-        self.btn_Start = QPushButton("Start",self)
+        self.btn_Start = QPushButton("Load last dataset used",self)
         self.btn_Start.setObjectName("btn_Start")
-        self.btn_Start.clicked.connect(lambda : self.rejected(Dialog))
+        self.btn_Start.clicked.connect(lambda : self.Load(Dialog))
         self.btn_Start.setFont(font)
         self.btn_Start.setMinimumSize(750, 100)
         # self.btn_Start.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -66,11 +67,15 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.buttonBox.rejected.connect(self.rejected)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         
-        try:
-            extension_path, data_file = openreadtxt(dir)  
-            self.text_brow.append('original extensions path:' + extension_path + '\noriginal data path:' + data_file + '\n')
-        except:
-            print('path not exist') 
+        # try:
+        extension_path, data_file = openreadtxt(dir) 
+        # use ast to put every import module from extension folder to requirement.txt 
+        process_folder(extension_path)
+        '''# use subprocess to pip install automatically
+        subprocess.run(['pip', 'install', '-r', 'requirements.txt'])'''
+        self.text_brow.append('original extensions path:' + extension_path + '\noriginal data path:' + data_file + '\n')
+        '''except:
+            self.text_brow.append('please choose your files') '''
 
 
     def event(self, event):
@@ -85,7 +90,6 @@ class Ui_Dialog(QDialog, QWidget, object):
         if Extensions == "":
             print("\nchoose canceled")
             return
-
         # write extension into user_data_dir
         text_create('extension_path', Extensions)
         print("\nExtensions:",Extensions)
@@ -94,17 +98,16 @@ class Ui_Dialog(QDialog, QWidget, object):
     def slot_btn_Data(self):
         global Data
         Data, file_type = QFileDialog.getOpenFileName(self,"Choose Data", self.cwd)   # 设置文件扩展名过滤,用双分号间隔
-
         if Data == "":
             print("\nchoose canceled")
             return
-
         # write Data into user_data_dir
         text_create('data_file', Data)
         print("\nData:",Data)
         self.text_brow.append("new data path:"+Data)
+        self.btn_Start.setText("Load new dataset")
 
-    def rejected(self, Dialog):
+    def Load(self, Dialog):
         Dialog.reject()
         check_code = 'app closed'
         self.my_signal.emit(check_code)
@@ -113,6 +116,58 @@ class Ui_Dialog(QDialog, QWidget, object):
     '''def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Choose", "Choose"))'''
+
+
+# fetch every module.py from extension folder
+def process_folder(folder_path):
+    all_imports = {'import': set(), 'from': set()}
+    for root, dirs, files in os.walk(folder_path):
+        for file_name in files:
+            if file_name == 'module.py':
+                file_path = os.path.join(root, file_name)
+                imports = extract_imports(file_path)
+                all_imports['import'].update(imports['import'])
+                all_imports['from'].update(imports['from'])
+    filtered_imports = {
+        'import': filter_standard_libraries(all_imports['import']),
+        'from': filter_standard_libraries(all_imports['from'])
+    }
+    # with open('requirements.txt', 'w') as req_file:
+    required_modules = []
+    for imp in filtered_imports['import']:
+        # req_file.write(f"{imp}\n")
+        required_modules.append(imp)
+    for frm in filtered_imports['from']:
+        # req_file.write(f"{frm}\n")
+        required_modules.append(frm)
+    print('required modules', required_modules)
+    # use subprocess to pip install required packages
+    for module in required_modules:
+        try:
+            subprocess.check_call(['pip', 'install', module])
+        except subprocess.CalledProcessError as e:
+            print(f'Failed to install {module}. Error: {e}')
+
+
+# fetch every import module from module.py
+def extract_imports(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        tree = ast.parse(file.read(), filename=file_path)
+    imports = {'import': set(), 'from': set()}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports['import'].add(alias.name.split('.')[0])
+        elif isinstance(node, ast.ImportFrom):
+            imports['from'].add(node.module.split('.')[0])
+    return imports
+
+
+# erase the python sys module 
+def filter_standard_libraries(import_set):
+    installed_modules = list(set(sys.modules) | {module_info.name.split('.')[0] for module_info in pkgutil.iter_modules()})
+    print(installed_modules)
+    return {lib for lib in import_set if lib not in (installed_modules)}
 
 
 def mkdir(path):

@@ -9,7 +9,7 @@ try:
     from scpantheon.front_end import data_qt
 except:
     from scpantheon.app import bokeh_qt
-    from scpantheon.front_end import data_qt
+    import data_qt
 
 class ImportWarning(Warning):
     def __init__(self, message):

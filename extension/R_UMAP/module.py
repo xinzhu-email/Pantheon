@@ -27,6 +27,14 @@ r = ro.r
 class new_layout:
     def __init__(self):
         # assay_list <<- Assays(new_data)
+        global dir
+        # create the file to write data
+        appname = "scpantheon"
+        appauthor = "xinzhu"
+        version = "0.2.1"
+        dirs = AppDirs(appname, appauthor, version)
+        dir = dirs.user_data_dir
+        mkdir(path=dir)
         r('''
             library(Seurat)
             library(Matrix)
@@ -97,6 +105,13 @@ def plot_r_umap():
     buttons_group, b = plot.get_buttons_group()
     button_disabled(buttons_group)
     def plot_r(buttons_group):
+        try:
+            RNA_folder, ADT_file, Droplet_file = openreadtxt(dir)
+            r['read_mtx'](RNA_folder)
+            r['Create_data_adt'](ADT_file)
+            r['read_csv'](Droplet_file)
+        except:
+            print('please choose your files') 
         r('''
             DefaultAssay(new_data) <- 'RNA' 
             new_data <- NormalizeData(new_data) %>% FindVariableFeatures() %>% ScaleData() %>% RunPCA()
@@ -105,16 +120,14 @@ def plot_r_umap():
             new_data <- NormalizeData(new_data, normalization.method = 'CLR', margin = 2) %>% ScaleData() %>% RunPCA(reduction.name = 'apca')
             new_data <- FindMultiModalNeighbors(new_data, reduction.list = list("pca", "apca"), dims.list = list(1:30, 1:18), modality.weight.name = "RNA.weight")
             new_data <- RunUMAP(new_data, nn.name = "weighted.nn", reduction.name = "wnn.umap", reduction.key = "wnnUMAP_")
-        ''')
-        r('''
+
             new_data@meta.data['label'] <- new_label[,'cell_type']
             new_data <- FindClusters(new_data, graph.name = "wsnn", algorithm = 3, resolution = 1, verbose = FALSE)
 
             p1 <- DimPlot(new_data, reduction = 'wnn.umap', label = TRUE, repel = TRUE, label.size = 2.5) + NoLegend()
             p2 <- DimPlot(new_data, reduction = 'wnn.umap', group.by='label', label = TRUE, repel = TRUE, label.size = 2.5) + NoLegend()
             p1+p2
-        ''')
-        r('''
+
             png(filename = "p1+p2.png", width = 10, height = 6, units = "in", res = 300)
             print(plot_grid(p1, p2, ncol = 2))
             dev.off()
@@ -133,15 +146,13 @@ def get_data_r_init():
         global RNA_folder, ADT_file, Droplet_file
         if main() == 'app closed':
             print('choosing finished')
-        appname = "scpantheon"
-        appauthor = "xinzhu"
-        version = "0.2.1"
-        dirs = AppDirs(appname, appauthor, version)
-        dir = dirs.user_data_dir
-        RNA_folder, ADT_file, Droplet_file = openreadtxt(dir) 
-        r['read_mtx'](RNA_folder)
+        try:
+            RNA_folder, ADT_file, Droplet_file = openreadtxt(dir)
+        except:
+            print('please choose your files') 
+        '''r['read_mtx'](RNA_folder)
         r['Create_data_adt'](ADT_file)
-        r['read_csv'](Droplet_file)
+        r['read_csv'](Droplet_file)'''
         button_abled(buttons_group)
     curdoc().add_next_tick_callback(lambda : get(buttons_group))
 
@@ -160,16 +171,14 @@ def openreadtxt(dir):
     droplet_file.close()
     return rna_path, adt_path, droplet_path
 
-
-
-sys.path.append(str(Path(__file__).resolve().parents[1]))
+# qt for data 
 
 class Ui_Dialog(QDialog, QWidget, object):
     my_signal = pyqtSignal(str)
     
     def setupUi(self, Dialog):
         Dialog.setObjectName("Choose")
-        Dialog.resize(750, 900)
+        Dialog.resize(750, 600)
         self.cwd = os.getcwd()
         font = QtGui.QFont()
         font.setPointSize(20)
@@ -177,14 +186,6 @@ class Ui_Dialog(QDialog, QWidget, object):
 
         # render help text
         self.text_brow = QTextBrowser()
-
-        '''
-        folder:
-        RNA_folder
-        file:
-        ADT_file
-        Droplet_file
-        '''
 
         # folder
         self.btn_RNA_folder = QPushButton("RNA_folder",self)  
@@ -208,13 +209,6 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.btn_Droplet_file.clicked.connect(self.slot_Droplet_file)
         self.btn_Droplet_file.setFont(font)
         self.btn_Droplet_file.setMinimumSize(750, 100)
-
-        # folder
-        self.btn_RNA_folder = QPushButton("RNA_folder",self)
-        self.btn_RNA_folder.setObjectName("btn_RNA_folder")
-        self.btn_RNA_folder.clicked.connect(self.slot_RNA_folder)
-        self.btn_RNA_folder.setFont(font)
-        self.btn_RNA_folder.setMinimumSize(750, 100)
         # self.btn_Start.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.layout1 = QVBoxLayout()
@@ -238,9 +232,9 @@ class Ui_Dialog(QDialog, QWidget, object):
 
         try:
             RNA_path, ADT_file, Droplet_file = openreadtxt(dir)  
-            self.text_brow.append('original RNA path:' + RNA_path + '\noriginal ADT path:' + ADT_file + '\noriginal Droplet path:' + Droplet_file + '\n') 
+            self.text_brow.append('Original RNA path:\n' + RNA_path + '\nOriginal ADT path:\n' + ADT_file + '\nOriginal Droplet path:\n' + Droplet_file + '\n') 
         except:
-            print('path not exist')
+            print('please choose your files') 
 
     def event(self, event):
         if event.type()==QtCore.QEvent.EnterWhatsThisMode:
@@ -258,7 +252,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         # write extension into user_data_dir
         text_create('RNA_folder', RNA_folder)
         print("\RNA folder:",RNA_folder)
-        self.text_brow.append("new RNA folder:" + RNA_folder)
+        self.text_brow.append("New RNA folder:" + RNA_folder)
 
     def slot_ADT_file(self):
         global ADT_file
@@ -271,7 +265,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         # write Data into user_data_dir
         text_create('ADT_file', ADT_file)
         print("\nADT:",ADT_file)
-        self.text_brow.append("new ADT path:" + ADT_file)
+        self.text_brow.append("New ADT path:" + ADT_file)
 
     def slot_Droplet_file(self):
         global Droplet_file
@@ -284,17 +278,12 @@ class Ui_Dialog(QDialog, QWidget, object):
         # write Data into user_data_dir
         text_create('Droplet_file', Droplet_file)
         print("\Droplet:",Droplet_file)
-        self.text_brow.append("new Droplet path:" + Droplet_file)
+        self.text_brow.append("New Droplet path:" + Droplet_file)
 
     def rejected(self, Dialog):
         Dialog.reject()
         check_code = 'app closed'
         self.my_signal.emit(check_code)
-
-
-    '''def retranslateUi(self, Dialog):
-        _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Choose", "Choose"))'''
 
 
 def mkdir(path):
@@ -340,14 +329,6 @@ def signal_slot(data):
 
 
 def main():
-    global dir
-    # create the file to write data
-    appname = "scpantheon"
-    appauthor = "xinzhu"
-    version = "0.2.1"
-    dirs = AppDirs(appname, appauthor, version)
-    dir = dirs.user_data_dir
-    mkdir(path=dir)
     # create qt app
     app = QApplication(sys.argv)
     Dialog = QDialog()
