@@ -22,11 +22,16 @@ import os, sys, io
 import importlib
 from PyQt5.QtWidgets import *
 # import mysql.connector
-try: from scpantheon.front_end import save_qt
-except: from front_end import save_qt
+# !!!
+from scpantheon.front_end.data_qt import dir
+# !!!
+try: from scpantheon.front_end import save_qt, load_qt
+except: from front_end import save_qt, load_qt
+# !!!
+try: from scpantheon.front_end.data_qt import auto_pip_install
+except: from front_end.data_qt import auto_pip_install
 from appdirs import AppDirs
-import requests, zipfile, shutil
-
+import requests, zipfile, tarfile, shutil
 
 TOOLTIPS = [
         ("(x,y)", "($x, $y)"),
@@ -39,7 +44,7 @@ class FlowPlot:
         self.data_df = self.adata.to_df()
         self.data_log = np.log1p(self.data_df)    
         # For real-valued input, log1p is accurate also for x so small that 1 + x == 1 in floating-point accuracy.
-        self.label_existed, view_existed = False, False
+        self.label_existed, view_existed = False, False # group_label_existed
         # personalized
         try:
             group_list = list(self.adata.uns['category_dict'].keys()) 
@@ -47,22 +52,19 @@ class FlowPlot:
             if main_plot == None:
                 self.label_existed = True
         except:
-            self.adata.uns['category_dict'] = dict()  
-            # initialize the null category_dict     
+            self.adata.uns['category_dict'] = dict()   
             group_list = list(self.adata.obs.columns) 
 
             if group_list != [] and main_plot == None:
                 self.label_existed = True
-                for group in group_list: # every single obs
-                    self.adata.uns['category_dict'][group] = pandas.DataFrame(columns=['class_name','color','cell_num']) # 2d matrix with new add columns
-                                                  # key, because it's a dict
-                    class_list = self.adata.obs[group] # one specific obs
-                    # cell classes
-                    self.adata.obs[group] = pandas.Series(self.adata.obs[group], dtype=object) # 1d ndarray with axis labels(default to RangeIndex (0, 1, 2, …, n) if not provided.)
-                                                                                   ### ??? ###
+                for group in group_list: 
+                    self.adata.uns['category_dict'][group] = pandas.DataFrame(columns=['class_name','color','cell_num']) 
+                    class_list = self.adata.obs[group] 
+                    # ??? why transform now?
+                    self.adata.obs[group] = pandas.Series(self.adata.obs[group], dtype=object)
                     class_dict = {}
-                    for value in class_list:
-                        class_dict[value] = class_dict.get(value,0) + 1 # initialize with 1 ?? ##
+                    for value in class_list: # ??? every single cell value?
+                        class_dict[value] = class_dict.get(value,0) + 1 
                     ind = 0 
                     for key in class_dict.keys():
                         self.adata.uns['category_dict'][group].loc[ind,:] = {'class_name': key, 'cell_num': class_dict[key], 'color':color_list[int(ind*4%20)]}
@@ -124,14 +126,14 @@ class FlowPlot:
         ######################################
         ####### Create panels of plots #######
         ######################################    
-        # Input extension url
-        self.extension_url = TextInput(title='Input extension url: ', value='')
+        # Extension url
+        self.extension_url = TextInput(title='Extension url: ', value='')
         self.extension_url.js_on_change("value", CustomJS(code="""
             console.log('text_input: value=' + this.value, this.toString())
         """))
         # Import extension zip from online
-        self.import_extension = Button(label="online extension")
-        self.import_extension.on_click(self.import_func)
+        self.import_extension = Button(label="online extension zip")
+        self.import_extension.on_click(self.load_extensions)
         # Show gene list
         self.show_gene_list = Div(text='Gene/Marker List: '+str(self.data_columns[0:10]))
         # Show plot
@@ -293,9 +295,10 @@ class FlowPlot:
     ####### Call Back Functions ######
     ##################################
     # Import extension packages from online
-    def import_func(self):
+    def load_extensions(self):
+        global dir
         self.button_disabled()
-        def import_f(self):
+        def load_e(self):
             if self.extension_url == '':
                 print('please input extension url')
             else:
@@ -303,16 +306,26 @@ class FlowPlot:
             self.extension_url.value = ''
             # Download online packages and get the new extensions path
             # try :
-            print('extension path:', extension_path)
+            # print('extension path:', extension_path)
             r = requests.get(zip_file_url, stream=True)
-            z = zipfile.ZipFile(io.BytesIO(r.content))
-            extract_path = 'C:/Users/23606/Documents/Workspace/Pantheon/online_extension_packages/' 
+            # !!!
+            if load_qt.main() == 'app closed':
+                print('choosing finished')
+            extract_path = load_qt.get_load_path() + '/online_extension/'
             '''print(os.getcwd())
-            extract_path = os.getcwd() + 'online_extension_packages/'
+            extract_path = os.getcwd() + 'online_extension/'
             extract_path.replace('scpantheon')'''
-
-            # Download online extensions packages to the extract_path
-            z.extractall(extract_path)
+            try:
+                z = zipfile.ZipFile(io.BytesIO(r.content))
+                z.extractall(extract_path)
+                print("get zip file")
+            except zipfile.BadZipFile:
+                try:
+                    t = tarfile.open(fileobj=io.BytesIO(r.content), mode="r:gz")  
+                    t.extractall(extract_path)
+                    print("get tar file")
+                except tarfile.ReadError:
+                    print("zip or tar file is needed")
             ''' file_names = z.namelist()
             for file_name in file_names:
                 # find dir
@@ -323,7 +336,7 @@ class FlowPlot:
                         new_extension_path = extract_path + file_name
             print('extension from online path:', new_extension_path)'''
             
-            # Find all the directory from online extension packages that has module.py
+            # Find all the directory from new local extension that has module.py
             module_path_list = []
             def find_module(path):
                 lsdir = os.listdir(path)
@@ -352,6 +365,8 @@ class FlowPlot:
                 except:
                     print('Module', folder_name, 'already exists')
             print('Online packages download finished!')
+            # auto pip install import 
+            auto_pip_install(extension_path)
             # pre_module_select = curdoc().get_model_by_name('module_select')
             # option = pre_module_select.value
             models = curdoc().get_model_by_id('1234') # pre_module_select = Select(...,id='1234') 
@@ -364,7 +379,7 @@ class FlowPlot:
             '''except:
                 print('please use correct extension package url')'''
             self.button_abled()
-        curdoc().add_next_tick_callback(lambda : import_f(self))
+        curdoc().add_next_tick_callback(lambda : load_e(self))
 
     # Change view list
     def change_view_list(self):
@@ -392,7 +407,7 @@ class FlowPlot:
                 self.adata.obs.to_csv(path+'cluster.csv')
             except:
                 os.makedirs(path)
-                self.adata.write_h5ad(path+'result.h5ad') 
+                self.adata.write_h5ad(path+'result.h5ad')
                 self.adata.obs.to_csv(path+'cluster.csv')
             # for cate in list(self.adata.uns['category_dict'].keys()):
             #     self.adata.obs[cate].to_csv(path+'%s.csv'%cate)
@@ -1139,6 +1154,7 @@ class plot_function:
     
     def get_buttons_group(self):
         return self.Figure.buttons_group, self.Figure.buttons_amount
+
     def tweak_buttons_group(self, buttons_group):
         self.Figure.buttons_group = buttons_group
 
@@ -1317,7 +1333,7 @@ def text_cover(dir, msg):
     file.close()
 
 
-def openreadtxt(dir):
+def read_path(dir):
     e_file = open(dir + '/' + 'extension_path.txt', 'r')
     e_path = e_file.readline()
     e_file.close()
@@ -1338,14 +1354,10 @@ def get_save_path(dir):
 
 
 def main(doc):
-    global Main_plot, extension_path, data_file, dir
-    appname = "scpantheon"
-    appauthor = "xinzhu"
-    version = "0.2.1"
-    dirs = AppDirs(appname, appauthor, version)
-    dir = dirs.user_data_dir
+    global Main_plot, extension_path, data_file
     # read path_ and file from user_data_dir
-    extension_path, data_file = openreadtxt(dir)                                                                                              
+    extension_path, data_file = read_path(dir)   
+    auto_pip_install(extension_path)                                                         
     
     '''
     global mycursor

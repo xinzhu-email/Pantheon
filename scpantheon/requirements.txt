@@ -1,3 +1,0 @@
-tomas
-rpy2
-PyQt5

@@ -25,11 +25,11 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.text_brow = QTextBrowser()
 
         # choose path button
-        self.btn_save = QPushButton("output", self)  
-        self.btn_save.setObjectName("btn_save")  
-        self.btn_save.clicked.connect(self.slot_btn_save)
-        self.btn_save.setFont(font)
-        self.btn_save.setMinimumSize(750, 100)
+        self.btn_download = QPushButton("output", self)  
+        self.btn_download.setObjectName("btn_download")  
+        self.btn_download.clicked.connect(self.slot_btn_download)
+        self.btn_download.setFont(font)
+        self.btn_download.setMinimumSize(750, 100)
 
         # Start load
         self.btn_Start = QPushButton("Load",self)
@@ -48,7 +48,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.buttonBox.setObjectName("buttonBox")
         self.layout2.addWidget(self.buttonBox)
 
-        self.layout2.addWidget(self.btn_save)
+        self.layout2.addWidget(self.btn_download)
         self.layout2.addWidget(self.btn_Start)
 
         # self.retranslateUi(Dialog) 
@@ -57,46 +57,45 @@ class Ui_Dialog(QDialog, QWidget, object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
         try:
-            output_path = self.get_save_path() + '\\'
+            output_path = get_load_path() + '\\'
             self.text_brow.append('original output path:' + output_path)
         except: 
-            self.text_brow.append('Choose the path to save your file')
-            print('Choose the path you want to save your file') 
+            self.text_brow.append('Choose the path to load your file')
+            print('Choose the path you want to load your file') 
 
 
     def event(self, event):
         if event.type()==QtCore.QEvent.EnterWhatsThisMode:
             QWhatsThis.leaveWhatsThisMode()
-            self.text_brow.setText("Choose the path you want to save your file")
+            self.text_brow.setText("Choose the path to load your file")
         return QDialog.event(self,event)
 
-    def slot_btn_save(self):
-        save = QFileDialog.getExistingDirectory(self,"Choose save",self.cwd) # 起始路径
-        if save == "":
+    def slot_btn_download(self):
+        load = QFileDialog.getExistingDirectory(self,"Choose load",self.cwd) # 起始路径
+        if load == "":
             print("\nchoose canceled")
             return
 
         # write extension into user_data_dir
-        write_msg('save_path', save)
-        print("\nsave:", save) 
-        self.text_brow.append("new output path:" + save)
+        write_msg('load_path', load)
+        print("\nload:", load) 
+        self.text_brow.append("new output path:" + load)
 
     def Load(self, Dialog):
         Dialog.reject()
         check_code = 'app closed'
         self.my_signal.emit(check_code)
 
-    def get_save_path(self):
-        s_file = open(dir + '/' + 'save_path.txt', 'r')
-        s_path = s_file.readline()
-        s_file.close()
-        print('-======- s_path', s_path)
-        return s_path
-
     '''def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Choose", "Choose"))'''
 
+def get_load_path():
+    l_file = open(dir + '/' + 'load_path.txt', 'r')
+    l_path = l_file.readline()
+    l_file.close()
+    print('-======- load_path', l_path)
+    return l_path
 
 def mkdir(path):
     isExists = os.path.exists(path)
@@ -120,6 +119,8 @@ def write_msg(name, msg):
 
 
 def main():
+    global dir
+    # create the file to write data
     mkdir(path=dir)
     # create qt app
     app = QApplication(sys.argv)

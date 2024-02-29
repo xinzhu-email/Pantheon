@@ -1,5 +1,0 @@
-cffi>=1.10.0
-jinja2
-pytz
-tzlocal
-packaging;platform_system=='Windows'

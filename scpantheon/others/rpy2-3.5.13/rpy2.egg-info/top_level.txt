@@ -1,3 +1,0 @@
-_rinterface_cffi_abi
-_rinterface_cffi_api
-rpy2
