@@ -4,10 +4,11 @@ freeze_support()
 from bokeh.server.server import Server
 import multiprocessing
 import warnings
-# !!!
+
 try:
-    from scpantheon.app import bokeh_qt
-    from scpantheon.front_end import data_qt
+    # !!!
+    from app import bokeh_qt
+    from front_end import data_qt
 except:
     from app import bokeh_qt
     from front_end import data_qt
@@ -20,7 +21,7 @@ class ImportWarning(Warning):
 
 try: 
     # !!!
-    from scpantheon import source
+    import source
 except:
     import source # import from online
     warnings.warn('source import failed',ImportWarning)
@@ -38,14 +39,11 @@ def run():
 
 def app():
     if data_qt.main() == 'app closed':
-        print('choosing finished')
         if bokeh_qt.main() == 'app closed':
-            p1.terminate()
             print('app ended')
     else: 
-        p1.terminate()
-        print("app ended")
-    
+        print("app failed")
+    p1.terminate()
 
 def main():
     global p1

@@ -17,21 +17,22 @@ import colorcet as cc
 import scanpy as sc
 # from new_func import new_layout
 # from main3 import change_class_color
-
+# import mysql.connector
 import os, sys, io
 import importlib
 from PyQt5.QtWidgets import *
-# import mysql.connector
-# !!!
-from scpantheon.front_end.data_qt import dir
-# !!!
-try: from scpantheon.front_end import save_qt, load_qt
-except: from front_end import save_qt, load_qt
-# !!!
-try: from scpantheon.front_end.data_qt import auto_pip_install
-except: from front_end.data_qt import auto_pip_install
 from appdirs import AppDirs
 import requests, zipfile, tarfile, shutil
+# !!！ 
+try:
+    from front_end import save_qt, load_qt
+    from front_end.data_qt import dir, auto_pip_install, read_path
+    from front_end.save_qt import get_save_path
+except:
+    from front_end import save_qt, load_qt
+    from front_end.data_qt import dir, auto_pip_install, read_path
+    from front_end.save_qt import get_save_path
+
 
 TOOLTIPS = [
         ("(x,y)", "($x, $y)"),
@@ -49,12 +50,12 @@ class FlowPlot:
         try:
             group_list = list(self.adata.uns['category_dict'].keys()) 
             #  uns can get any kinds of data type like dict or list
-            if main_plot == None:
+            if main_plot == None and group_list != []:
                 self.label_existed = True
         except:
             self.adata.uns['category_dict'] = dict()   
             group_list = list(self.adata.obs.columns) 
-
+            # print("group list:", group_list)
             if group_list != [] and main_plot == None:
                 self.label_existed = True
                 for group in group_list: 
@@ -121,7 +122,7 @@ class FlowPlot:
         if select_color_change:
             self.r.selection_glyph = Circle(fill_alpha=1,fill_color=self.cur_color, line_color='black')
         self.allow_select = allow_select
-        print('label and view existed',self.label_existed,view_existed)
+        print('label and view existed',self.label_existed, view_existed)
 
         ######################################
         ####### Create panels of plots #######
@@ -159,6 +160,8 @@ class FlowPlot:
         # Select class group
         if self.label_existed:
             group_list = list(self.adata.uns['category_dict'].keys()) 
+            # !!! h5ad load fail 
+            # print("group list:", group_list)
             self.group = Select(title='Select Cluster Group:', options=group_list, value=group_list[-1])
             #self.group = Select(title='Select Cluster Group:',options=[' '],value=' ')
             # self.update_checkbox()
@@ -258,7 +261,7 @@ class FlowPlot:
             hl_color_bar = ColorBar(color_mapper=self.hl_bar_map, label_standoff=8, border_line_color=None)
             self.p.add_layout(hl_color_bar,'right')
             self.marker_file = FileInput()
-            print('++++++',self.marker_file.filename)
+            # print('++++++',self.marker_file.filename)
             self.marker_file.on_change('filename', lambda attr, old, new: self.marker_choice())
             self.cell_type = Select(title='Choose Cell Type:', options=['No cell type'], value='No cell type')
             self.cell_type.on_change('value',lambda attr, old, new: self.change_marker_ct())
@@ -309,75 +312,75 @@ class FlowPlot:
             # print('extension path:', extension_path)
             r = requests.get(zip_file_url, stream=True)
             # !!!
-            if load_qt.main() == 'app closed':
-                print('choosing finished')
-            extract_path = load_qt.get_load_path() + '/online_extension/'
-            '''print(os.getcwd())
-            extract_path = os.getcwd() + 'online_extension/'
-            extract_path.replace('scpantheon')'''
-            try:
-                z = zipfile.ZipFile(io.BytesIO(r.content))
-                z.extractall(extract_path)
-                print("get zip file")
-            except zipfile.BadZipFile:
+            check_code = load_qt.main()
+            if check_code == 'app closed':
+                extract_path = load_qt.get_load_path() + '/online_extension/'
+                '''print(os.getcwd())
+                extract_path = os.getcwd() + 'online_extension/'
+                extract_path.replace('scpantheon')'''
                 try:
-                    t = tarfile.open(fileobj=io.BytesIO(r.content), mode="r:gz")  
-                    t.extractall(extract_path)
-                    print("get tar file")
-                except tarfile.ReadError:
-                    print("zip or tar file is needed")
-            ''' file_names = z.namelist()
-            for file_name in file_names:
-                # find dir
-                if file_name.endswith('/'):
-                    # get dir name
-                    folder_name = os.path.basename(file_name[:-1])
-                    if folder_name == 'extension':
-                        new_extension_path = extract_path + file_name
-            print('extension from online path:', new_extension_path)'''
-            
-            # Find all the directory from new local extension that has module.py
-            module_path_list = []
-            def find_module(path):
-                lsdir = os.listdir(path)
-                dirs = [i for i in lsdir if os.path.isdir(os.path.join(path, i))]
-                if dirs:
-                    for i in dirs:
-                        find_module(os.path.join(path, i))
-                files = [i for i in lsdir if os.path.isfile(os.path.join(path,i))]
-                flag = False
-                for f in files:
-                    if f == 'module.py':
-                        flag = True
-                        # module_path_list.append(os.path.join(path, f))
-                if flag: 
-                    module_path_list.append(path)
+                    z = zipfile.ZipFile(io.BytesIO(r.content))
+                    z.extractall(extract_path)
+                    print("get zip file")
+                except zipfile.BadZipFile:
+                    try:
+                        t = tarfile.open(fileobj=io.BytesIO(r.content), mode="r:gz")  
+                        t.extractall(extract_path)
+                        print("get tar file")
+                    except tarfile.ReadError:
+                        print("zip or tar file is needed")
+                ''' file_names = z.namelist()
+                for file_name in file_names:
+                    # find dir
+                    if file_name.endswith('/'):
+                        # get dir name
+                        folder_name = os.path.basename(file_name[:-1])
+                        if folder_name == 'extension':
+                            new_extension_path = extract_path + file_name
+                print('extension from online path:', new_extension_path)'''
+                
+                # Find all the directory from new local extension that has module.py
+                module_path_list = []
+                def find_module(path):
+                    lsdir = os.listdir(path)
+                    dirs = [i for i in lsdir if os.path.isdir(os.path.join(path, i))]
+                    if dirs:
+                        for i in dirs:
+                            find_module(os.path.join(path, i))
+                    files = [i for i in lsdir if os.path.isfile(os.path.join(path,i))]
+                    flag = False
+                    for f in files:
+                        if f == 'module.py':
+                            flag = True
+                            # module_path_list.append(os.path.join(path, f))
+                    if flag: 
+                        module_path_list.append(path)
 
-            find_module(extract_path)
-            print('module path list:\n', module_path_list)
-            # Copy all the extension module to extension path
-            for module_directory in module_path_list:
-                module_directory += '/'
-                folder_name = os.path.basename(module_directory[:-1])
-                try: 
-                    shutil.copytree(module_directory, extension_path+'/'+folder_name+'/')
-                    print('Module', folder_name, 'added')
-                except:
-                    print('Module', folder_name, 'already exists')
-            print('Online packages download finished!')
-            # auto pip install import 
-            auto_pip_install(extension_path)
-            # pre_module_select = curdoc().get_model_by_name('module_select')
-            # option = pre_module_select.value
-            models = curdoc().get_model_by_id('1234') # pre_module_select = Select(...,id='1234') 
-            # print(models)
-            models.visible = False
-            curdoc().remove_root(models)
-            module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
-            module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
-            curdoc().add_root(module_select)
-            '''except:
-                print('please use correct extension package url')'''
+                find_module(extract_path)
+                print('module path list:\n', module_path_list)
+                # Copy all the extension module to extension path
+                for module_directory in module_path_list:
+                    module_directory += '/'
+                    folder_name = os.path.basename(module_directory[:-1])
+                    try: 
+                        shutil.copytree(module_directory, extension_path+'/'+folder_name+'/')
+                        print('Module', folder_name, 'added')
+                    except:
+                        print('Module', folder_name, 'already exists')
+                print('Online packages download finished!')
+                # auto pip install import 
+                auto_pip_install(extension_path)
+                # pre_module_select = curdoc().get_model_by_name('module_select')
+                # option = pre_module_select.value
+                models = curdoc().get_model_by_id('1234') # pre_module_select = Select(...,id='1234') 
+                # print(models)
+                models.visible = False
+                curdoc().remove_root(models)
+                module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
+                module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
+                curdoc().add_root(module_select)
+                '''except:
+                    print('please use correct extension package url')'''
             self.button_abled()
         curdoc().add_next_tick_callback(lambda : load_e(self))
 
@@ -397,21 +400,23 @@ class FlowPlot:
         global dir
         self.button_disabled()
         def next_save(self):
-            if save_qt.main() == 'app closed':
-                print('choosing finished')
-            path = get_save_path(dir) + '/'
-            text_cover(dir, path + 'result.h5ad') # write the output anndata to cover the data
-            print("path covered to " + path + "result.h5ad")
-            try: 
-                self.adata.write_h5ad(path+'result.h5ad') 
-                self.adata.obs.to_csv(path+'cluster.csv')
-            except:
-                os.makedirs(path)
-                self.adata.write_h5ad(path+'result.h5ad')
-                self.adata.obs.to_csv(path+'cluster.csv')
-            # for cate in list(self.adata.uns['category_dict'].keys()):
-            #     self.adata.obs[cate].to_csv(path+'%s.csv'%cate)
-            #adata.uns['category_dict']('cluster name.csv') 
+            # !!!
+            check_code = save_qt.main()
+            if check_code == 'app closed':
+                # print('choosing finished')
+                path = get_save_path(dir) + '/'
+                text_cover(dir, path + 'result.h5ad') # write the output anndata to cover the data
+                print("path covered to " + path + "result.h5ad")
+                try: 
+                    self.adata.write_h5ad(path+'result.h5ad') 
+                    self.adata.obs.to_csv(path+'cluster.csv')
+                except:
+                    os.makedirs(path)
+                    self.adata.write_h5ad(path+'result.h5ad')
+                    self.adata.obs.to_csv(path+'cluster.csv')
+                # for cate in list(self.adata.uns['category_dict'].keys()):
+                #     self.adata.obs[cate].to_csv(path+'%s.csv'%cate)
+                #adata.uns['category_dict']('cluster name.csv') 
             self.button_abled()
         curdoc().add_next_tick_callback(lambda : next_save(self))
 
@@ -887,7 +892,7 @@ class FlowPlot:
         def ct(self):
             cell_type = self.cell_type.value
             marker = pandas.read_csv('data/' + self.marker_file.filename)
-            print('+++++++marker gene')
+            # print('+++++++marker gene')
             marker_list = list(marker[marker['cell_type']==cell_type].loc[:,'marker_gene'])
             self.ct_marker.options = marker_list
             self.ct_marker.value = marker_list[0]
@@ -1295,17 +1300,17 @@ def upload_callback():
                                                       # [-1] means the last tuple: the type 
         if filetype == 'csv':
             adata = sc.read_csv(data_file) 
-            print('csv')
+            print('csv data')
         elif filetype == 'h5ad':
-            # adata = sc.read_h5ad(data_file)
-            adata = anndata.read(data_file, backed='r')
-            print('h5ad')
+            adata = sc.read_h5ad(data_file)
+            # adata = anndata.read(data_file, backed='r')  
+            print('h5ad data')
         elif filetype == 'mtx':
             adata = sc.read_10x_mtx(
                 'data/hg19/',  # the directory with the `.mtx` file
                 var_names='gene_symbols',                # use gene symbols for the variable names (variables-axis index)
                 cache=True)                              # write a cache file for faster subsequent reading
-        print(data_file)
+        # print(data_file)
         # Figure, layout
         mainplot, panel1 = CreateTool(adata=adata).base_tool() # Mainplot: figure, layout
         print('===mainplot finished=====')
@@ -1321,10 +1326,9 @@ def upload_callback():
 
     curdoc().add_next_tick_callback(load)
 
-
 def text_cover(dir, msg):
     path = dir + '/data_file.txt'
-    print("-========- path:", path)
+    # print("-========- path:", path)
     with open(path, "w") as f:
         f.truncate(0)
         f.close()
@@ -1332,32 +1336,12 @@ def text_cover(dir, msg):
     file.write(msg)
     file.close()
 
-
-def read_path(dir):
-    e_file = open(dir + '/' + 'extension_path.txt', 'r')
-    e_path = e_file.readline()
-    e_file.close()
-    print('-======- e_path:', e_path)
-    d_file = open(dir + '/' + 'data_file.txt', 'r')
-    data = d_file.readline()
-    print('-======- data:', data)
-    d_file.close()
-    return e_path, data
-
-
-def get_save_path(dir):
-    s_file = open(dir + '/' + 'save_path.txt', 'r')
-    s_path = s_file.readline()
-    s_file.close()
-    print('-======- s_path', s_path)
-    return s_path
-
-
 def main(doc):
     global Main_plot, extension_path, data_file
     # read path_ and file from user_data_dir
     extension_path, data_file = read_path(dir)   
-    auto_pip_install(extension_path)                                                         
+    auto_pip_install(extension_path)    
+    doc.add_next_tick_callback(upload_callback)                                                     
     
     '''
     global mycursor
@@ -1379,9 +1363,6 @@ def main(doc):
     upload_button.on_event(ButtonClick, upload_callback)
     curdoc().add_root(upload_button) # 这就是那个按钮'''
 
-    doc.add_next_tick_callback(upload_callback)
-
-    
 if __name__ == "main":
     main(curdoc())
 
@@ -1416,3 +1397,23 @@ def fetch():
     print("=== test finished ===")
     return result[-2][0], result[-1][0]
 '''
+
+# !!!
+'''def read_path(dir):
+    e_file = open(dir + '/' + 'extension_path.txt', 'r')
+    e_path = e_file.readline()
+    e_file.close()
+    # print('-======- e_path:', e_path)
+    d_file = open(dir + '/' + 'data_file.txt', 'r')
+    data = d_file.readline()
+    # print('-======- data:', data)
+    d_file.close()
+    return e_path, data'''
+
+# !!!
+'''def get_save_path(dir):
+    s_file = open(dir + '/' + 'save_path.txt', 'r')
+    s_path = s_file.readline()
+    s_file.close()
+    # print('-======- s_path', s_path)
+    return s_path'''
