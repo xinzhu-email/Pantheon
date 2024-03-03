@@ -10,7 +10,6 @@ from scpantheon.front_end.data_qt import dir
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-# !!! 
 try: 
     from scpantheon.front_end.data_qt import write_msg, mkdir
 except:
@@ -112,8 +111,7 @@ def main():
     Dialog.show()  # makes window reappear, acts like normal window now (on top now but can be underneath if you raise another window)'''
     app.exec()
     return check_code
-
-# !!!
+ 
 '''def write_msg(name, msg):
     path = dir + "/" + name + '.txt'
     # print("-========- path:", path)
@@ -123,8 +121,7 @@ def main():
     file = open(path, 'w')
     file.write(msg)
     file.close()'''
-
-# !!!
+ 
 '''def mkdir(path):
     isExists = os.path.exists(path)
     if not isExists:

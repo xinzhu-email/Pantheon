@@ -159,9 +159,7 @@ class FlowPlot:
         ### Class Group Functions Buttons ###
         # Select class group
         if self.label_existed:
-            group_list = list(self.adata.uns['category_dict'].keys()) 
-            # !!! h5ad load fail 
-            # print("group list:", group_list)
+            group_list = list(self.adata.uns['category_dict'].keys())  
             self.group = Select(title='Select Cluster Group:', options=group_list, value=group_list[-1])
             #self.group = Select(title='Select Cluster Group:',options=[' '],value=' ')
             # self.update_checkbox()
@@ -310,8 +308,7 @@ class FlowPlot:
             # Download online packages and get the new extensions path
             # try :
             # print('extension path:', extension_path)
-            r = requests.get(zip_file_url, stream=True)
-            # !!!
+            r = requests.get(zip_file_url, stream=True) 
             check_code = load_qt.main()
             if check_code == 'app closed':
                 extract_path = load_qt.get_load_path() + '/online_extension/'
@@ -399,8 +396,7 @@ class FlowPlot:
     def save_profile(self):
         global dir
         self.button_disabled()
-        def next_save(self):
-            # !!!
+        def next_save(self): 
             check_code = save_qt.main()
             if check_code == 'app closed':
                 # print('choosing finished')
@@ -1397,8 +1393,7 @@ def fetch():
     print("=== test finished ===")
     return result[-2][0], result[-1][0]
 '''
-
-# !!!
+ 
 '''def read_path(dir):
     e_file = open(dir + '/' + 'extension_path.txt', 'r')
     e_path = e_file.readline()
@@ -1409,8 +1404,7 @@ def fetch():
     # print('-======- data:', data)
     d_file.close()
     return e_path, data'''
-
-# !!!
+ 
 '''def get_save_path(dir):
     s_file = open(dir + '/' + 'save_path.txt', 'r')
     s_path = s_file.readline()

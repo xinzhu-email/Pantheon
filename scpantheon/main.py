@@ -5,10 +5,9 @@ from bokeh.server.server import Server
 import multiprocessing
 import warnings
 
-try:
-    # !!!
-    from app import bokeh_qt
-    from front_end import data_qt
+try: 
+    from scpantheon.app import bokeh_qt
+    from scpantheon.front_end import data_qt
 except:
     from app import bokeh_qt
     from front_end import data_qt
@@ -19,14 +18,12 @@ class ImportWarning(Warning):
     def __str__(self):
         return repr(self.message)
 
-try: 
-    # !!!
-    import source
+try:  
+    from scpantheon import source
 except:
     import source # import from online
     warnings.warn('source import failed',ImportWarning)
-
-# !!!
+ 
 global dir
 
 def run():

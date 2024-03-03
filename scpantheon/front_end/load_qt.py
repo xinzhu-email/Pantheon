@@ -111,8 +111,7 @@ def main():
     Dialog.show()
     app.exec()
     return check_code
-
-# !!!
+ 
 '''def write_msg(name, msg):
     path = dir + "/" + name + '.txt'
     # print("-========- path:", path)
@@ -123,8 +122,7 @@ def main():
     file.write(msg)
     file.close()
 '''
-
-# !!!
+ 
 '''def mkdir(path):
     isExists = os.path.exists(path)
     if not isExists:

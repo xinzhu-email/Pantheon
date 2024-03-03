@@ -9,7 +9,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 # create center directory to store all kinds of data
-# !!!
 from appdirs import AppDirs
 import pkg_resources
 global dir
