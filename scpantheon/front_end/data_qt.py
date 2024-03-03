@@ -17,7 +17,8 @@ appauthor = "xinzhu"
 try:
     version = pkg_resources.get_distribution("scpantheon").version
 except pkg_resources.DistributionNotFound:
-    print("scpantheon not found")
+    subprocess.check_call(['pip', 'install', "scpantheon"])
+    version = pkg_resources.get_distribution("scpantheon").version
 dirs = AppDirs(appname, appauthor, version)
 dir = dirs.user_data_dir 
 
@@ -153,8 +154,6 @@ def auto_pip_install(folder_path):
             print(f'Succeed to install {module}')
         except subprocess.CalledProcessError as e:
             print(f'Failed to install {module}. Error: {e}')
-
-
 # fetch every import module from module.py
 def extract_imports(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -167,13 +166,12 @@ def extract_imports(file_path):
         elif isinstance(node, ast.ImportFrom):
             imports['from'].add(node.module.split('.')[0])
     return imports
-
-
 # erase the python sys module 
 def filter_standard_libraries(import_set):
     installed_modules = list(set(sys.modules) | {module_info.name.split('.')[0] for module_info in pkgutil.iter_modules()})
     installed_modules.append('rpy2')
     return {lib for lib in import_set if lib not in (installed_modules)}
+
 
 def mkdir(path):
     isExists = os.path.exists(path)
@@ -219,7 +217,9 @@ def main():
     Dialog = QDialog()
     ui = Ui_Dialog()
     ui.setupUi(Dialog)
-    # Dialog.setWindowFlags(Dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)  
+    Dialog.setWindowFlags(Dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)  
+    Dialog.show()
+    Dialog.setWindowFlags(Dialog.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint) 
     Dialog.show()
     app.exec()
     return check_code
