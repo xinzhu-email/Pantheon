@@ -11,6 +11,7 @@ from bokeh.models import FileInput, Button, TextInput, Div, Select
 from bokeh.layouts import row, column
 import pandas, anndata
 import numpy as np
+from scipy.stats import gaussian_kde
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from scpantheon import source as soc
@@ -46,7 +47,7 @@ def plot_histogram():
         global plotlist, p, glylist
         '''for b in buttons_group:
             print(b.disabled)'''
-        layout = curdoc().get_model_by_name('Check_Histogram')
+        # layout = curdoc().get_model_by_name('Check_Histogram')
         change = soc.connection()
         #pdata = change.get_pandata()
         adata = change.get_anndata()
@@ -55,42 +56,45 @@ def plot_histogram():
         x, y = plot.get_x_y()
         print('x:', x, '\ny:', y)
         glylist = plot.get_glyph_list()
-        # adata.obsm = change.get_obsm()
-        def ad_to_pd():
-            global pdata
-            X = adata.X
-            obs_df = adata.obs
-            var_df = adata.var
-            pdata = pandas.concat([obs_df, var_df, pandas.DataFrame(X.T)], axis=1)
-            pdata = pdata.T
-        ad_to_pd()
-
 
         if len(glylist) <= 1:
-            # pdata[self.data_columns[x_init_idx]].describe()
-            mean_range = np.mean(adata.X)
-
-            # Show log data according to the checkbox log_axis
             log_axis = plot.get_log_axis()
-            def get_df_x_y(df, mean_range):
+            def get_df_x_y(df):
                 if log_axis.active == []:
                     df_x = df[x]
                     df_y = df[y]
-                    mean_range = mean_range
                 else:
                     df_x = np.log1p(df[x])
                     df_y = np.log1p(df[y])
-                    mean_range = np.log1p(mean_range)
-                    # if mean_range < 200: mean_range = 200
-                return df_x, df_y, mean_range
+                return df_x, df_y
 
-            # Numpy for data modeling
-            bins = np.linspace(0, int(mean_range * 6), int(1e4))
             try:
                 df = change.get_data_df()
             except:
                 df = adata.to_df()
-            df_x, df_y, mean_range = get_df_x_y(df, mean_range)
+            df_x, df_y = get_df_x_y(df)
+            density1, density2 = gaussian_kde(df_x), gaussian_kde(df_y)
+            x1 = np.linspace(min(df_x), max(df_x), 100)  
+            y1 = density1(x1) 
+            x2 = np.linspace(min(df_y), max(df_y), 100) 
+            y2 = density2(x2) 
+            max_x1 = max(x1)
+            max_x2 = max(x2)
+            # y normalization
+            y2 = y2 / max(y2) * max_x1
+            y1 = y1 / max(y1) * max_x2
+
+            #   
+            d1 = p.line(x1, y1, line_color="#00CCCC", line_width=2, legend_label = "d1")
+            p1 = p.patch(np.append(x1, x1[::-1]), np.append(y1, np.zeros_like(y1)), color="#99d8c9", alpha=0.4, legend_label = "p1")
+            #  #FF99FF   #FF9999   |    #6699FF   #99CCFF
+            d2 = p.line(y2, x2, line_color="#FF9999", line_width=2, legend_label = "d2")
+            p2 = p.patch(np.append(y2, y2[::-1]), np.append(x2, np.zeros_like(x2)), color="#FF99FF", alpha=0.4, legend_label = "p2")
+            plotlist = [d1, d2, p1, p2]
+            glylist.extend(plotlist)
+            p.legend.location = "center_right"
+            p.legend.click_policy = "hide"
+            '''
             # print('mean_range\n', mean_range)
             # print('hist:\n', hist)
             hist, edges = np.histogram(df_x, bins = bins, range = [0, mean_range * 6])
@@ -104,6 +108,7 @@ def plot_histogram():
             glylist.extend(plotlist)
             p.legend.location = "center_right"
             p.legend.click_policy = "hide"
+            '''
         else:
             print('Histogram already existed')
         button_abled(buttons_group)
