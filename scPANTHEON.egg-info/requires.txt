@@ -1,0 +1,11 @@
+bokeh==2.4.3
+pandas
+anndata==0.8.0
+colorcet
+scanpy
+numpy
+PyQt5==5.15.6
+PyQtWebEngine
+appdirs
+requests
+leidenalg
