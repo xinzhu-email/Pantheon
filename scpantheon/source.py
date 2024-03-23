@@ -6,12 +6,10 @@ from bokeh.transform import log_cmap
 from bokeh.palettes import d3
 from bokeh.layouts import row, column, layout
 from bokeh.io import curdoc# current document
-from bokeh.plotting import figure, output_file, save, show
-from bokeh.embed import components, file_html
+from bokeh.plotting import figure
 from bokeh.resources import CDN
 import pandas 
 import numpy as np
-import anndata
 import scipy.sparse as ss
 import colorcet as cc
 import scanpy as sc
@@ -22,16 +20,19 @@ import os, sys, io
 import importlib
 from PyQt5.QtWidgets import *
 from appdirs import AppDirs
-import requests, zipfile, tarfile, shutil
-# !!！ 
+import requests, zipfile, tarfile, shutil, subprocess
 try:
+    # !!! 
+    from front_end import extensions_qt 
+    from front_end.extensions_qt import get_extensions_path
     from front_end import save_qt, load_qt
     from front_end.data_qt import dir, auto_pip_install, read_path
     from front_end.save_qt import get_save_path
 except:
-    from front_end import save_qt, load_qt
-    from front_end.data_qt import dir, auto_pip_install, read_path
-    from front_end.save_qt import get_save_path
+    subprocess.check_call(['pip', 'install', "scpantheon"])
+    from scpantheon.front_end import save_qt, load_qt
+    from scpantheon.front_end.data_qt import dir, auto_pip_install, read_path
+    from scpantheon.front_end.save_qt import get_save_path
 
 
 TOOLTIPS = [
@@ -133,7 +134,10 @@ class FlowPlot:
         """))
         # Import extension zip from online
         self.import_extension = Button(label="online extension zip")
-        self.import_extension.on_click(self.load_extensions)
+        self.import_extension.on_click(self.load_online_extensions)
+        # !!! Extension packages
+        self.extension_packages = Button(label="local extension packages")
+        self.extension_packages.on_click(self.load_local_extensions)
         # Show gene list
         self.show_gene_list = Div(text='Gene/Marker List: '+str(self.data_columns[0:10]))
         # Show plot
@@ -245,7 +249,7 @@ class FlowPlot:
         # Button disabled list, remember to append in each button func
         self.buttons_group = [self.gate_button,self.export_button,self.remove_button,self.showall_button,self.create_group,self.rename_group,self.delete_group,
                             self.show_selected_class,self.checkbox_color,self.new_class,self.merge_class,self.rename_class,self.delete_class,self.add_to,
-                            self.remove_from,self.update_class,self.change_class_color,self.import_extension]
+                            self.remove_from,self.update_class,self.change_class_color,self.import_extension,self.extension_packages]
         self.buttons_amount = len(self.buttons_group)
         
         if self.label_existed:
@@ -294,8 +298,8 @@ class FlowPlot:
     ##################################
     ####### Call Back Functions ######
     ##################################
-    # Import extension packages from online
-    def load_extensions(self):
+    # Import Online Extension Packages
+    def load_online_extensions(self):
         global dir
         self.button_disabled()
         def load_e(self):
@@ -306,7 +310,7 @@ class FlowPlot:
             self.extension_url.value = ''
             # Download online packages and get the new extensions path
             # try :
-            # print('extension path:', extension_path)
+            # print('extensions path:', extensions_path)
             r = requests.get(zip_file_url, stream=True) 
             check_code = load_qt.main()
             if check_code == 'app closed':
@@ -325,15 +329,6 @@ class FlowPlot:
                         print("get tar file")
                     except tarfile.ReadError:
                         print("zip or tar file is needed")
-                ''' file_names = z.namelist()
-                for file_name in file_names:
-                    # find dir
-                    if file_name.endswith('/'):
-                        # get dir name
-                        folder_name = os.path.basename(file_name[:-1])
-                        if folder_name == 'extension':
-                            new_extension_path = extract_path + file_name
-                print('extension from online path:', new_extension_path)'''
                 
                 # Find all the directory from new local extension that has module.py
                 module_path_list = []
@@ -359,13 +354,13 @@ class FlowPlot:
                     module_directory += '/'
                     folder_name = os.path.basename(module_directory[:-1])
                     try: 
-                        shutil.copytree(module_directory, extension_path+'/'+folder_name+'/')
+                        shutil.copytree(module_directory, extensions_path+'/'+folder_name+'/')
                         print('Module', folder_name, 'added')
                     except:
                         print('Module', folder_name, 'already exists')
                 print('Online packages download finished!')
                 # auto pip install import 
-                auto_pip_install(extension_path)
+                auto_pip_install(extensions_path)
                 # pre_module_select = curdoc().get_model_by_name('module_select')
                 # option = pre_module_select.value
                 models = curdoc().get_model_by_id('1234') # pre_module_select = Select(...,id='1234') 
@@ -377,6 +372,24 @@ class FlowPlot:
                 curdoc().add_root(module_select)
                 '''except:
                     print('please use correct extension package url')'''
+            self.button_abled()
+        curdoc().add_next_tick_callback(lambda : load_e(self))
+    
+    # !!! Import Local Extension Packages
+    def load_local_extensions(self):
+        global dir
+        self.button_disabled()
+        def load_e(self):
+            check_code = extensions_qt.main()
+            if check_code == 'app closed':
+                extensions_path = get_extensions_path(dir) + '/'
+            auto_pip_install(extensions_path)
+            models = curdoc().get_model_by_id('1234') 
+            models.visible = False
+            curdoc().remove_root(models)
+            module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select') 
+            module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
+            curdoc().add_root(module_select)
             self.button_abled()
         curdoc().add_next_tick_callback(lambda : load_e(self))
 
@@ -964,7 +977,7 @@ class CreateTool:
         module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
         Figure = FlowPlot(data=self.adata, color_map='color')
 
-        layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, Figure.extension_url, Figure.import_extension, module_select), # module_checkbox added
+        layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, Figure.extension_url, Figure.import_extension, Figure.extension_packages, module_select), # module_checkbox added
             column(Figure.choose_panel,Figure.s_x, Figure.s_y, Figure.log_axis, Figure.color_selection, Figure.gate_button, Figure.remove_button, Figure.showall_button, Figure.export_button),
             column(Figure.group, Figure.group_name, Figure.create_group, Figure.rename_group, Figure.delete_group,
              Figure.class_name, Figure.new_class, Figure.checkbox_color, Figure.class_checkbox),
@@ -1006,7 +1019,7 @@ color_list = d3['Category20c'][20]
 Main_plot = FlowPlot
 
 class connection:
-    global extension_path, data_file
+    global extensions_path, data_file
     def __init__(self):
         self.Figure = Main_plot
     
@@ -1127,7 +1140,7 @@ class connection:
         return data_file
 
     def get_extension_file(self):
-        return extension_path
+        return extensions_path
 
 
 class plot_function:
@@ -1190,9 +1203,9 @@ class plot_function:
 
 # get extensions 
 def load_options():
-    global extension_path
+    global extensions_path
     try:
-        name_list = os.listdir(extension_path)
+        name_list = os.listdir(extensions_path)
         # listdir: list of file under the path
     except:
         name_list = []
@@ -1200,7 +1213,7 @@ def load_options():
 
     
 def load_module(active):
-    global extension_path
+    global extensions_path
     plot = plot_function()
     buttons_group, buttons_n = plot.get_buttons_group() # buttons group, buttons number
     # delete last extended buttons
@@ -1208,7 +1221,7 @@ def load_module(active):
         buttons_group.pop()
     # buttons = curdoc().get_model_by_name('module_buttons')
     try:
-        name_list = os.listdir(extension_path)
+        name_list = os.listdir(extensions_path)
     except:
         return     
     layouts = column()
@@ -1218,7 +1231,7 @@ def load_module(active):
         but = curdoc().get_model_by_name(name)
         div = Div(text='')
         if name == active:
-            sys.path.append(extension_path)
+            sys.path.append(extensions_path)
             module_name = name + '.module'
             try:
                 new_class = module_name.new_layout()
@@ -1279,7 +1292,6 @@ def clear_cb(ind):
 
 def upload_callback(): 
 
-    global extension_path
     global data_file
     global Main_plot
 
@@ -1332,10 +1344,10 @@ def text_cover(dir, msg):
     file.close()
 
 def main(doc):
-    global Main_plot, extension_path, data_file
+    global Main_plot, extensions_path, data_file
     # read path_ and file from user_data_dir
-    extension_path, data_file = read_path(dir)   
-    auto_pip_install(extension_path)    
+    extensions_path, data_file = read_path(dir)
+    # auto_pip_install(extensions_path)    
     doc.add_next_tick_callback(upload_callback)                                                     
     
     '''
@@ -1394,7 +1406,7 @@ def fetch():
 '''
  
 '''def read_path(dir):
-    e_file = open(dir + '/' + 'extension_path.txt', 'r')
+    e_file = open(dir + '/' + 'extensions_path.txt', 'r')
     e_path = e_file.readline()
     e_file.close()
     # print('-======- e_path:', e_path)

@@ -22,7 +22,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         super(Ui_Dialog, self).__init__()
     
     def setupUi(self, Dialog):
-        Dialog.setObjectName("Online Package Loader")
+        Dialog.setObjectName("Online Packages Loader")
         Dialog.resize(750,300)
         self.cwd = os.getcwd()
         font = QtGui.QFont()
@@ -64,14 +64,17 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
-        load_path = get_load_path()
-        if load_path != '':
-            self.btn_Start.setText("Load Packages In The Previous Path")
-            self.text_brow.setText("\t\t\tPrevious Loading Path:\n\t" + load_path)
-        else:
+        try:
+            load_path = get_load_path()
+            if load_path != '':
+                self.btn_Start.setText("Load Packages In The Previous Path")
+                self.text_brow.setText("\t\t\tPrevious Loading Path:\n\t" + load_path)
+            else:
+                self.btn_download.setText("Choose A Loading Path!")
+                self.text_brow.setText("\t\t\tLoading Path Not Found...")
+        except:
             self.btn_download.setText("Choose A Loading Path!")
             self.text_brow.setText("\t\t\tLoading Path Not Found...")
-        # self.text_brow.append('original output path:' + output_path) 
 
     def event(self, event):
         if event.type()==QtCore.QEvent.EnterWhatsThisMode:
@@ -84,6 +87,8 @@ class Ui_Dialog(QDialog, QWidget, object):
         # write extension into user_data_dir
         if load != '':
             write_msg('load_path', load)
+        self.btn_Start.setText("Laod Data In The New Path!")
+        self.text_brow.setText("\t\t\tNew Loading Path:\n\t" + load)
 
     def Load(self, Dialog):
         global check_code

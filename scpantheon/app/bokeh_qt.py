@@ -7,6 +7,13 @@ from PyQt5.QtCore import QUrl, QStandardPaths
 from pathlib import Path
 from appdirs import AppDirs
 from PyQt5.QtNetwork import QNetworkCookieJar
+import pkg_resources, subprocess
+
+try:
+    version = pkg_resources.get_distribution("scpantheon").version
+except pkg_resources.DistributionNotFound:
+    subprocess.check_call(['pip', 'install', "scpantheon"])
+    version = pkg_resources.get_distribution("scpantheon").version
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 

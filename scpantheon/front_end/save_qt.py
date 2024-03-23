@@ -59,12 +59,16 @@ class Ui_Dialog(QDialog, QWidget, object):
         # self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
-
-        save_path = get_save_path(dir)
-        if save_path != '':
-            self.btn_Start.setText("Save Data In The Previous Path")
-            self.text_brow.setText("\t\t\tPrevious Saving Path:\n\t" + save_path)
-        else:
+        
+        try:
+            save_path = get_save_path(dir)
+            if save_path != '':
+                self.btn_Start.setText("Save Data In The Previous Path")
+                self.text_brow.setText("\t\t\tPrevious Saving Path:\n\t" + save_path)
+            else:
+                self.btn_save.setText("Choose A Saving Path!")
+                self.text_brow.setText("\t\t\tSaving Path Not Found...")
+        except:
             self.btn_save.setText("Choose A Saving Path!")
             self.text_brow.setText("\t\t\tSaving Path Not Found...")
 
@@ -79,6 +83,8 @@ class Ui_Dialog(QDialog, QWidget, object):
         # write extension into user_data_dir
         if save != '':
             write_msg('save_path', save)
+        self.btn_Start.setText("Save Data In The New Path!")
+        self.text_brow.setText("\t\t\tNew Saving Path:\n\t" + save)
 
     def Load(self, Dialog):
         global check_code

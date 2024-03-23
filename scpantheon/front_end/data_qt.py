@@ -9,16 +9,17 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 # create center directory to store all kinds of data
+try: 
+    version = pkg_resources.get_distribution("scpantheon").version
+except:
+    subprocess.check_call(['pip', 'install', "scpantheon"])
+    version = pkg_resources.get_distribution("scpantheon").version
+    
 from appdirs import AppDirs
 import pkg_resources
 global dir
 appname = "scpantheon"
 appauthor = "xinzhu"
-try:
-    version = pkg_resources.get_distribution("scpantheon").version
-except pkg_resources.DistributionNotFound:
-    subprocess.check_call(['pip', 'install', "scpantheon"])
-    version = pkg_resources.get_distribution("scpantheon").version
 dirs = AppDirs(appname, appauthor, version)
 dir = dirs.user_data_dir 
 
@@ -40,19 +41,19 @@ class Ui_Dialog(QDialog, QWidget, object):
         # render help text
         self.text_brow = QTextBrowser()
 
-        # Choose path button
+        '''# Choose path button
         self.btn_Extensions = QPushButton("Choose New Extensions folder",self)  
         self.btn_Extensions.setObjectName("btn_Extensions")  
         self.btn_Extensions.clicked.connect(self.slot_btn_Extensions)
         self.btn_Extensions.setFont(font)
         self.btn_Extensions.setMinimumSize(750, 100)
-        # self.btn_Extensions.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # self.btn_Extensions.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)'''
         # Choose file button
         self.btn_Data = QPushButton("Choose New Data File",self)  
         self.btn_Data.setObjectName("btn_Data")  
         self.btn_Data.clicked.connect(self.slot_btn_Data)
         self.btn_Data.setFont(font)
-        self.btn_Data.setMinimumSize(750, 100)
+        self.btn_Data.setMinimumSize(750, 150)
         # self.btn_Data.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Start scpantheon
@@ -60,7 +61,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.btn_Start.setObjectName("btn_Start")
         self.btn_Start.clicked.connect(lambda : self.Run(Dialog))
         self.btn_Start.setFont(font)
-        self.btn_Start.setMinimumSize(750, 100)
+        self.btn_Start.setMinimumSize(750, 150)
         # self.btn_Start.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.layout = QVBoxLayout(Dialog)
@@ -72,7 +73,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.buttonBox.setObjectName("buttonBox")
         self.layout.addWidget(self.buttonBox)
 
-        self.layout.addWidget(self.btn_Extensions)
+        '''self.layout.addWidget(self.btn_Extensions)'''
         self.layout.addWidget(self.btn_Data)
         self.layout.addWidget(self.btn_Start)
 
@@ -81,16 +82,19 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.buttonBox.rejected.connect(self.rejected)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         
-        extension_path, data_file = read_path(dir)  
-        if data_file != '':
-            self.btn_Start.setText("Run Previous Data")
-            self.text_brow.setText("\t\t\tPrevious Data File Path:\n\t" + data_file)
-        else:
+        try:
+            '''extensions_path, data_file = read_path(dir) '''
+            extensions_file, data_file = read_path(dir) 
+            if data_file != '':
+                self.btn_Start.setText("Run Previous Data")
+                self.text_brow.setText("\t\t\tPrevious Data File Path:\n\t" + data_file)
+            else:
+                self.btn_Data.setText("Choose A Data File!")
+                self.text_brow.setText("\t\t\tData File Not Found...")
+            '''auto_pip_install(extensions_path) '''
+        except:
             self.btn_Data.setText("Choose A Data File!")
             self.text_brow.setText("\t\t\tData File Not Found...")
-        # self.text_brow.append('original extensions path:' + extension_path + '\noriginal data path:' + data_file + '\n')
-        # use ast to put every import module from extension folder to requirement.txt  
-        auto_pip_install(extension_path) 
 
     def event(self, event):
         if event.type()==QtCore.QEvent.EnterWhatsThisMode:
@@ -98,12 +102,12 @@ class Ui_Dialog(QDialog, QWidget, object):
             # self.text_brow.setText("Choose your extension packages and your data") 
         return QDialog.event(self,event)
 
-    def slot_btn_Extensions(self):
+    '''def slot_btn_Extensions(self):
         global Extensions
         Extensions = QFileDialog.getExistingDirectory(self," ",self.cwd) # 起始路径
         # write extension into user_data_dir
         if Extensions != '':
-           write_msg('extension_path', Extensions)
+           write_msg('extensions_path', Extensions)'''
 
     def slot_btn_Data(self):
         global Data
@@ -126,14 +130,17 @@ class Ui_Dialog(QDialog, QWidget, object):
 
 # fetch every module from each module.py in extension folder
 def auto_pip_install(folder_path):
-    all_imports = {'import': set(), 'from': set()}
-    for root, dirs, files in os.walk(folder_path):
-        for file_name in files:
-            if file_name == 'module.py':
-                file_path = os.path.join(root, file_name)
-                imports = extract_imports(file_path)
-                all_imports['import'].update(imports['import'])
-                all_imports['from'].update(imports['from'])
+    try:
+        all_imports = {'import': set(), 'from': set()}
+        for root, dirs, files in os.walk(folder_path):
+            for file_name in files:
+                if file_name == 'module.py':
+                    file_path = os.path.join(root, file_name)
+                    imports = extract_imports(file_path)
+                    all_imports['import'].update(imports['import'])
+                    all_imports['from'].update(imports['from'])
+    except:
+        return
     filtered_imports = {
         'import': filter_standard_libraries(all_imports['import']),
         'from': filter_standard_libraries(all_imports['from'])
@@ -191,9 +198,19 @@ def write_msg(name, msg):
     file.close()
 
 def read_path(dir):
-    e_file = open(dir + '/' + 'extension_path.txt', 'r')
-    e_path = e_file.readline()
-    e_file.close()
+    try:
+        e_file = open(dir + '/' + 'extensions_path.txt', 'r')
+        e_path = e_file.readline()
+        e_file.close()
+    except:
+        # !!! self create extensions path 
+        Extensions = ""
+        write_msg('extensions_path', Extensions)
+        print('Empty Extension Path Created')
+        e_file = open(dir + '/' + 'extensions_path.txt', 'r')
+        e_path = e_file.readline()
+        e_file.close()
+
     # print('-======- e_path:', e_path)
     d_file = open(dir + '/' + 'data_file.txt', 'r')
     data = d_file.readline()

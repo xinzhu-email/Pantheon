@@ -14,4 +14,8 @@ scpantheon/app/__init__.py
 scpantheon/app/bokeh_qt.py
 scpantheon/front_end/__init__.py
 scpantheon/front_end/data_qt.py
+<<<<<<< HEAD
+scpantheon/front_end/load_qt.py
+=======
+>>>>>>> f66edc8215cb97ac3992d7f3fd2b48b56be5ea62
 scpantheon/front_end/save_qt.py
