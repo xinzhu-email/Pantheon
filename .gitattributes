@@ -1,0 +1,5 @@
+*.h5ad
+*.H5AD
+*.csv
+scpantheon/data/4_50_ADT.csv filter=lfs diff=lfs merge=lfs -text
+*.csv filter=lfs diff=lfs merge=lfs -text
