@@ -84,6 +84,7 @@ def plot_histogram():
             y2 = y2 / max(y2) * max_x1
             y1 = y1 / max(y1) * max_x2
 
+            # print("new extension")
             #   
             d1 = p.line(x1, y1, line_color="#00CCCC", line_width=2, legend_label = "d1")
             p1 = p.patch(np.append(x1, x1[::-1]), np.append(y1, np.zeros_like(y1)), color="#99d8c9", alpha=0.4, legend_label = "p1")
