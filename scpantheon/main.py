@@ -5,7 +5,8 @@ import multiprocessing
 import pkg_resources
 import subprocess
 from scpantheon import source
-from scpantheon.app import bokeh_qt
+# !!! 
+from app import bokeh_qt
 from scpantheon.front_end import data_qt
 from bokeh.server.server import Server
 import sys
