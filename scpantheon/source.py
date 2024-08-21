@@ -1191,6 +1191,7 @@ def load_extensions(extensions_path): # to solve the problem of extension link c
 
     
 def load_module(active):
+    print('load_module')
     global extensions_path
     plot = plot_function()
     buttons_group, buttons_n = plot.get_buttons_group() # buttons group, buttons number
@@ -1271,23 +1272,23 @@ def load_extension_select(extensions_path):
     models.visible = False
     curdoc().remove_root(models)
     module_select = Select(title='Choose Functions to Add:', options=load_extensions(extensions_path), value='', id=str(module_select_id), name='modules_select')
-
+    print("line 1275")
     module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
     curdoc().add_root(module_select)
 
-def clear_cb(ind):
-    module_checkbox = curdoc().get_model_by_name('modules_checkbox') 
-    # options = module_checkbox.labels
-    # for i in range(len(options)):
-    #     if options[i] == 'Find_Marker_Gene':
-    #         ind = i
-    option = module_checkbox.value
-    models = curdoc().get_model_by_name(option)
-    curdoc().remove_root(models)
-    print(curdoc().get_model_by_name(option))
-    load_module(module_checkbox.value)
-    # models.visible = False
-    # module_checkbox.active.remove(int(ind))
+# def clear_cb(ind):
+#     module_checkbox = curdoc().get_model_by_name('modules_checkbox') 
+#     # options = module_checkbox.labels
+#     # for i in range(len(options)):
+#     #     if options[i] == 'Find_Marker_Gene':
+#     #         ind = i
+#     option = module_checkbox.value
+#     models = curdoc().get_model_by_name(option)
+#     curdoc().remove_root(models)
+#     print(curdoc().get_model_by_name(option))
+#     load_module(module_checkbox.value)
+#     # models.visible = False
+#     # module_checkbox.active.remove(int(ind))
 
 def upload_callback(): 
 
