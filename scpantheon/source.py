@@ -343,7 +343,7 @@ class FlowPlot:
                 extensions_path = get_extensions_path(dir) + '/'
             auto_pip_install(extensions_path)
             # load new extensions to curdoc
-            load_extension_select()
+            load_extension_select(extensions_path)
             self.button_abled()
         curdoc().add_next_tick_callback(lambda : load_e(self))
 
@@ -987,129 +987,129 @@ class CreateTool:
 color_list = d3['Category20c'][20]
 Main_plot = FlowPlot
 
-class connection:
-    global extensions_path, data_path
-    def __init__(self):
-        self.Figure = Main_plot
+# class connection:
+#     global extensions_path, data_path
+#     def __init__(self):
+#         self.Figure = Main_plot
     
-    def get_attributes(self):
-        if self.Figure.view.filters == []:
-            remain_cells = list(range(self.Figure.data_df.shape[0]))
-        else:
-            remain_cells = list(self.Figure.view.filters[0].indices)
-        to_json = data_trans(self.Figure.p.xaxis.axis_label, 
-                             list(self.Figure.source.data['color']), 
-                             self.Figure.color_selection.color,
-                             list(self.Figure.class_checkbox.active),
-                             self.Figure.group.value,
-                             list(self.Figure.source.selected.indices),
-                             remain_cells)
-        to_json = json.dumps(obj=to_json.__dict__,ensure_ascii=False)
-        return to_json
+#     def get_attributes(self):
+#         if self.Figure.view.filters == []:
+#             remain_cells = list(range(self.Figure.data_df.shape[0]))
+#         else:
+#             remain_cells = list(self.Figure.view.filters[0].indices)
+#         to_json = data_trans(self.Figure.p.xaxis.axis_label, 
+#                              list(self.Figure.source.data['color']), 
+#                              self.Figure.color_selection.color,
+#                              list(self.Figure.class_checkbox.active),
+#                              self.Figure.group.value,
+#                              list(self.Figure.source.selected.indices),
+#                              remain_cells)
+#         to_json = json.dumps(obj=to_json.__dict__,ensure_ascii=False)
+#         return to_json
 
-    def set_attributes(self,d):
-        self.Figure.source.data['color'] = list(d['data_color'])
-        self.Figure.view.filters = [IndexFilter(d['showing_indices'])]
-        print(len(self.Figure.view.filters[0].indices))
+#     def set_attributes(self,d):
+#         self.Figure.source.data['color'] = list(d['data_color'])
+#         self.Figure.view.filters = [IndexFilter(d['showing_indices'])]
+#         print(len(self.Figure.view.filters[0].indices))
     
-    def get_anndata(self):
-        adata = self.Figure.adata.copy()
-        return adata
+#     def get_anndata(self):
+#         adata = self.Figure.adata.copy()
+#         return adata
 
-    def get_data_df(self):
-        return self.Figure.data_df
+#     def get_data_df(self):
+#         return self.Figure.data_df
 
-    def set_anndata(self, adata):
-        self.Figure.adata = adata
-        data_df = self.Figure.data_df
-        data_log = self.Figure.data_log
-        if len(data_df.index) != len(self.Figure.adata.obs_names):
-            indices = list(set(data_df.index) - set(self.Figure.adata.obs_names))
-            data_df.drop(index=indices, axis=0, inplace=True)
-            data_log.drop(index=indices, axis=0, inplace=True)
+#     def set_anndata(self, adata):
+#         self.Figure.adata = adata
+#         data_df = self.Figure.data_df
+#         data_log = self.Figure.data_log
+#         if len(data_df.index) != len(self.Figure.adata.obs_names):
+#             indices = list(set(data_df.index) - set(self.Figure.adata.obs_names))
+#             data_df.drop(index=indices, axis=0, inplace=True)
+#             data_log.drop(index=indices, axis=0, inplace=True)
             
-        df_column = list(set(data_df.columns) - set(['hl_gene','color']))
-        if len(df_column) != len(self.Figure.adata.var_names):
-            del_columns = list(set(df_column)-set(self.Figure.adata.var_names))
-            data_df.drop(labels=del_columns, axis=1, inplace=True)
-            data_log.drop(labels=del_columns, axis=1, inplace=True)
-        self.Figure.data_df = data_df
-        self.Figure.data_log = data_log
-        self.Figure.adata.obs['ind'] = pandas.Series(np.array(range(self.Figure.data_df.shape[0])).astype(int).tolist(), index=self.Figure.data_df.index)
-        self.Figure.view.filters = [IndexFilter(list(self.Figure.adata.obs['ind']))]
+#         df_column = list(set(data_df.columns) - set(['hl_gene','color']))
+#         if len(df_column) != len(self.Figure.adata.var_names):
+#             del_columns = list(set(df_column)-set(self.Figure.adata.var_names))
+#             data_df.drop(labels=del_columns, axis=1, inplace=True)
+#             data_log.drop(labels=del_columns, axis=1, inplace=True)
+#         self.Figure.data_df = data_df
+#         self.Figure.data_log = data_log
+#         self.Figure.adata.obs['ind'] = pandas.Series(np.array(range(self.Figure.data_df.shape[0])).astype(int).tolist(), index=self.Figure.data_df.index)
+#         self.Figure.view.filters = [IndexFilter(list(self.Figure.adata.obs['ind']))]
 
-    def get_group_dict(self):
-        return self.Figure.adata.uns['category_dict']
+#     def get_group_dict(self):
+#         return self.Figure.adata.uns['category_dict']
     
-    def set_group_dict(self, group_dict):
-        self.Figure.adata.uns['category_dict'] = group_dict
+#     def set_group_dict(self, group_dict):
+#         self.Figure.adata.uns['category_dict'] = group_dict
     
-    def get_obs(self):
-        return self.Figure.adata.obs
+#     def get_obs(self):
+#         return self.Figure.adata.obs
 
-    def get_obsm(self):
-        return self.Figure.adata.obsm
+#     def get_obsm(self):
+#         return self.Figure.adata.obsm
     
-    def set_obs(self, group_label, set_group_name=None):
-        if not set_group_name:
-            self.Figure.adata.obs = group_label
-            return 
-        try:
-            existed_group_list = list(self.Figure.adata.uns['category_dict'].keys()) + ['ind']
-        except:
-            self.adata.uns['category_dict'] = dict()      
-            existed_group_list = ['ind'] 
-        group_list = list(group_label.columns)
+#     def set_obs(self, group_label, set_group_name=None):
+#         if not set_group_name:
+#             self.Figure.adata.obs = group_label
+#             return 
+#         try:
+#             existed_group_list = list(self.Figure.adata.uns['category_dict'].keys()) + ['ind']
+#         except:
+#             self.adata.uns['category_dict'] = dict()      
+#             existed_group_list = ['ind'] 
+#         group_list = list(group_label.columns)
 
-        for group in set_group_name:
-            if True:
-                if group in list(self.Figure.adata.uns['category_dict'].keys()):
-                    del self.Figure.adata.uns['category_dict'][group]
-                    self.Figure.adata.obs.drop(group, axis=1)
-                self.Figure.adata.uns['category_dict'][group] = pandas.DataFrame(columns=['class_name','color','cell_num'])
-                class_list = group_label[group]
-                self.Figure.adata.obs[group] = pandas.Series(group_label[group], dtype=object)
-                class_dict = {}
-                for value in class_list:
-                    class_dict[value] = class_dict.get(value,0) + 1
-                ind = 0
-                for key in class_dict.keys():
-                    self.Figure.adata.uns['category_dict'][group].loc[ind,:] = {'class_name': key, 'cell_num': class_dict[key], 'color':color_list[int(ind*3%20)]}
-                    ind = ind + 1
-        self.Figure.adata.obs = group_label
-        self.Figure.group.options = list(self.Figure.adata.uns['category_dict'].keys())
-        self.Figure.group.value = self.Figure.group.options[-1]
-        self.Figure.update_checkbox()
-        self.Figure.show_color()
+#         for group in set_group_name:
+#             if True:
+#                 if group in list(self.Figure.adata.uns['category_dict'].keys()):
+#                     del self.Figure.adata.uns['category_dict'][group]
+#                     self.Figure.adata.obs.drop(group, axis=1)
+#                 self.Figure.adata.uns['category_dict'][group] = pandas.DataFrame(columns=['class_name','color','cell_num'])
+#                 class_list = group_label[group]
+#                 self.Figure.adata.obs[group] = pandas.Series(group_label[group], dtype=object)
+#                 class_dict = {}
+#                 for value in class_list:
+#                     class_dict[value] = class_dict.get(value,0) + 1
+#                 ind = 0
+#                 for key in class_dict.keys():
+#                     self.Figure.adata.uns['category_dict'][group].loc[ind,:] = {'class_name': key, 'cell_num': class_dict[key], 'color':color_list[int(ind*3%20)]}
+#                     ind = ind + 1
+#         self.Figure.adata.obs = group_label
+#         self.Figure.group.options = list(self.Figure.adata.uns['category_dict'].keys())
+#         self.Figure.group.value = self.Figure.group.options[-1]
+#         self.Figure.update_checkbox()
+#         self.Figure.show_color()
 
 
-    def set_varm(self, varm):
-        self.Figure.adata.varm = varm
+#     def set_varm(self, varm):
+#         self.Figure.adata.varm = varm
 
-    def set_uns(self, uns):
-        self.Figure.adata.uns = uns
+#     def set_uns(self, uns):
+#         self.Figure.adata.uns = uns
     
-    def set_obsm(self, obsm):
-        views = list(obsm)
-        print('views:', views)
-        for view_name in views:
-            if view_name not in self.Figure.choose_panel.options:
-                for i in range(obsm[view_name].shape[1]):
-                    self.Figure.data_df[view_name+str(i)] = pandas.Series(obsm[view_name][:,i],index=self.Figure.data_df.index)
-                    self.Figure.data_log[view_name+str(i)] = self.Figure.data_df[view_name+str(i)]
-                    #print('data_df===',self.Figure.data_df[view_name+str(i)])
-        view_list = list(obsm.keys())+['generic_columns']
-        self.Figure.adata.obsm = obsm
-        self.Figure.choose_panel.options = view_list
-        self.Figure.choose_panel.value = view_list[-2]
-        self.Figure.s_x.value = view_list[-2] + str(0)
-        self.Figure.s_y.value = view_list[-2] + str(1)
+#     def set_obsm(self, obsm):
+#         views = list(obsm)
+#         print('views:', views)
+#         for view_name in views:
+#             if view_name not in self.Figure.choose_panel.options:
+#                 for i in range(obsm[view_name].shape[1]):
+#                     self.Figure.data_df[view_name+str(i)] = pandas.Series(obsm[view_name][:,i],index=self.Figure.data_df.index)
+#                     self.Figure.data_log[view_name+str(i)] = self.Figure.data_df[view_name+str(i)]
+#                     #print('data_df===',self.Figure.data_df[view_name+str(i)])
+#         view_list = list(obsm.keys())+['generic_columns']
+#         self.Figure.adata.obsm = obsm
+#         self.Figure.choose_panel.options = view_list
+#         self.Figure.choose_panel.value = view_list[-2]
+#         self.Figure.s_x.value = view_list[-2] + str(0)
+#         self.Figure.s_y.value = view_list[-2] + str(1)
     
-    def get_data_path(self):
-        return data_path
+#     def get_data_path(self):
+#         return data_path
 
-    def get_extension_file(self):
-        return extensions_path
+#     def get_extension_file(self):
+#         return extensions_path
 
 
 class plot_function:
@@ -1173,6 +1173,15 @@ class plot_function:
 # get extensions 
 def load_options():
     global extensions_path
+    print(extensions_path)
+    try:
+        name_list = os.listdir(extensions_path)
+        # listdir: list of file under the path
+    except:
+        name_list = []
+    return name_list
+
+def load_extensions(extensions_path): # to solve the problem of extension link change only after reopen the software 
     try:
         name_list = os.listdir(extensions_path)
         # listdir: list of file under the path
@@ -1247,7 +1256,7 @@ def add_to_buttons_group(buttons, buttons_group):
 
     return buttons_group
 
-def load_extension_select():
+def load_extension_select(extensions_path):
     global module_select_id
     # Remove Extensions Visible Buttons
     name_list = os.listdir(extensions_path)  
@@ -1261,7 +1270,7 @@ def load_extension_select():
     module_select_id += 1 
     models.visible = False
     curdoc().remove_root(models)
-    module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', id=str(module_select_id), name='modules_select')
+    module_select = Select(title='Choose Functions to Add:', options=load_extensions(extensions_path), value='', id=str(module_select_id), name='modules_select')
 
     module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
     curdoc().add_root(module_select)
