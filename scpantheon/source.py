@@ -307,10 +307,10 @@ class FlowPlot:
     ##################################
     # Import Online Extension Packages
     def load_online_extensions(self):
-        global dir
+        global dir, extensions_path
         self.button_disabled()
         def load_e(self):
-            global module_select_id
+            global module_select_id, extensions_path
             if self.extension_url == '':
                 print('please input extension url')
             else:
@@ -942,7 +942,7 @@ class CreateTool:
     def base_tool(self):       
         global module_select_id 
         # module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
-        module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select', id=str(module_select_id)) 
+        module_select = Select(title='Choose Functions to Add:', options=load_options(), value='Please select a function', name='modules_select', id=str(module_select_id)) 
         module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
         Figure = FlowPlot(data=self.adata, color_map='color')
 
@@ -1175,20 +1175,11 @@ def load_options():
     global extensions_path
     print(extensions_path)
     try:
-        name_list = os.listdir(extensions_path)
+        name_list = ['Please select a function'] + os.listdir(extensions_path)
         # listdir: list of file under the path
     except:
         name_list = []
     return name_list
-
-def load_extensions(extensions_path): # to solve the problem of extension link change only after reopen the software 
-    try:
-        name_list = os.listdir(extensions_path)
-        # listdir: list of file under the path
-    except:
-        name_list = []
-    return name_list
-
     
 def load_module(active):
     print('load_module')
