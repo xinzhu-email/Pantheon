@@ -337,7 +337,7 @@ class FlowPlot:
         global dir, extensions_path
         self.button_disabled()
         def load_e(self):
-            global module_select_id
+            global module_select_id, extensions_path
             check_code = extensions_qt.main()
             if check_code == 'app closed':
                 extensions_path = get_extensions_path(dir) + '/'
@@ -1271,7 +1271,7 @@ def load_extension_select(extensions_path):
     module_select_id += 1 
     models.visible = False
     curdoc().remove_root(models)
-    module_select = Select(title='Choose Functions to Add:', options=load_extensions(extensions_path), value='', id=str(module_select_id), name='modules_select')
+    module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', id=str(module_select_id), name='modules_select')
     print("line 1275")
     module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
     curdoc().add_root(module_select)
