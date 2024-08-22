@@ -311,6 +311,7 @@ class FlowPlot:
         self.button_disabled()
         def load_e(self):
             global module_select_id, extensions_path
+            load_module('Please select a function')
             if self.extension_url == '':
                 print('please input extension url')
             else:
@@ -337,6 +338,7 @@ class FlowPlot:
         global dir, extensions_path
         self.button_disabled()
         def load_e(self):
+            load_module('Please select a function')
             global module_select_id, extensions_path
             check_code = extensions_qt.main()
             if check_code == 'app closed':
@@ -1173,7 +1175,9 @@ class plot_function:
 # get extensions 
 def load_options():
     global extensions_path
-    print(extensions_path)
+    # plot = plot_function()
+    # buttons_group, buttons_n = plot.get_buttons_group()
+    # print(buttons_group, buttons_n)
     try:
         name_list = ['Please select a function'] + os.listdir(extensions_path)
         # listdir: list of file under the path
@@ -1182,25 +1186,29 @@ def load_options():
     return name_list
     
 def load_module(active):
-    print('load_module')
     global extensions_path
     plot = plot_function()
     buttons_group, buttons_n = plot.get_buttons_group() # buttons group, buttons number
+    print(buttons_group)
     # delete last extended buttons
     for i in range(buttons_n, len(buttons_group)):
         buttons_group.pop()
     # buttons = curdoc().get_model_by_name('module_buttons')
     try:
-        name_list = os.listdir(extensions_path)
+        name_list = ['Please select a function'] + os.listdir(extensions_path)
     except:
-        return     
+        return
+    print(buttons_group)     
     layouts = column()
     print('active:',active) # ex => active: Clustering_with_Scanpy
     ind = 0 
     for name in name_list:
-        but = curdoc().get_model_by_name(name)
+        if name != 'Please select a function':
+            but = curdoc().get_model_by_name(name)
+        else:
+            but = None
         div = Div(text='')
-        if name == active:
+        if name == active and name != 'Please select a function':
             sys.path.append(extensions_path)
             module_name = name + '.module'
             try:
@@ -1235,6 +1243,7 @@ def load_module(active):
                 but.visible = False'''
         ind = ind + 1
     buttons = layouts
+    print(buttons)
     if curdoc().get_model_by_name('module_buttons') == None:
         buttons.name = 'module_buttons'
     # curdoc().add_root(buttons)
@@ -1247,6 +1256,11 @@ def add_to_buttons_group(buttons, buttons_group):
             buttons_group.append(child)
 
     return buttons_group
+
+# def clear_from_buttons_group(buttons, buttons_group):
+#     for child in buttons.children:
+#         buttons_group = [x for x in buttons_group if x != child]
+#         return buttons_group
 
 def load_extension_select(extensions_path):
     global module_select_id
@@ -1262,7 +1276,7 @@ def load_extension_select(extensions_path):
     module_select_id += 1 
     models.visible = False
     curdoc().remove_root(models)
-    module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', id=str(module_select_id), name='modules_select')
+    module_select = Select(title='Choose Functions to Add:', options=load_options(), value='Please select a function', id=str(module_select_id), name='modules_select')
     print("line 1275")
     module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
     curdoc().add_root(module_select)
