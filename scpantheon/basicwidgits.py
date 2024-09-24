@@ -1,17 +1,13 @@
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[3]))
 from bokeh.models import Select, Button, CheckboxGroup, TextInput, ColorPicker, AutocompleteInput, ColumnDataSource
 from bokeh.palettes import d3
 from bokeh.layouts import row, column
-from Pantheon.scpantheon.myplot import Plot
+from myplot import Plot
 import data as dt
 import tabs as tb
 import numpy as np
 import pandas as pd
 
-class Widgets_Color:
-    
+class Widgets:
     color_list = d3['Category20c'][20]
     
     def __init__(self):
@@ -28,8 +24,8 @@ class Widgets_Color:
             index = dt.adata.obs_names,
             columns = ['color', 'default']
         )
-        dt.adata.obs['color'] = Widgets_Color.color_list[0]
-        dt.adata.obs['default'] = Widgets_Color.color_list[0]
+        dt.adata.obs['color'] = Widgets.color_list[0]
+        dt.adata.obs['default'] = Widgets.color_list[0]
         self.update_data()
         self.widgets_dict = dict()
         self.figure = Plot()
@@ -42,10 +38,10 @@ class Widgets_Color:
         self.plot_coordinates()
         self.update_layout()
 
-
     def update_data(self):
-        my_obsm = np.zeros((dt.adata.n_obs, 2))
-        dt.adata.obsm['cluster'] = my_obsm
+        """
+        for functions in extensions, turn obsm into pd.Dataframe type
+        """
         if dt.adata.obsm:
             for key in dt.adata.obsm_keys(): 
                 if type(dt.adata.obsm[key]) == np.ndarray:
@@ -140,8 +136,8 @@ class Widgets_Color:
     def init_color(self):
         color_selection = ColorPicker(
             title = "Select color:",
-            color = Widgets_Color.color_list[0], 
-            css_classes = Widgets_Color.color_list
+            color = Widgets.color_list[0], 
+            css_classes = Widgets.color_list
         )
         color_change = Button(label = 'Color Change')
         color_change.on_click (lambda : self.change_color())
@@ -231,7 +227,7 @@ class Widgets_Color:
             index = [curclsname, 'unassigned']
             columns = ['cell_num', 'color']
             group_unsdf = pd.DataFrame(index = index, columns = columns)
-            group_unsdf.loc['unassigned', 'color'] = Widgets_Color.color_list[0]
+            group_unsdf.loc['unassigned', 'color'] = Widgets.color_list[0]
             group_unsdf.loc[curclsname, 'color'] = curcolor
             group_unsdf.loc['unassigned', 'cell_num'] = dt.adata.n_obs - len(selected_list)
             group_unsdf.loc[curclsname, 'cell_num'] = len(selected_list)
@@ -303,7 +299,7 @@ class Widgets_Color:
         curmap = self.widgets_dict['choose_map'].value 
         curgroup = self.widgets_dict['group_select'].value
         cluster_name = [dt.adata.uns[curmap][curgroup].index.tolist()[i] for i in active_cls]
-        dt.adata.obs.loc[dt.adata.obs[curgroup].isin(cluster_name), 'color'] = Widgets_Color.color_list[0]
+        dt.adata.obs.loc[dt.adata.obs[curgroup].isin(cluster_name), 'color'] = Widgets.color_list[0]
         dt.adata.obs.loc[dt.adata.obs[curgroup].isin(cluster_name), curgroup] = 'unassigned'
         # ensure the clustername and color is right in the list, cell_num will be updated in update_cluster_list
         dt.adata.uns[curmap][curgroup].drop(cluster_name, inplace = True)
@@ -510,7 +506,7 @@ class Widgets_Color:
                 index = ['unassigned']
                 columns = ['cell_num', 'color']
                 group_unsdf = pd.DataFrame(index = index, columns = columns)
-                group_unsdf.loc['unassigned', 'color'] = Widgets_Color.color_list[0]
+                group_unsdf.loc['unassigned', 'color'] = Widgets.color_list[0]
                 group_unsdf.loc['unassigned', 'cell_num'] = dt.adata.n_obs
                 dt.adata.uns[curmap][curgroup] = group_unsdf
                 dt.adata.obs[curgroup] = 'unassigned'

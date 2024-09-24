@@ -1,7 +1,7 @@
 # # -*- coding: utf-8 -*-
 
 from multiprocessing import freeze_support
-import multiprocessing
+from multiprocessing import Process
 import pkg_resources
 import subprocess
 
@@ -57,7 +57,7 @@ def main():
     print("freeze support")
     freeze_support()
     global p1
-    p1 = multiprocessing.Process(target=run)
+    p1 = Process(target=run)
     p1.start()
     app()
 
