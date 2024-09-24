@@ -648,9 +648,14 @@ class Widgets:
         if is_log:
             x_list = np.log1p(x_list)
             y_list = np.log1p(y_list)
-        # curmap = self.widgets_dict['choose_map'].value
-        # curgroup = self.widgets_dict['group_select'].value
-        # dt.adata.obs['color'] = dt.adata.obs[curmap][curgroup]
+        curmap = self.widgets_dict['choose_map'].value
+        curgroup = self.widgets_dict['group_select'].value
+        if curgroup in dt.adata.uns[curmap]:
+            for cell_name in dt.adata.obs.index:
+                cell_type = dt.adata.obs.loc[cell_name, curgroup]
+                dt.adata.obs.loc[cell_name, 'color'] = dt.adata.uns[curmap][curgroup].loc[cell_type, 'color']
+        else:
+            dt.adata.obs['color'] = dt.adata.obs['default']
         color = dt.adata.obs['color'].to_list()
         source = ColumnDataSource (data = {x_varname : x_list, y_varname : y_list, 'color' : color})
         plot_dict = {'source' : source}
