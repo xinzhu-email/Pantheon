@@ -8,7 +8,9 @@ import pandas as pd
 
 class Widgets:
     
-    def __init__(self):
+    def __init__(self,
+        name: str | None = 'generic columns',
+    ):
         """
         dt.adata: handle with anndata structure  
         .obs: a pd.Dataframe with cell names as index, color and group name as columns  
@@ -18,6 +20,7 @@ class Widgets:
         denotes each cluster's color and cell number
         """
         self.new_panel = True
+        self.name = name
         self.update_data()
         self.widgets_dict = dict()
         self.figure = Plot()
@@ -645,7 +648,9 @@ class Widgets:
         if is_log:
             x_list = np.log1p(x_list)
             y_list = np.log1p(y_list)
-        
+        # curmap = self.widgets_dict['choose_map'].value
+        # curgroup = self.widgets_dict['group_select'].value
+        # dt.adata.obs['color'] = dt.adata.obs[curmap][curgroup]
         color = dt.adata.obs['color'].to_list()
         source = ColumnDataSource (data = {x_varname : x_list, y_varname : y_list, 'color' : color})
         plot_dict = {'source' : source}
@@ -679,4 +684,5 @@ class Widgets:
         layout_cluster = column(values)
 
         self.layout = row([self.figure.plot, row([column([layout_coords, layout_color]), layout_group, layout_cluster])])
+        tb.curpanel = self.name
         tb.view_panel(tb.panel_dict, tb.ext_layout, tb.curpanel)

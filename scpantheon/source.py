@@ -108,7 +108,7 @@ class Extension:
                 print("Error: original map is no longer in the new maplist")
         elif module_name == 'gene relations':
             print("init")
-            cur_panel = Widgets()
+            cur_panel = Widgets(module_name)
             tb.panel_dict['gene relations'] = cur_panel
             tb.curpanel = 'gene relations'
         else:
@@ -116,7 +116,7 @@ class Extension:
             name = module_name
             module_name = name + '.module'           
             mod = importlib.import_module(module_name)
-            cur_panel = mod.Widgets_Color()
+            cur_panel = mod.Widgets_Color(name)
             if cur_panel.new_panel: 
                 tb.panel_dict[name] = cur_panel
                 tb.curpanel = name

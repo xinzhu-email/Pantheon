@@ -12,7 +12,9 @@ import pandas as pd
 
 class Widgets_Color:
     
-    def __init__(self):
+    def __init__(self,
+        name: str,
+    ):
         """
         dt.adata: handle with anndata structure  
         .obs: a pd.Dataframe with cell names as index, color and group name as columns  
@@ -22,6 +24,7 @@ class Widgets_Color:
         denotes each cluster's color and cell number
         """
         self.new_panel = True
+        self.name = name
         self.update_data()
         self.widgets_dict = dict()
         self.figure = Plot()
@@ -683,4 +686,5 @@ class Widgets_Color:
         layout_cluster = column(values)
 
         self.layout = row([self.figure.plot, row([column([layout_coords, layout_color]), layout_group, layout_cluster])])
+        tb.curpanel = self.name
         tb.view_panel(tb.panel_dict, tb.ext_layout, tb.curpanel)
