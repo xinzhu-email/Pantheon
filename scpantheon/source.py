@@ -102,6 +102,7 @@ class Extension:
                     options = maplist
                 )
                 tb.panel_dict[tb.curpanel].widgets_dict['choose_map'] = new_map
+                new_map.on_change('value',lambda attr, old, new :tb.panel_dict[tb.curpanel].update_var())
                 tb.panel_dict[tb.curpanel].update_layout()
             else:
                 print("Error: original map is no longer in the new maplist")
