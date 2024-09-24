@@ -7,6 +7,7 @@ from subprocess import check_call
 import importlib
 import sys
 import tabs as tb
+import data as dt
 try:
     from scpantheon.front_end import extensions_qt 
     from scpantheon.front_end.extensions_qt import get_extensions_path
@@ -86,13 +87,26 @@ class Extension:
         """
         create a Widget if not in cls.panel_dict
         """
-        print(tb.adata.uns)
         module_name = self.widget_ext_dict['modules_select'].value
-        print(tb.adata.uns)
         if module_name == 'Please select a function' or module_name == 'Please load an extension':
             module_name = 'gene relations'
         tb.curpanel = module_name
-        if module_name == 'gene relations':
+        if tb.curpanel in tb.panel_dict:
+            curmap = tb.panel_dict[tb.curpanel].widgets_dict['choose_map'].value
+            print(dt.adata.uns.keys())
+            maplist = list(dt.adata.uns.keys())
+            if curmap in maplist:
+                new_map = Select(
+                    title = 'Choose map:',
+                    value = curmap,
+                    options = maplist
+                )
+                tb.panel_dict[tb.curpanel].widgets_dict['choose_map'] = new_map
+                tb.panel_dict[tb.curpanel].update_layout()
+            else:
+                print("Error: original map is no longer in the new maplist")
+        elif module_name == 'gene relations':
+            print("init")
             cur_panel = Widgets()
             tb.panel_dict['gene relations'] = cur_panel
             tb.curpanel = 'gene relations'
