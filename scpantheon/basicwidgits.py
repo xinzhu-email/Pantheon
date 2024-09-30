@@ -619,7 +619,9 @@ class Widgets:
             print("Reject: pointweise color change isn't allowed, try 'cluster color'")
             return        
     
-    def get_params(self):
+    def plot_coordinates(self,
+        selected : list | None = None
+    ):
         choose_map = self.widgets_dict['choose_map'].value
         x_varname = self.widgets_dict['x_varname'].value
         y_varname = self.widgets_dict['y_varname'].value
@@ -658,15 +660,9 @@ class Widgets:
             dt.adata.obs['color'] = dt.adata.obs['default']
         color = dt.adata.obs['color'].to_list()
         source = ColumnDataSource (data = {x_varname : x_list, y_varname : y_list, 'color' : color})
-        plot_dict = {'source' : source}
-        return plot_dict
-    
-    def plot_coordinates(self,
-        selected : list | None = None
-    ):
-        plot_dict = self.get_params()
         if selected:
-            plot_dict['selected'] = selected 
+            source.selected.indices = selected
+        plot_dict = {'source' : source}
         self.figure.update_source(**plot_dict)
     
     def update_layout(self):

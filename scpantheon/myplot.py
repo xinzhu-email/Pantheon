@@ -9,14 +9,10 @@ class Plot:
             self.source = None
         self.plot = None
         self.glyphs = None
-        if widgets.get('selected'):
-            self.source.selected.indices = widgets.get('selected')
         self.plot_figure()
 
     def update_source(self, **widgets):
         self.source = widgets.get('source')
-        if widgets.get('selected'):
-            self.source.selected.indices = widgets.get('selected')
         self.plot_figure()
             
     def plot_figure (self):

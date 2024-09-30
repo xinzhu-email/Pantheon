@@ -1,7 +1,7 @@
 from bokeh.io import curdoc
 from bokeh.models import Div, Select, Button, TextInput
 from bokeh.layouts import column
-from basicwidgits import Widgets
+from widgets import Widgets
 import os
 from subprocess import check_call
 import importlib
@@ -30,8 +30,8 @@ class Extension:
         self.extensions_path: str, a variable to record path of extensions
         self.extensions_list: list(str), a variable to record for module selection
         self.widget_ext_dict: dict("Button_names" : Buttons), record whole info of 4 buttons
-        self.layout: Layout, organize 4 buttons for visualization
         """
+        print("source")
         self.extensions_path = None
         self.extensions_list = ['Please load an extension']
         self.widget_ext_dict = dict()
@@ -93,7 +93,6 @@ class Extension:
         tb.curpanel = module_name
         if tb.curpanel in tb.panel_dict:
             curmap = tb.panel_dict[tb.curpanel].widgets_dict['choose_map'].value
-            print(dt.adata.uns.keys())
             maplist = list(dt.adata.uns.keys())
             if curmap in maplist:
                 new_map = Select(
@@ -107,7 +106,6 @@ class Extension:
             else:
                 print("Error: original map is no longer in the new maplist")
         elif module_name == 'gene relations':
-            print("init")
             cur_panel = Widgets(module_name)
             tb.panel_dict['gene relations'] = cur_panel
             tb.curpanel = 'gene relations'

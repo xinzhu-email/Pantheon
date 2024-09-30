@@ -28,13 +28,50 @@ def load_path():
     else:
         print("error input")
 
-def init_data(adata):
+def init_data(adata: sc.AnnData,):
     adata.obs = pd.DataFrame(
         index = adata.obs_names,
-        columns = ['color', 'default']
+        columns = ['color', 'Please create a group']
     )
     adata.obs['color'] = color_list[0]
-    adata.obs['default'] = color_list[0]
+    adata.obs['Please create a group'] = 'unassigned'
+    adata.uns['group_dict'] = dict()
+    print(adata.X.dtype.kind)
+
+def init_uns(
+    adata: sc.AnnData,
+    group_name: str,
+    default: bool | None = None,
+):
+    empty_group_uns = pd.DataFrame(
+        index = ['unassigned'],
+        columns = ['color', 'cell_num']
+    )
+    empty_group_uns.loc['unassigned', 'cell_num'] = adata.n_obs
+    if default:
+        empty_group_uns.loc['unassigned', 'color'] = color_list[0]
+    else:
+        empty_group_uns.loc['unassigned', 'color'] = color_list[18]
+    empty_group_uns.index = empty_group_uns.index.astype('category')
+    adata.uns['group_dict'][group_name] = empty_group_uns
+    adata.obs[group_name] = 'unassigned'
+
+def update_uns_by_obs(
+    adata: sc.AnnData,
+    group_name: str | None = None,
+    color: str | None = None
+):
+    """
+    cases to call: 
+    when a cluster is created, obs is updated first
+    """
+    cluster_counts_series = pd.Series(adata.obs[group_name].value_counts())
+    adata.uns['group_dict'][group_name]['cell_num'] = adata.uns['group_dict'][group_name]['cell_num'].index.map(cluster_counts_series).fillna(0).astype(int)
+    # missing_clusters = set(cluster_counts_series.keys()) - set(adata.uns['group_dict'][group_name]['cell_num'].index)
+    # for cluster in missing_clusters:
+    #     adata.uns['group_dict'][group_name]['cell_num'].loc[cluster] = [color, cluster_counts_series[cluster]]
+
 
 adata = load_path()
 init_data(adata)
+init_uns(adata, 'Please create a group', default = True)

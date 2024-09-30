@@ -1,7 +1,6 @@
 from bokeh.layouts import column
 from bokeh.models import Panel, Tabs
 from bokeh.io import curdoc
-from scpantheon.front_end.data_qt import dir, read_path
 
 def view_panel(
     panel_dict,
