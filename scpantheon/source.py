@@ -92,19 +92,7 @@ class Extension:
             module_name = 'gene relations'
         tb.curpanel = module_name
         if tb.curpanel in tb.panel_dict:
-            curmap = tb.panel_dict[tb.curpanel].widgets_dict['choose_map'].value
-            maplist = list(dt.adata.uns.keys())
-            if curmap in maplist:
-                new_map = Select(
-                    title = 'Choose map:',
-                    value = curmap,
-                    options = maplist
-                )
-                tb.panel_dict[tb.curpanel].widgets_dict['choose_map'] = new_map
-                new_map.on_change('value',lambda attr, old, new :tb.panel_dict[tb.curpanel].update_var())
-                tb.panel_dict[tb.curpanel].update_layout()
-            else:
-                print("Error: original map is no longer in the new maplist")
+            tb.panel_dict[tb.curpanel].switch_tab()
         elif module_name == 'gene relations':
             cur_panel = Widgets(module_name)
             tb.panel_dict['gene relations'] = cur_panel

@@ -36,15 +36,35 @@ class Widgets:
         self.plot_coordinates()
         self.update_layout()
     
+    def switch_tab(self):
+        """
+        when the tab already exists, update itself by adata
+        """
+        curmap = self.widgets_dict['choose_map'].value
+        self.init_map(curmap)
+        self.init_coordinates()
+        self.update_plot_source_by_coords()
+        self.init_group_select()
+        self.init_cluster_select()
+        self.update_plot_source_by_colors()
+        self.plot_coordinates()
+        self.update_layout()
 
     """
     Following are functions to init widgets in homepage
     """    
-    def init_map(self):
+    def init_map(self,
+        map_name: str | None = None
+    ):
         """
         Init widget 'Choose map' according to adata.obsm
         """
-        map_list = dt.adata.obsm_keys() + ['generic_columns'] 
+        map_list = dt.adata.obsm_keys() + ['generic_columns']
+        if not map_name:
+            map_name = map_list[0]
+        elif map_name not in map_list:
+            print("Error: original map is no longer in the new maplist")
+            map_name = map_list[0]
         choose_map = Select(
             title = 'Choose map:',
             value = map_list[0],
@@ -84,8 +104,7 @@ class Widgets:
 
         widgets_dict = {'x_varname': x_axis, 'y_varname': y_axis, 'is_log': log_axis, 'log_info': log_info}
         merged_dict = {**self.widgets_dict, **widgets_dict}
-        self.widgets_dict = merged_dict
-        
+        self.widgets_dict = merged_dict       
     
     def init_group(self):
         """
@@ -307,6 +326,13 @@ class Widgets:
         self.update_layout()
 
     def delete_group_select(self):
+        """
+        delete current group      
+        first delete corresponding column/df in obs and uns    
+        next update group_select    
+        then update cluster_select    
+        finally update self.plot_source and visualize
+        """
         group_list = self.widgets_dict['group_select'].options
         group_name = self.widgets_dict['group_select'].value
         if group_name in group_list:
@@ -347,7 +373,17 @@ class Widgets:
         curcolor = self.widgets_dict['color_picker'].color
         selected_list = self.figure.source.selected.indices
         if curgroup == 'Please create a group':
-            curgroup = self.widgets_dict['x_varname'].value + '+' + self.widgets_dict['y_varname'].value
+            group_name = self.widgets_dict['group_name'].value
+            if group_name == '':
+                curgroup = self.widgets_dict['x_varname'].value + '+' + self.widgets_dict['y_varname'].value
+            elif group_name == 'Please create a group':
+                print("Reject: name conflict, 'Please create a group' is reserved")
+                return
+            elif group_name in self.widgets_dict['group_select'].options:
+                print("Reject: name already exists")
+                return
+            else:
+                curgroup = group_name
             dt.init_uns(dt.adata, curgroup, default = False)
             self.init_group_select(curgroup)
         clusterlist = dt.adata.uns['group_dict'][curgroup].index.tolist()
