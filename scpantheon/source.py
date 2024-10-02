@@ -90,6 +90,8 @@ class Extension:
         module_name = self.widget_ext_dict['modules_select'].value
         if module_name == 'Please select a function' or module_name == 'Please load an extension':
             module_name = 'gene relations'
+        if module_name == tb.curpanel:
+            return
         tb.curpanel = module_name
         if tb.curpanel in tb.panel_dict:
             tb.panel_dict[tb.curpanel].switch_tab()

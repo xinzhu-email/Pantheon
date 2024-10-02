@@ -41,10 +41,11 @@ class Widgets:
         when the tab already exists, update itself by adata
         """
         curmap = self.widgets_dict['choose_map'].value
+        curgroup = self.widgets_dict['group_select'].value
         self.init_map(curmap)
         self.init_coordinates()
         self.update_plot_source_by_coords()
-        self.init_group_select()
+        self.init_group_select(curgroup)
         self.init_cluster_select()
         self.update_plot_source_by_colors()
         self.plot_coordinates()
@@ -67,7 +68,7 @@ class Widgets:
             map_name = map_list[0]
         choose_map = Select(
             title = 'Choose map:',
-            value = map_list[0],
+            value = map_name,
             options = map_list
         )
         choose_map.on_change('value',lambda attr, old, new :self.update_var())
@@ -384,6 +385,7 @@ class Widgets:
                 return
             else:
                 curgroup = group_name
+                self.widgets_dict['group_name'].value = ''
             dt.init_uns(dt.adata, curgroup, default = False)
             self.init_group_select(curgroup)
         clusterlist = dt.adata.uns['group_dict'][curgroup].index.tolist()
