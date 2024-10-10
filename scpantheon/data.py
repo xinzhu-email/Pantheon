@@ -59,7 +59,7 @@ def init_uns(
 def update_uns_by_obs(
     adata: sc.AnnData,
     group_name: str | None = None,
-    color: str | None = None
+    # color: str | None = None
 ):
     """
     cases to call: 

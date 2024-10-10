@@ -154,7 +154,7 @@ class Ui_Dialog(QDialog, QWidget, object):
         Dialog.reject() 
 
 # extract online extension zip
-def extract_online_packages(extensions_path, extract_path, url='https://github.com/xinzhu-email/Pantheon/archive/refs/heads/main.zip'):
+def extract_online_packages(extensions_path, extract_path, url: str | None ='https://github.com/xinzhu-email/Pantheon/archive/refs/heads/main.zip'):
     r = requests.get(url, stream=True) 
     try:
         z = zipfile.ZipFile(io.BytesIO(r.content))

@@ -81,6 +81,10 @@ class Widgets:
         init x_axis, y_axis and log checkbox
         """
         varlist = self.get_var()
+        if 'is_log' in self.widgets_dict:
+            active_status = self.widgets_dict['is_log'].active
+        else:
+            active_status = []
         x_axis = AutocompleteInput(
             title = "x axis:", 
             value = varlist[0], 
@@ -97,7 +101,7 @@ class Widgets:
         )
         y_axis.on_change("value", lambda attr, old, new : self.update_axis('y_varname', attr, old, new))
 
-        log_axis = CheckboxGroup(labels = ['Log-scaled axis', 'Exponential-scaled axis'], active = [])
+        log_axis = CheckboxGroup(labels = ['Log-scaled axis', 'Exponential-scaled axis'], active = active_status)
         log_axis.on_change('active',lambda attr, old, new : self.update_log(attr, old, new))
 
         log_status = self.get_log_status()
@@ -751,7 +755,7 @@ class Widgets:
         for cell_name in dt.adata.obs.index:
             cell_type = dt.adata.obs.loc[cell_name, curgroup]
             dt.adata.obs.loc[cell_name, 'color'] = dt.adata.uns['group_dict'][curgroup].loc[cell_type, 'color']
-        self.plot_source['color'] = dt.adata.obs['color'].to_list()
+        self.plot_source['color'] = dt.adata.obs['color'].to_list() 
 
     def plot_coordinates(self,
         selected : list | None = None
