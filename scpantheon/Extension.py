@@ -1,5 +1,6 @@
 from bokeh.models import Select, Button, TextInput
 from bokeh.layouts import column
+from bokeh.io import curdoc
 from widgets import Widgets
 import os
 from subprocess import check_call
@@ -55,44 +56,48 @@ class Extension:
     def load_online_extensions(self):
         # Test failed (connection)
         Extension.disable_widgets(Extension.widget_ext_dict)
-        Extension.disable_widgets(tb.curpanel.widgets_dict)
-        if Extension.widget_ext_dict['extension_url'].value == '':
-            print("Warning: default url as 'https://github.com/xinzhu-email/Pantheon/archive/refs/heads/main.zip'")
-            zip_file_url = None
-        else:
-            zip_file_url = Extension.widget_ext_dict['extension_url'].value
-        Extension.widget_ext_dict['extension_url'].value = ''
-        check_code = load_qt.main()
-        if check_code == 'app closed':
-            extract_path = load_qt.get_load_path() + '/online_extension/'
-            self.extensions_path, _ = read_path(dir)
-            if zip_file_url:
-                extract_online_packages(self.extensions_path, extract_path, zip_file_url)
+        Extension.disable_widgets(tb.panel_dict[tb.curpanel].widgets_dict)
+        def load_online_extensions_callback(self):
+            if Extension.widget_ext_dict['extension_url'].value == '':
+                print("Warning: default url as 'https://github.com/xinzhu-email/Pantheon/archive/refs/heads/main.zip'")
+                zip_file_url = None
             else:
-                extract_online_packages(self.extensions_path, extract_path)
-        try:
-            self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
-        except:
-            self.extensions_list = ['Please load an extension']
-        self.init_modules()
-        self.update_layout()
-        Extension.enable_widgets(Extension.widget_ext_dict)
-        Extension.enable_widgets(tb.curpanel.widgets_dict)
+                zip_file_url = Extension.widget_ext_dict['extension_url'].value
+            Extension.widget_ext_dict['extension_url'].value = ''
+            check_code = load_qt.main()
+            if check_code == 'app closed':
+                extract_path = load_qt.get_load_path() + '/online_extension/'
+                self.extensions_path, _ = read_path(dir)
+                if zip_file_url:
+                    extract_online_packages(self.extensions_path, extract_path, zip_file_url)
+                else:
+                    extract_online_packages(self.extensions_path, extract_path)
+            try:
+                self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
+            except:
+                self.extensions_list = ['Please load an extension']
+            self.init_modules()
+            self.update_layout()
+            Extension.enable_widgets(Extension.widget_ext_dict)
+            Extension.enable_widgets(tb.panel_dict[tb.curpanel].widgets_dict)
+        curdoc().add_next_tick_callback(lambda: load_online_extensions_callback(self))
     
     def load_local_extensions(self):
         Extension.disable_widgets(Extension.widget_ext_dict)
-        Extension.disable_widgets(tb.curpanel.widgets_dict)
-        check_code = extensions_qt.main()
-        if check_code == 'app closed':
-            self.extensions_path = get_extensions_path(dir) + '/'
-        try:
-            self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
-        except:
-            self.extensions_list = ['Please load an extension']
-        self.init_modules()
-        self.update_layout()
-        Extension.enable_widgets(Extension.widget_ext_dict)
-        Extension.enable_widgets(tb.curpanel.widgets_dict)
+        Extension.disable_widgets(tb.panel_dict[tb.curpanel].widgets_dict)
+        def load_local_extensions_callback(self):    
+            check_code = extensions_qt.main()
+            if check_code == 'app closed':
+                self.extensions_path = get_extensions_path(dir) + '/'
+            try:
+                self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
+            except:
+                self.extensions_list = ['Please load an extension']
+            self.init_modules()
+            self.update_layout()
+            Extension.enable_widgets(Extension.widget_ext_dict)
+            Extension.enable_widgets(tb.panel_dict[tb.curpanel].widgets_dict)
+        curdoc().add_next_tick_callback(lambda: load_local_extensions_callback(self))
     
     def init_modules(self):
         modules_select = Select(
@@ -142,12 +147,13 @@ class Extension:
         widget_dict: dict
     ):
         tb.Tabs.disabled = True
-        for widgets in widget_dict:
-            widgets.disabled = True       
+        for widget_key in widget_dict:
+            widget_dict[widget_key].disabled = True
+            print(widget_dict[widget_key], widget_key)       
   
     def enable_widgets(
         widget_dict: dict
     ):
         tb.Tabs.disabled = False
-        for widgets in widget_dict:
-            widgets.disabled = False
+        for widget_key in widget_dict:
+            widget_dict[widget_key].disabled = False
