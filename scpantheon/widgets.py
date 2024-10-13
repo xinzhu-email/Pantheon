@@ -1,4 +1,4 @@
-from bokeh.models import Select, Button, CheckboxGroup, TextInput, ColorPicker, AutocompleteInput, ColumnDataSource, Div
+from bokeh.models import CustomJS ,Select, Button, CheckboxGroup, TextInput, ColorPicker, AutocompleteInput, ColumnDataSource, Div
 from bokeh.layouts import row, column
 from myplot import Plot
 import data as dt
@@ -22,7 +22,11 @@ class Widgets:
         self.widgets_dict = dict()
         self.plot_source = {'x': dict(), 'y': dict(), 'color': list()}
         self.figure = Plot()
-        self.layout = None
+        self.layout = column([])
+        if self.name == 'gene relations':
+            self.init_tab()
+    
+    def init_tab(self):
         self.init_map()
         self.init_coordinates()
         self.update_plot_source_by_coords()
@@ -34,11 +38,13 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
     
     def switch_tab(self):
         """
         when the tab already exists, update itself by adata
         """
+        print("switch")
         curmap = self.widgets_dict['choose_map'].value
         curgroup = self.widgets_dict['group_select'].value
         self.init_map(curmap)
@@ -49,6 +55,7 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
 
     """
     Following are functions to init widgets in homepage
@@ -226,8 +233,9 @@ class Widgets:
             labels = clusterlist,
             active = [],
             css_classes = ["cluster_checkbox_label"]
-        )
+        )        
         cluster_checkbox.on_change('active', lambda attr, old, new: self.show_select())
+        # cluster_checkbox.on_change('labels', lambda attr, old, new: self.show_cluster_color())
         widgets_dict = {'cluster_checkbox' : cluster_checkbox}
         merged_dict = {**self.widgets_dict, **widgets_dict}
         self.widgets_dict = merged_dict
@@ -246,6 +254,7 @@ class Widgets:
         self.update_plot_source_by_coords()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
 
     def update_axis(self, widget_key, attr, old, new):
         """
@@ -255,6 +264,7 @@ class Widgets:
         self.update_plot_source_by_coords()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
     
     def update_log(self, attr, old, new):
         """
@@ -268,6 +278,7 @@ class Widgets:
         self.update_plot_source_by_coords()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
     
     def create_group_select(self,
         group_name: str | None = None
@@ -299,6 +310,7 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
 
     def rename_group_select(self):
         """
@@ -328,6 +340,7 @@ class Widgets:
         dt.adata.uns['group_dict'][new_name] = dt.adata.uns['group_dict'].pop(group_name)
         self.init_group_select(new_name)
         self.update_layout()
+        self.view_tab()
 
     def delete_group_select(self):
         """
@@ -350,6 +363,7 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
 
     def update_group(self):
         """
@@ -362,6 +376,7 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
 
     def create_cluster_select(self):
         """
@@ -408,6 +423,7 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
     
     def rename_cluster_select(self):
         """
@@ -449,6 +465,7 @@ class Widgets:
         dt.adata.uns['group_dict'][curgroup] = dt.adata.uns['group_dict'][curgroup].drop(cluster_name_old, axis = 0)
         self.init_cluster_select()
         self.update_layout()
+        self.view_tab()
 
     def delete_cluster_select(self):
         """
@@ -475,6 +492,7 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
 
     def merge_cluster_select(self):
         """
@@ -520,6 +538,7 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
 
     def add_to(self):
         """
@@ -550,6 +569,7 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
 
     def remove_from(self):
         """
@@ -581,6 +601,7 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
 
     def update(self):
         """
@@ -623,6 +644,7 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
 
     def change_cluster_color(self):
         """
@@ -655,6 +677,7 @@ class Widgets:
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
+        self.view_tab()
 
     def show_select(self):
         curgroup = self.widgets_dict['group_select'].value
@@ -667,6 +690,7 @@ class Widgets:
         ]
         self.figure.source.selected.indices = selected
         self.update_layout()
+        self.view_tab()
     
 
     """
@@ -681,6 +705,7 @@ class Widgets:
             varlist = dt.adata.var.index.to_list()
         else:
             varlist = dt.adata.obsm[curmap].columns.tolist()
+            print(varlist)
         return varlist 
     
     def get_log_status(self):
@@ -705,6 +730,32 @@ class Widgets:
             cluster_prompt = str(cluster_name) + ": cell_nums = " + str(cellnum)
             cluster_promtlist.append(cluster_prompt)
         return cluster_promtlist
+    
+    # def show_cluster_color(self):
+    #     para_color = Div(text='0', visible=False, css_classes=['hide'])
+    #     trigger_color = Div(text='1', visible=False)
+    #     trigger_color.js_on_change('text', CustomJS(code="""            
+    #         setTimeout(function(){
+    #             const collection = document.getElementsByClassName("cluster_checkbox_label");
+    #             var str = document.getElementsByClassName('hide')[0].children[0].innerHTML;
+    #             console.log(document.getElementsByClassName('hide')[0].children[0].innerHTML);
+    #             const color = str.split(' ');
+    #             var k = color.length;
+    #             console.log(k,color);
+    #             for (var i=0;i<k;i++)
+    #             {
+    #                 collection[0].children[0].children[i].style.color = color[i];
+    #             }
+    #             console.log('collection:' + collection[0].children[0].innerHTML);
+    #         }, 100);            
+    #     """))
+
+    #     curgroup = self.widgets_dict['group_select'].value
+    #     clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
+    #     for clustername in clusterlist:
+    #         color_js = dt.adata.uns['group_dict'][curgroup].loc[clustername, 'color'] + ' '
+    #     para_color.text = color_js[:-1]
+    #     trigger_color.text = trigger_color.text + '1'
     
     def update_plot_source_by_coords(self):
         """
@@ -803,5 +854,7 @@ class Widgets:
         layout_cluster = column(values)
 
         self.layout = row([self.figure.plot, row([column([layout_coords, layout_color]), layout_group, layout_cluster])])
+    
+    def view_tab(self):
         tb.curpanel = self.name
         tb.view_panel(tb.panel_dict, tb.ext_layout, tb.curpanel)

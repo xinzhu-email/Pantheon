@@ -80,11 +80,5 @@ def update_uns_by_obs(
     """
     cluster_counts_series = pd.Series(adata.obs[group_name].value_counts())
     adata.uns['group_dict'][group_name]['cell_num'] = adata.uns['group_dict'][group_name]['cell_num'].index.map(cluster_counts_series).fillna(0).astype(int)
-    # missing_clusters = set(cluster_counts_series.keys()) - set(adata.uns['group_dict'][group_name]['cell_num'].index)
-    # for cluster in missing_clusters:
-    #     adata.uns['group_dict'][group_name]['cell_num'].loc[cluster] = [color, cluster_counts_series[cluster]]
 
 adata = None
-adata = load_path()
-init_data(adata)
-# init_uns(adata, 'Please create a group', default = True)
