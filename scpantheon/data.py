@@ -1,6 +1,7 @@
 import scanpy as sc
 import os
 import pandas as pd
+import numpy as np
 from bokeh.palettes import d3
 
 from scpantheon.front_end.data_qt import dir, read_path
@@ -29,6 +30,8 @@ def load_path():
         print("error input")
 
 def init_data(adata: sc.AnnData,):
+    if not isinstance(adata.X, np.ndarray): # judge dense matrix
+        adata.X = adata.X.toarray()
     adata.obs = pd.DataFrame(
         index = adata.obs_names,
         columns = ['color', 'Please create a group']
@@ -71,7 +74,7 @@ def update_uns_by_obs(
     # for cluster in missing_clusters:
     #     adata.uns['group_dict'][group_name]['cell_num'].loc[cluster] = [color, cluster_counts_series[cluster]]
 
-
-adata = load_path()
-init_data(adata)
-init_uns(adata, 'Please create a group', default = True)
+adata = None
+# adata = load_path()
+# init_data(adata)
+# init_uns(adata, 'Please create a group', default = True)

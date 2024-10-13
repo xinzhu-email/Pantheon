@@ -1,3 +1,5 @@
+# outdated version
+
 from bokeh.models import Select, Button, CheckboxGroup, TextInput, ColorPicker, AutocompleteInput, ColumnDataSource
 from bokeh.layouts import row, column
 from myplot import Plot

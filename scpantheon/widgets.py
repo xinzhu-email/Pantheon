@@ -4,7 +4,6 @@ from myplot import Plot
 import data as dt
 import tabs as tb
 import numpy as np
-import pandas as pd
 
 class Widgets:
     def __init__(self,
@@ -692,6 +691,7 @@ class Widgets:
             return "log info: original data probably not log-scaled"
         else:
             return "log info: original data probably log-scaled already"
+
     
     def get_cluster_list(self):
         """
