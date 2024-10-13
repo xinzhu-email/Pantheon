@@ -55,6 +55,7 @@ def init_uns(
     adata: sc.AnnData,
     group_name: str,
     default: bool | None = None,
+    obs_exist: bool | None = False
 ):
     empty_group_uns = pd.DataFrame(
         index = ['unassigned'],
@@ -67,18 +68,40 @@ def init_uns(
         empty_group_uns.loc['unassigned', 'color'] = color_list[18]
     empty_group_uns.index = empty_group_uns.index.astype('category')
     adata.uns['group_dict'][group_name] = empty_group_uns
-    adata.obs[group_name] = 'unassigned'
+    if obs_exist == False:
+        adata.obs[group_name] = 'unassigned'
 
 def update_uns_by_obs(
     adata: sc.AnnData,
     group_name: str | None = None,
-    # color: str | None = None
 ):
     """
     cases to call: 
-    when a cluster is created, obs is updated first
+    when a cluster is created, obs is updated first, uns cluster not defined
     """
     cluster_counts_series = pd.Series(adata.obs[group_name].value_counts())
     adata.uns['group_dict'][group_name]['cell_num'] = adata.uns['group_dict'][group_name]['cell_num'].index.map(cluster_counts_series).fillna(0).astype(int)
+    print(adata.uns['group_dict'][group_name])
+
+def update_uns_hybrid_obs(
+    adata: sc.AnnData,
+    group_name: str | None = None,
+):
+    """
+    cases to call: 
+    when a cluster is created, obs is updated first, uns cluster not defined
+    """
+    cluster_counts_series = pd.Series(adata.obs[group_name].value_counts())
+    clusterlist_obs = cluster_counts_series.index.tolist()
+    clusterlist_uns = adata.uns['group_dict'][group_name].index.tolist()
+    clusterlist = list(set(clusterlist_uns+ clusterlist_obs))
+    adata.uns['group_dict'][group_name] = adata.uns['group_dict'][group_name].reindex(clusterlist)
+    clusterlist = adata.uns['group_dict'][group_name].index.tolist()
+    print(clusterlist)
+    adata.uns['group_dict'][group_name]['cell_num'] = adata.uns['group_dict'][group_name]['cell_num'].index.map(cluster_counts_series).fillna(0).astype(int)
+    for clustername in clusterlist:
+        if pd.isna(adata.uns['group_dict'][group_name].loc[clustername, 'color']):
+            adata.uns['group_dict'][group_name].loc[clustername,'color'] = color_list[(18 + clusterlist.index(clustername))%20]
+    print(adata.uns['group_dict'][group_name])
 
 adata = None

@@ -25,6 +25,7 @@ class Widgets_Color(Widgets):
         """
         self.update_data()
         super().__init__(name)
+        super().init_tab()
 
 
     def update_data(self):

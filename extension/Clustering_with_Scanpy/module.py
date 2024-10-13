@@ -11,7 +11,6 @@ from bokeh.models import FileInput, Button, TextInput, Div, Select
 from bokeh.layouts import row, column
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-from scpantheon import source as soc
 
 color_list = d3['Category20c'][20]
 
@@ -113,6 +112,7 @@ class Widgets_Color(Widgets):
         pd.Dataframe's index are cluster names, columns are color and cell_num  
         denotes each cluster's color and cell number
         """
+        self.update_data()
         super().__init__(name)
         self.init_sccluster()
         super().init_tab()
@@ -136,11 +136,26 @@ class Widgets_Color(Widgets):
         self.widgets_dict = merged_dict
     
 
-    def pca():
-        pass
+    def pca(self):
+        sc.pl.pca_variance_ratio(dt.adata, log=True, save='.png')
+        img = open('figures/pca_variance_ratio.png','rb')
+        img_base64 = base64.b64encode(img.read()).decode("ascii")
+        pca_img = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
+        widgets_dict = {'pca_img': pca_img}
+        merged_dict = {**self.widgets_dict, **widgets_dict}
+        self.widgets_dict = merged_dict
+        self.update_layout()
+        self.view_tab()
 
-    def neighborhood_graph(neighbor_num, pc_num, resolution):
-        pass
+    def neighborhood_graph(self, neighbor_num, pc_num, resolution):
+        sc.pp.neighbors(dt.adata, n_neighbors=int(neighbor_num), n_pcs=int(pc_num))
+        sc.tl.umap(dt.adata)
+        sc.tl.leiden(dt.adata, resolution=float(resolution), flavor="igraph", n_iterations=2, directed=False)
+        dt.init_uns(dt.adata, 'leiden', default = False, obs_exist = True)
+        dt.update_uns_hybrid_obs(dt.adata, 'leiden')
+        super().create_group_select('leiden')
+        self.update_layout()
+        self.view_tab()
 
 
     def update_layout(self):
@@ -148,17 +163,19 @@ class Widgets_Color(Widgets):
         sccluster_key = ['sc_cluster_step1', 'cl_input1', 'cl_input2', 'cl_input3', 'sc_cluster_step2']
         values = [self.widgets_dict[key] for key in sccluster_key if key in self.widgets_dict]
         layout_sccluster = column(values)
-        self.layout = column([self.layout, layout_sccluster])
+
+        pca_img_key = ['pca_img']
+        values = [self.widgets_dict[key] for key in pca_img_key if key in self.widgets_dict]
+        layout_pca_img = column(values)
+        self.layout = column([self.layout, row([layout_sccluster, layout_pca_img])])
     
     def update_data(self):
-        my_obsm = np.zeros((dt.adata.n_obs, 2))
-        dt.adata.obsm['cluster'] = my_obsm
-        if dt.adata.obsm:
-            for key in dt.adata.obsm_keys(): 
-                if type(dt.adata.obsm[key]) == np.ndarray:
-                    column_names = list([key + str(i) for i in range(dt.adata.obsm[key].shape[1])])
-                    dt.adata.obsm[key] = pd.DataFrame(
-                        dt.adata.obsm[key],
-                        index = dt.adata.obs_names,
-                        columns = column_names
-                    )
+        sc.tl.pca(dt.adata, svd_solver='arpack')
+        key = 'X_pca'
+        if type(dt.adata.obsm[key]) == np.ndarray:
+            column_names = list([key + str(i) for i in range(dt.adata.obsm[key].shape[1])])
+            dt.adata.obsm[key] = pd.DataFrame(
+                dt.adata.obsm[key],
+                index = dt.adata.obs_names,
+                columns = column_names
+            )
