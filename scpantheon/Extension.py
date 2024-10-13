@@ -23,7 +23,7 @@ except:
 
 class Extension:
     widget_ext_dict = dict()
-    
+    print("ext")
     def __init__(self):
         """
         self.extensions_path: str, a variable to record path of extensions

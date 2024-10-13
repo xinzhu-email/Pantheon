@@ -687,7 +687,7 @@ class Widgets:
         """
         provide reference information for whether original data is log-scaled
         """
-        if np.isclose(dt.adata.X, np.trunc(dt.adata.X)).all():            
+        if dt.adata.uns["original_log"] is False:            
             return "log info: original data probably not log-scaled"
         else:
             return "log info: original data probably log-scaled already"
@@ -763,10 +763,16 @@ class Widgets:
         """
         update self.figure by self.plot_source
         """
+        if dt.adata.uns["is_dense"]:
+            x_data = list(self.plot_source['x'].values())[0]
+            y_data = list(self.plot_source['y'].values())[0]
+        else:
+            x_data = list(self.plot_source['y'].values())[0].toarray().flatten()
+            y_data = list(self.plot_source['y'].values())[0].toarray().flatten()
         source = ColumnDataSource(
             data = {
-                list(self.plot_source['x'].keys())[0] : list(self.plot_source['x'].values())[0],
-                list(self.plot_source['y'].keys())[0] : list(self.plot_source['y'].values())[0],
+                list(self.plot_source['x'].keys())[0] : x_data,
+                list(self.plot_source['y'].keys())[0] : y_data,
                 'color': self.plot_source['color']
             }
         )

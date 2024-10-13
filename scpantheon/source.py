@@ -11,7 +11,7 @@ def main(doc):
     """starting page with loading remind"""
     dt.adata = dt.load_path()
     dt.init_data(dt.adata)
-    dt.init_uns(dt.adata, 'Please create a group', default = True)
+    print("main")
     loading_remind = Div(text='Loading data……')
     doc.add_root(loading_remind) 
     print('===loading finished=====')

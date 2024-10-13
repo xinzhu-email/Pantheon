@@ -31,7 +31,17 @@ def load_path():
 
 def init_data(adata: sc.AnnData,):
     if not isinstance(adata.X, np.ndarray): # judge dense matrix
-        adata.X = adata.X.toarray()
+        adata.uns["is_dense"] = False
+    else:
+        adata.uns["is_dense"] = True
+    if adata.uns["is_dense"] is True:
+        judge = adata.X[:, 0]
+    else:
+        judge = adata.X[:, 0].toarray().flatten()
+    if np.isclose(judge.shape[0], np.trunc(judge)).all():
+        adata.uns["original_log"] = False
+    else: 
+        adata.uns["original_log"] = True
     adata.obs = pd.DataFrame(
         index = adata.obs_names,
         columns = ['color', 'Please create a group']
@@ -39,7 +49,7 @@ def init_data(adata: sc.AnnData,):
     adata.obs['color'] = color_list[0]
     adata.obs['Please create a group'] = 'unassigned'
     adata.uns['group_dict'] = dict()
-    print(adata.X.dtype.kind)
+    init_uns(adata, 'Please create a group', default = True)
 
 def init_uns(
     adata: sc.AnnData,
@@ -75,6 +85,6 @@ def update_uns_by_obs(
     #     adata.uns['group_dict'][group_name]['cell_num'].loc[cluster] = [color, cluster_counts_series[cluster]]
 
 adata = None
-# adata = load_path()
-# init_data(adata)
+adata = load_path()
+init_data(adata)
 # init_uns(adata, 'Please create a group', default = True)
