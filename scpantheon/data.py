@@ -73,6 +73,18 @@ def init_uns(
     if obs_exist == False:
         adata.obs[group_name] = 'unassigned'
 
+def update_data_obsm(
+    adata: sc.AnnData,
+    obsm_key: str    
+):
+    if type(adata.obsm[obsm_key]) == np.ndarray:
+        column_names = list([obsm_key + str(i) for i in range(adata.obsm[obsm_key].shape[1])])
+        adata.obsm[obsm_key] = pd.DataFrame(
+            adata.obsm[obsm_key],
+            index = adata.obs_names,
+            columns = column_names
+        )
+
 def update_uns_by_obs(
     adata: sc.AnnData,
     group_name: str | None = None,
@@ -83,7 +95,6 @@ def update_uns_by_obs(
     """
     cluster_counts_series = pd.Series(adata.obs[group_name].value_counts())
     adata.uns['group_dict'][group_name]['cell_num'] = adata.uns['group_dict'][group_name]['cell_num'].index.map(cluster_counts_series).fillna(0).astype(int)
-    print(adata.uns['group_dict'][group_name])
 
 def update_uns_hybrid_obs(
     adata: sc.AnnData,
@@ -99,11 +110,9 @@ def update_uns_hybrid_obs(
     clusterlist = list(set(clusterlist_uns+ clusterlist_obs))
     adata.uns['group_dict'][group_name] = adata.uns['group_dict'][group_name].reindex(clusterlist)
     clusterlist = adata.uns['group_dict'][group_name].index.tolist()
-    print(clusterlist)
     adata.uns['group_dict'][group_name]['cell_num'] = adata.uns['group_dict'][group_name]['cell_num'].index.map(cluster_counts_series).fillna(0).astype(int)
     for clustername in clusterlist:
         if pd.isna(adata.uns['group_dict'][group_name].loc[clustername, 'color']):
             adata.uns['group_dict'][group_name].loc[clustername,'color'] = color_list[(18 + clusterlist.index(clustername))%20]
-    print(adata.uns['group_dict'][group_name])
 
 adata = None
