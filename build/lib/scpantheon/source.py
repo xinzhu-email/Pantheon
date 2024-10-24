@@ -6,17 +6,26 @@ from bokeh.transform import log_cmap
 from bokeh.palettes import d3
 from bokeh.layouts import row, column, layout
 from bokeh.io import curdoc# current document
+<<<<<<< HEAD
 from bokeh.plotting import figure, output_file, save, show
 from bokeh.embed import components, file_html
 from bokeh.resources import CDN
 import pandas 
 import numpy as np
 import anndata
+=======
+from bokeh.embed import file_html
+from bokeh.plotting import figure, save
+from bokeh.resources import CDN
+import pandas 
+import numpy as np
+>>>>>>> extension
 import scipy.sparse as ss
 import colorcet as cc
 import scanpy as sc
 # from new_func import new_layout
 # from main3 import change_class_color
+<<<<<<< HEAD
 
 import os, sys, io
 import importlib
@@ -26,12 +35,34 @@ try: from scpantheon.front_end import save_qt
 except: from front_end import save_qt
 from appdirs import AppDirs
 import requests, zipfile, shutil
+=======
+# import mysql.connector
+import os, sys, io
+import importlib
+from PyQt5.QtWidgets import *
+from appdirs import AppDirs
+import requests, zipfile, tarfile, shutil, subprocess
+try:
+    from scpantheon.front_end import extensions_qt 
+    from scpantheon.front_end.extensions_qt import get_extensions_path
+    from scpantheon.front_end import save_qt, load_qt
+    from scpantheon.front_end.data_qt import dir, extract_online_packages, auto_pip_install, read_path
+    from scpantheon.front_end.save_qt import get_save_path
+except:
+    subprocess.check_call(['pip3', 'install', "scpantheon"])
+    from scpantheon.front_end import extensions_qt 
+    from scpantheon.front_end.extensions_qt import get_extensions_path
+    from scpantheon.front_end import save_qt, load_qt
+    from scpantheon.front_end.data_qt import dir, extract_online_packages, auto_pip_install, read_path
+    from scpantheon.front_end.save_qt import get_save_path
+>>>>>>> extension
 
 
 TOOLTIPS = [
         ("(x,y)", "($x, $y)"),
         ("color", "@color"),
 ]
+<<<<<<< HEAD
 class FlowPlot:
     global data_file
     def __init__(self, data=None, color_map=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
@@ -40,10 +71,27 @@ class FlowPlot:
         self.data_log = np.log1p(self.data_df)    
         # For real-valued input, log1p is accurate also for x so small that 1 + x == 1 in floating-point accuracy.
         self.label_existed, view_existed = False, False
+=======
+
+class FlowPlot:
+    global data_path
+    def __init__(self, data=None, color_map=None, x_init_idx = 0, y_init_idx = 1, allow_select = True, select_color_change = True, main_plot = None,title=None): # - legend=None
+        self.adata = data
+        # !!! only plot x, y of adata
+        # self.adata = self.adata[:, [x_init_idx, y_init_idx]]
+        # self.adata = self.adata[:, ['CD3D','CD3E','GNLY','CD14']]
+        '''print(self.adata)
+        print(self.adata.var_names)'''
+        self.data_df = self.adata.to_df()
+        self.data_log = np.log1p(self.data_df)    
+        # For real-valued input, log1p is accurate also for x so small that 1 + x == 1 in floating-point accuracy.
+        self.label_existed, view_existed = False, False # group_label_existed
+>>>>>>> extension
         # personalized
         try:
             group_list = list(self.adata.uns['category_dict'].keys()) 
             #  uns can get any kinds of data type like dict or list
+<<<<<<< HEAD
             if main_plot == None:
                 self.label_existed = True
         except:
@@ -63,6 +111,24 @@ class FlowPlot:
                     class_dict = {}
                     for value in class_list:
                         class_dict[value] = class_dict.get(value,0) + 1 # initialize with 1 ?? ##
+=======
+            if main_plot == None and group_list != []:
+                self.label_existed = True
+        except:
+            self.adata.uns['category_dict'] = dict()   
+            group_list = list(self.adata.obs.columns) 
+            # print("group list:", group_list)
+            if group_list != [] and main_plot == None:
+                self.label_existed = True
+                for group in group_list: 
+                    self.adata.uns['category_dict'][group] = pandas.DataFrame(columns=['class_name','color','cell_num']) 
+                    class_list = self.adata.obs[group] 
+                    # ??? why transform now?
+                    self.adata.obs[group] = pandas.Series(self.adata.obs[group], dtype=object)
+                    class_dict = {}
+                    for value in class_list: # ??? every single cell value?
+                        class_dict[value] = class_dict.get(value,0) + 1 
+>>>>>>> extension
                     ind = 0 
                     for key in class_dict.keys():
                         self.adata.uns['category_dict'][group].loc[ind,:] = {'class_name': key, 'cell_num': class_dict[key], 'color':color_list[int(ind*4%20)]}
@@ -77,7 +143,10 @@ class FlowPlot:
         self.source = ColumnDataSource(data=self.data_df[self.data_columns[0:2]+['color']+['hl_gene']])                             
         self.opts = dict(plot_width=500, plot_height=500, min_border=0, tools="pan,lasso_select,box_select,wheel_zoom,save")
         views = list(self.adata.obsm.keys())
+<<<<<<< HEAD
         # print('views:!!!!!!!!!!!', views)
+=======
+>>>>>>> extension
         if views != []:
             for view_name in views:
                 for i in range(self.adata.obsm[view_name].shape[1]):
@@ -91,14 +160,22 @@ class FlowPlot:
         self.cur_color = color_list[0]
         self.p = figure(width=500, height=500, tools="pan,lasso_select,box_select,tap,wheel_zoom,save,hover",title=title, tooltips=TOOLTIPS, output_backend="webgl")
         #self.p.output_backend = "svg"
+<<<<<<< HEAD
         #print("backend is ", self.p.output_backend)        
+=======
+        #print("backend is ", self.p.output_backend)     
+        # Choose Map   
+>>>>>>> extension
         if view_existed:
             view_list = list(self.adata.obsm.keys())+['generic_columns']
             self.choose_panel = Select(title='Choose map:', value=view_list[0], options=view_list)
             self.data_columns = list([self.choose_panel.value +str(i) for i in range(self.adata.obsm[self.choose_panel.value].shape[1])])
             self.source.data = self.data_df[self.data_columns[0:2]+['color']+['hl_gene']]
         else:
+<<<<<<< HEAD
 
+=======
+>>>>>>> extension
             self.choose_panel = Select(title='Choose map:',value='generic_columns',options=['generic_columns'])
         self.choose_panel.on_change('value',lambda attr, old, new :self.change_view_list())
         self.p.xaxis.axis_label = self.data_columns[x_init_idx]
@@ -107,7 +184,10 @@ class FlowPlot:
         self.y = y_init_idx
         # plot cell get
         self.r = self.p.circle(self.data_columns[x_init_idx], self.data_columns[y_init_idx],  source=self.source, view=self.view, fill_alpha=1,fill_color=color_map,line_color=None )
+<<<<<<< HEAD
 
+=======
+>>>>>>> extension
         # glygh list
         self.glylist = [self.r,]
         self.s_x = AutocompleteInput(title="x axis:", value=self.data_columns[x_init_idx], completions=self.data_columns, min_characters=1)
@@ -119,19 +199,36 @@ class FlowPlot:
         if select_color_change:
             self.r.selection_glyph = Circle(fill_alpha=1,fill_color=self.cur_color, line_color='black')
         self.allow_select = allow_select
+<<<<<<< HEAD
         print('label and view existed',self.label_existed,view_existed)
+=======
+        print('label and view existed',self.label_existed, view_existed)
+>>>>>>> extension
 
         ######################################
         ####### Create panels of plots #######
         ######################################    
+<<<<<<< HEAD
         # Input extension url
         self.extension_url = TextInput(title='Input extension url: ', value='')
+=======
+        # Extension url
+        self.extension_url = TextInput(title='Extension url: ', value='')
+>>>>>>> extension
         self.extension_url.js_on_change("value", CustomJS(code="""
             console.log('text_input: value=' + this.value, this.toString())
         """))
         # Import extension zip from online
+<<<<<<< HEAD
         self.import_extension = Button(label="online extension")
         self.import_extension.on_click(self.import_func)
+=======
+        self.import_extension = Button(label="online extension zip")
+        self.import_extension.on_click(self.load_online_extensions)
+        # Extension packages
+        self.extension_packages = Button(label="local extension packages")
+        self.extension_packages.on_click(self.load_local_extensions)
+>>>>>>> extension
         # Show gene list
         self.show_gene_list = Div(text='Gene/Marker List: '+str(self.data_columns[0:10]))
         # Show plot
@@ -156,7 +253,11 @@ class FlowPlot:
         ### Class Group Functions Buttons ###
         # Select class group
         if self.label_existed:
+<<<<<<< HEAD
             group_list = list(self.adata.uns['category_dict'].keys()) 
+=======
+            group_list = list(self.adata.uns['category_dict'].keys())  
+>>>>>>> extension
             self.group = Select(title='Select Cluster Group:', options=group_list, value=group_list[-1])
             #self.group = Select(title='Select Cluster Group:',options=[' '],value=' ')
             # self.update_checkbox()
@@ -243,7 +344,11 @@ class FlowPlot:
         # Button disabled list, remember to append in each button func
         self.buttons_group = [self.gate_button,self.export_button,self.remove_button,self.showall_button,self.create_group,self.rename_group,self.delete_group,
                             self.show_selected_class,self.checkbox_color,self.new_class,self.merge_class,self.rename_class,self.delete_class,self.add_to,
+<<<<<<< HEAD
                             self.remove_from,self.update_class,self.change_class_color,self.import_extension]
+=======
+                            self.remove_from,self.update_class,self.change_class_color,self.import_extension,self.extension_packages]
+>>>>>>> extension
         self.buttons_amount = len(self.buttons_group)
         
         if self.label_existed:
@@ -256,7 +361,11 @@ class FlowPlot:
             hl_color_bar = ColorBar(color_mapper=self.hl_bar_map, label_standoff=8, border_line_color=None)
             self.p.add_layout(hl_color_bar,'right')
             self.marker_file = FileInput()
+<<<<<<< HEAD
             print('++++++',self.marker_file.filename)
+=======
+            # print('++++++',self.marker_file.filename)
+>>>>>>> extension
             self.marker_file.on_change('filename', lambda attr, old, new: self.marker_choice())
             self.cell_type = Select(title='Choose Cell Type:', options=['No cell type'], value='No cell type')
             self.cell_type.on_change('value',lambda attr, old, new: self.change_marker_ct())
@@ -292,10 +401,19 @@ class FlowPlot:
     ##################################
     ####### Call Back Functions ######
     ##################################
+<<<<<<< HEAD
     # Import extension packages from online
     def import_func(self):
         self.button_disabled()
         def import_f(self):
+=======
+    # Import Online Extension Packages
+    def load_online_extensions(self):
+        global dir
+        self.button_disabled()
+        def load_e(self):
+            global module_select_id
+>>>>>>> extension
             if self.extension_url == '':
                 print('please input extension url')
             else:
@@ -303,6 +421,7 @@ class FlowPlot:
             self.extension_url.value = ''
             # Download online packages and get the new extensions path
             # try :
+<<<<<<< HEAD
             print('extension path:', extension_path)
             r = requests.get(zip_file_url, stream=True)
             z = zipfile.ZipFile(io.BytesIO(r.content))
@@ -365,6 +484,36 @@ class FlowPlot:
                 print('please use correct extension package url')'''
             self.button_abled()
         curdoc().add_next_tick_callback(lambda : import_f(self))
+=======
+            # print('extensions path:', extensions_path)
+            check_code = load_qt.main()
+            if check_code == 'app closed':
+                extract_path = load_qt.get_load_path() + '/online_extension/'
+                '''print(os.getcwd())
+                extract_path = os.getcwd() + 'online_extension/'
+                extract_path.replace('scpantheon')'''
+                # extract online extensions package
+                extract_online_packages(extensions_path, extract_path, zip_file_url)
+                # load new extensions to curdoc
+                load_extension_select()
+            self.button_abled()
+        curdoc().add_next_tick_callback(lambda : load_e(self))
+    
+    # Import Local Extension Packages
+    def load_local_extensions(self):
+        global dir, extensions_path
+        self.button_disabled()
+        def load_e(self):
+            global module_select_id
+            check_code = extensions_qt.main()
+            if check_code == 'app closed':
+                extensions_path = get_extensions_path(dir) + '/'
+            auto_pip_install(extensions_path)
+            # load new extensions to curdoc
+            load_extension_select()
+            self.button_abled()
+        curdoc().add_next_tick_callback(lambda : load_e(self))
+>>>>>>> extension
 
     # Change view list
     def change_view_list(self):
@@ -381,6 +530,7 @@ class FlowPlot:
     def save_profile(self):
         global dir
         self.button_disabled()
+<<<<<<< HEAD
         def next_save(self):
             if save_qt.main() == 'app closed':
                 print('choosing finished')
@@ -397,6 +547,25 @@ class FlowPlot:
             # for cate in list(self.adata.uns['category_dict'].keys()):
             #     self.adata.obs[cate].to_csv(path+'%s.csv'%cate)
             #adata.uns['category_dict']('cluster name.csv') 
+=======
+        def next_save(self): 
+            check_code = save_qt.main()
+            if check_code == 'app closed':
+                # print('choosing finished')
+                path = get_save_path(dir) + '/'
+                text_cover(dir, path + 'result.h5ad') # write the output anndata to cover the data
+                print("path covered to " + path + "result.h5ad")
+                try: 
+                    self.adata.write_h5ad(path+'result.h5ad') 
+                    self.adata.obs.to_csv(path+'cluster.csv')
+                except:
+                    os.makedirs(path)
+                    self.adata.write_h5ad(path+'result.h5ad')
+                    self.adata.obs.to_csv(path+'cluster.csv')
+                # for cate in list(self.adata.uns['category_dict'].keys()):
+                #     self.adata.obs[cate].to_csv(path+'%s.csv'%cate)
+                #adata.uns['category_dict']('cluster name.csv') 
+>>>>>>> extension
             self.button_abled()
         curdoc().add_next_tick_callback(lambda : next_save(self))
 
@@ -598,10 +767,16 @@ class FlowPlot:
         self.button_disabled()
         def next_text(self):
             color_js = ''
+<<<<<<< HEAD
+=======
+            '''print('\ntext_color: color===')
+            print(self.adata.uns['category_dict'][self.group.value]['color'])'''
+>>>>>>> extension
             try:
                 length = len(self.adata.uns['category_dict'][self.group.value]['color']) 
                 for i in range(length):
                     color_js = color_js + self.adata.uns['category_dict'][self.group.value]['color'][i] + ' '
+<<<<<<< HEAD
                 self.para_color.text = color_js + color_list[18]
             except:
                 length = 1
@@ -609,6 +784,18 @@ class FlowPlot:
                 self.para_color.text = str(color_list[18])
             self.trigger_color.text = self.trigger_color.text + '1'
             #print('CALL',color_js)
+=======
+                    # print("color_js", color_js)
+                self.para_color.text = color_js + color_list[18]
+            except:
+                print('====text color failed===')
+                length = 1
+                # color_js = [color_list[18]]
+                self.para_color.text = str(color_list[18])
+            # trigger js_on_change
+            self.trigger_color.text = self.trigger_color.text + '1'
+            # print('CALL',color_js)
+>>>>>>> extension
             self.button_abled()
         curdoc().add_next_tick_callback(lambda : next_text(self))
 
@@ -715,6 +902,7 @@ class FlowPlot:
         def next_del_claass(self):
             group = self.group.value
             cluster_list = self.adata.uns['category_dict'][group]['class_name']
+<<<<<<< HEAD
             self.adata.obs.loc[self.adata.obs[group].isin([cluster_list[i] for i in self.class_checkbox.active]),group] = np.nan
             checked_color = [self.adata.uns['category_dict'][group].loc[i,'color'] for i in self.class_checkbox.active]
             self.adata.uns['category_dict'][group].drop(index=self.class_checkbox.active,inplace=True)
@@ -727,6 +915,29 @@ class FlowPlot:
             self.class_checkbox.active = []
             self.adata.uns['category_dict'][group] = pandas.DataFrame(self.adata.uns['category_dict'][group], index=list(range(self.adata.uns['category_dict'][group].shape[0])))
             col_list = [color_list[18] if self.source.data['color'][i] in checked_color else self.source.data['color'][i] for i in range(self.data_df.shape[0])]
+=======
+            '''print('\ndel_class: color=0=')
+            print(self.adata.uns['category_dict'][group]['color'])'''
+            # set obs.group in cluster_list to nan 
+            # speed up delete_class 
+            # self.adata.obs.loc[self.adata.obs[group].isin([cluster_list[i] for i in self.class_checkbox.active]),group] = np.nan
+            self.adata.obs[group][self.adata.obs[group].isin([cluster_list[i] for i in self.class_checkbox.active])] = np.nan
+            checked_color = [self.adata.uns['category_dict'][group].loc[i,'color'] for i in self.class_checkbox.active]
+            # delete
+            self.adata.uns['category_dict'][group].drop(index=self.class_checkbox.active,inplace=True)
+            # Reset Index
+            self.adata.uns['category_dict'][group].reset_index(drop=True, inplace=True)
+            check_box_list = self.class_checkbox.labels
+            # special del
+            for i in range(len(self.class_checkbox.active)):
+                del check_box_list[self.class_checkbox.active[i]-i]
+            check_box_list[-1] = str('unassigned: color=grey, cell_nums=' + str(self.adata.obs.shape[0] - sum(self.adata.uns['category_dict'][group]['cell_num'])))
+            self.class_checkbox.labels = check_box_list
+            self.class_checkbox.active = []
+            self.adata.uns['category_dict'][group] = pandas.DataFrame(self.adata.uns['category_dict'][group], index=list(range(self.adata.uns['category_dict'][group].shape[0])))
+            col_list = [color_list[18] if self.source.data['color'][i] in checked_color else self.source.data['color'][i] for i in range(self.data_df.shape[0])]
+            # print('col_list', col_list)
+>>>>>>> extension
             self.source.data['color'] = col_list
             # self.text_color()
             self.button_abled()
@@ -872,7 +1083,11 @@ class FlowPlot:
         def ct(self):
             cell_type = self.cell_type.value
             marker = pandas.read_csv('data/' + self.marker_file.filename)
+<<<<<<< HEAD
             print('+++++++marker gene')
+=======
+            # print('+++++++marker gene')
+>>>>>>> extension
             marker_list = list(marker[marker['cell_type']==cell_type].loc[:,'marker_gene'])
             self.ct_marker.options = marker_list
             self.ct_marker.value = marker_list[0]
@@ -943,6 +1158,7 @@ class CreateTool:
     def set_function(self, effector, attr, value):
         setattr(effector, attr, value)
         
+<<<<<<< HEAD
     def base_tool(self):        
         # module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
         module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select', id='1234') 
@@ -950,6 +1166,16 @@ class CreateTool:
         Figure = FlowPlot(data=self.adata, color_map='color')
 
         layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, Figure.extension_url, Figure.import_extension, module_select), # module_checkbox added
+=======
+    def base_tool(self):       
+        global module_select_id 
+        # module_checkbox = CheckboxGroup(labels=load_options(),active=[],name='modules_checkbox') 
+        module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', name='modules_select', id=str(module_select_id)) 
+        module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
+        Figure = FlowPlot(data=self.adata, color_map='color')
+
+        layout=row(column(Figure.p, Figure.show_gene_list, Figure.show_plot, Figure.para_color, Figure.trigger_color, Figure.extension_url, Figure.import_extension, Figure.extension_packages, module_select), # module_checkbox added
+>>>>>>> extension
             column(Figure.choose_panel,Figure.s_x, Figure.s_y, Figure.log_axis, Figure.color_selection, Figure.gate_button, Figure.remove_button, Figure.showall_button, Figure.export_button),
             column(Figure.group, Figure.group_name, Figure.create_group, Figure.rename_group, Figure.delete_group,
              Figure.class_name, Figure.new_class, Figure.checkbox_color, Figure.class_checkbox),
@@ -991,7 +1217,11 @@ color_list = d3['Category20c'][20]
 Main_plot = FlowPlot
 
 class connection:
+<<<<<<< HEAD
     global extension_path, data_file
+=======
+    global extensions_path, data_path
+>>>>>>> extension
     def __init__(self):
         self.Figure = Main_plot
     
@@ -1108,11 +1338,19 @@ class connection:
         self.Figure.s_x.value = view_list[-2] + str(0)
         self.Figure.s_y.value = view_list[-2] + str(1)
     
+<<<<<<< HEAD
     def get_data_file(self):
         return data_file
 
     def get_extension_file(self):
         return extension_path
+=======
+    def get_data_path(self):
+        return data_path
+
+    def get_extension_file(self):
+        return extensions_path
+>>>>>>> extension
 
 
 class plot_function:
@@ -1139,6 +1377,10 @@ class plot_function:
     
     def get_buttons_group(self):
         return self.Figure.buttons_group, self.Figure.buttons_amount
+<<<<<<< HEAD
+=======
+
+>>>>>>> extension
     def tweak_buttons_group(self, buttons_group):
         self.Figure.buttons_group = buttons_group
 
@@ -1174,9 +1416,15 @@ class plot_function:
 
 # get extensions 
 def load_options():
+<<<<<<< HEAD
     global extension_path
     try:
         name_list = os.listdir(extension_path)
+=======
+    global extensions_path
+    try:
+        name_list = os.listdir(extensions_path)
+>>>>>>> extension
         # listdir: list of file under the path
     except:
         name_list = []
@@ -1184,7 +1432,11 @@ def load_options():
 
     
 def load_module(active):
+<<<<<<< HEAD
     global extension_path
+=======
+    global extensions_path
+>>>>>>> extension
     plot = plot_function()
     buttons_group, buttons_n = plot.get_buttons_group() # buttons group, buttons number
     # delete last extended buttons
@@ -1192,7 +1444,11 @@ def load_module(active):
         buttons_group.pop()
     # buttons = curdoc().get_model_by_name('module_buttons')
     try:
+<<<<<<< HEAD
         name_list = os.listdir(extension_path)
+=======
+        name_list = os.listdir(extensions_path)
+>>>>>>> extension
     except:
         return     
     layouts = column()
@@ -1202,7 +1458,11 @@ def load_module(active):
         but = curdoc().get_model_by_name(name)
         div = Div(text='')
         if name == active:
+<<<<<<< HEAD
             sys.path.append(extension_path)
+=======
+            sys.path.append(extensions_path)
+>>>>>>> extension
             module_name = name + '.module'
             try:
                 new_class = module_name.new_layout()
@@ -1214,7 +1474,11 @@ def load_module(active):
             # new_buttons = column(new_class.add(), clear)
             new_buttons = column(new_class.add()) 
             # append extended buttons
+<<<<<<< HEAD
             buttons_group = find_buttons(new_buttons, buttons_group)
+=======
+            buttons_group = add_to_buttons_group(new_buttons, buttons_group)
+>>>>>>> extension
             plot.tweak_buttons_group(buttons_group)
             if but != None and but.visible == False:
                 but.visible = True # already created model
@@ -1230,23 +1494,59 @@ def load_module(active):
             curdoc().add_root(new_buttons)
             layouts = column(layouts, new_buttons)
         else:
+<<<<<<< HEAD
             if but != None:
                 but.visible = False
+=======
+            if but is not None:
+                curdoc().remove_root(but)
+            '''if but != None:
+                but.visible = False'''
+>>>>>>> extension
         ind = ind + 1
     buttons = layouts
     if curdoc().get_model_by_name('module_buttons') == None:
         buttons.name = 'module_buttons'
     # curdoc().add_root(buttons)
 
+<<<<<<< HEAD
 def find_buttons(buttons, buttons_group):
     for child in buttons.children:
         try:
             find_buttons(child, buttons_group)
+=======
+def add_to_buttons_group(buttons, buttons_group):
+    for child in buttons.children:
+        try:
+            add_to_buttons_group(child, buttons_group)
+>>>>>>> extension
         except:
             buttons_group.append(child)
 
     return buttons_group
 
+<<<<<<< HEAD
+=======
+def load_extension_select():
+    global module_select_id
+    # Remove Extensions Visible Buttons
+    name_list = os.listdir(extensions_path)  
+    for name in name_list:
+        but = curdoc().get_model_by_name(name)
+        # print("but", but)
+        if but is not None:
+            curdoc().remove_root(but)
+    # Add New Extension Select To Curdoc
+    models = curdoc().get_model_by_id(str(module_select_id))
+    module_select_id += 1 
+    models.visible = False
+    curdoc().remove_root(models)
+    module_select = Select(title='Choose Functions to Add:', options=load_options(), value='', id=str(module_select_id), name='modules_select')
+
+    module_select.on_change('value', lambda attr, old, new: load_module(module_select.value))
+    curdoc().add_root(module_select)
+
+>>>>>>> extension
 def clear_cb(ind):
     module_checkbox = curdoc().get_model_by_name('modules_checkbox') 
     # options = module_checkbox.labels
@@ -1263,14 +1563,19 @@ def clear_cb(ind):
 
 def upload_callback(): 
 
+<<<<<<< HEAD
     global extension_path
     global data_file
+=======
+    global data_path
+>>>>>>> extension
     global Main_plot
 
     # path_, file_name = fetch()
     loading_remind = Div(text='Loading data……')
     curdoc().add_root(loading_remind) 
     print('===loading finished=====')
+<<<<<<< HEAD
     filename = os.path.split(data_file)[1]   
 
     def load():
@@ -1290,6 +1595,28 @@ def upload_callback():
                 var_names='gene_symbols',                # use gene symbols for the variable names (variables-axis index)
                 cache=True)                              # write a cache file for faster subsequent reading
         print(data_file)
+=======
+    filename = os.path.split(data_path)[1]   
+
+    def load():
+        global Main_plot
+        filetype = os.path.splitext(filename)[-1][1:] # split the filename and the type, [-1] means the last tuple: the type 
+        print('filetype:', filetype)
+        if filetype == 'csv':
+            adata = sc.read_csv(data_path) 
+            print('csv data')
+        elif filetype == 'h5ad':
+            adata = sc.read_h5ad(data_path)
+            # adata = anndata.read(data_path, backed='r')  
+            print('h5ad data')
+        elif filetype == '':
+            print("read_10x")
+            adata = sc.read_10x_mtx(
+                data_path,# the directory with the `.mtx` file
+                var_names='gene_symbols',                # use gene symbols for the variable names (variables-axis index)
+                cache=True)                              # write a cache file for faster subsequent reading
+
+>>>>>>> extension
         # Figure, layout
         mainplot, panel1 = CreateTool(adata=adata).base_tool() # Mainplot: figure, layout
         print('===mainplot finished=====')
@@ -1299,16 +1626,26 @@ def upload_callback():
         print('====highlight finished=====')
         tab = CreateTool(adata).multi_panel([mainplot,hl_figure], [panel1,panel2], ['Main View', 'Highlight Gene'], update_view=True)
         print('====tab====')
+<<<<<<< HEAD
+=======
+
+>>>>>>> extension
         curdoc().remove_root(loading_remind)
         curdoc().add_root(tab)
         print('===finish===')
 
     curdoc().add_next_tick_callback(load)
 
+<<<<<<< HEAD
 
 def text_cover(dir, msg):
     path = dir + '/data_file.txt'
     print("-========- path:", path)
+=======
+def text_cover(dir, msg):
+    path = dir + '/data_file.txt'
+    # print("-========- path:", path)
+>>>>>>> extension
     with open(path, "w") as f:
         f.truncate(0)
         f.close()
@@ -1316,6 +1653,7 @@ def text_cover(dir, msg):
     file.write(msg)
     file.close()
 
+<<<<<<< HEAD
 
 def openreadtxt(dir):
     e_file = open(dir + '/' + 'extension_path.txt', 'r')
@@ -1346,6 +1684,15 @@ def main(doc):
     dir = dirs.user_data_dir
     # read path_ and file from user_data_dir
     extension_path, data_file = openreadtxt(dir)                                                                                              
+=======
+def main(doc):
+    global Main_plot, extensions_path, data_path, module_select_id
+    module_select_id = 1999
+    # read path_ and file from user_data_dir
+    extensions_path, data_path = read_path(dir)
+    # auto_pip_install(extensions_path)    
+    doc.add_next_tick_callback(upload_callback)                                                     
+>>>>>>> extension
     
     '''
     global mycursor
@@ -1367,9 +1714,12 @@ def main(doc):
     upload_button.on_event(ButtonClick, upload_callback)
     curdoc().add_root(upload_button) # 这就是那个按钮'''
 
+<<<<<<< HEAD
     doc.add_next_tick_callback(upload_callback)
 
     
+=======
+>>>>>>> extension
 if __name__ == "main":
     main(curdoc())
 
@@ -1403,4 +1753,26 @@ def fetch():
     print('Data path:(',result[-1][0],')')
     print("=== test finished ===")
     return result[-2][0], result[-1][0]
+<<<<<<< HEAD
 '''
+=======
+'''
+ 
+'''def read_path(dir):
+    e_file = open(dir + '/' + 'extensions_path.txt', 'r')
+    e_path = e_file.readline()
+    e_file.close()
+    # print('-======- e_path:', e_path)
+    d_file = open(dir + '/' + 'data_file.txt', 'r')
+    data = d_file.readline()
+    # print('-======- data:', data)
+    d_file.close()
+    return e_path, data'''
+ 
+'''def get_save_path(dir):
+    s_file = open(dir + '/' + 'save_path.txt', 'r')
+    s_path = s_file.readline()
+    s_file.close()
+    # print('-======- s_path', s_path)
+    return s_path'''
+>>>>>>> extension

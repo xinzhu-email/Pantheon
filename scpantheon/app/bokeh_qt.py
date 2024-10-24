@@ -12,7 +12,11 @@ import pkg_resources, subprocess
 try:
     version = pkg_resources.get_distribution("scpantheon").version
 except pkg_resources.DistributionNotFound:
+<<<<<<< HEAD
     subprocess.check_call(['pip', 'install', "scpantheon"])
+=======
+    subprocess.check_call(['pip3', 'install', "scpantheon"])
+>>>>>>> extension
     version = pkg_resources.get_distribution("scpantheon").version
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -42,7 +46,11 @@ class Ui_Dialog(QWidget, object):
         url = "http://localhost:5006/"
         self.webEngineView.load(QUrl(url))
         self.layout.addWidget(self.webEngineView)
+<<<<<<< HEAD
 
+=======
+        print("webengine widget added!")
+>>>>>>> extension
 
         self.buttonBox = QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -57,6 +65,7 @@ class Ui_Dialog(QWidget, object):
 
 
     def loadPage(self):
+<<<<<<< HEAD
         # self.webEngineView.load(QUrl("http://baidu.com"))
         Func = open("embed.html","w")
         Func.write("<!doctype html>\n<html>\n<iframe src='http://localhost:5006/'\nname='thumbnails'\nframeborder='0'\nstyle='width: 100%; height: 2000px;'>\n</html>")
@@ -64,6 +73,17 @@ class Ui_Dialog(QWidget, object):
         with open('embed.html', 'r') as f:
             html = f.read()
             self.webEngineView.setHtml(html)
+=======
+        print("Load Page!")
+        self.webEngineView.load(QUrl("http://baidu.com"))
+        print("Load Page!")
+        '''Func = open("embed.html","w")
+        Func.write("<!doctype html>\n<html>\n<iframe src='http://localhost:5006/'\nname='thumbnails'\nframeborder='0'\nstyle='width: 100%; height: 1500px;'>\n</html>")
+        Func.close()
+        with open('embed.html', 'r') as f:
+            html = f.read()
+            self.webEngineView.setHtml(html)'''
+>>>>>>> extension
 
     '''def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -80,4 +100,8 @@ def main():
     ui.setupUi(Dialog)
     Dialog.show()
     app.exec()
+<<<<<<< HEAD
     return check_code
+=======
+    return check_code
+>>>>>>> extension

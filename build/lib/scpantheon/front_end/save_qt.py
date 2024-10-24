@@ -6,12 +6,29 @@ from appdirs import AppDirs
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+<<<<<<< HEAD
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 class Ui_Dialog(QDialog, QWidget, object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Choose")
+=======
+from scpantheon.front_end.data_qt import dir
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+try: 
+    from scpantheon.front_end.data_qt import write_msg, mkdir
+except:
+    from data_qt import write_msg, mkdir
+
+class Ui_Dialog(QDialog, QWidget, object):
+    my_signal = pyqtSignal(str)
+
+    def setupUi(self, Dialog):
+        Dialog.setObjectName("Local Data Storer")
+>>>>>>> extension
         Dialog.resize(750,300)
         self.cwd = os.getcwd()
         font = QtGui.QFont()
@@ -22,29 +39,55 @@ class Ui_Dialog(QDialog, QWidget, object):
         self.text_brow = QTextBrowser()
 
         # choose path button
+<<<<<<< HEAD
         self.btn_save = QPushButton("output", self)  
+=======
+        self.btn_save = QPushButton("Choose New Saving Path", self)  
+>>>>>>> extension
         self.btn_save.setObjectName("btn_save")  
         self.btn_save.clicked.connect(self.slot_btn_save)
         self.btn_save.setFont(font)
         self.btn_save.setMinimumSize(750, 100)
+<<<<<<< HEAD
         
         self.layout1 = QVBoxLayout()
         self.layout1.addWidget(self.btn_save)
         self.layout2 = QVBoxLayout(Dialog)
         self.layout2.setObjectName("Layout2")    
         self.layout2.addWidget(self.text_brow)             
+=======
+
+        # Start load
+        self.btn_Start = QPushButton("Saving Path Not Found",self)
+        self.btn_Start.setObjectName("btn_Start")
+        self.btn_Start.clicked.connect(lambda : self.Load(Dialog))
+        self.btn_Start.setFont(font)
+        self.btn_Start.setMinimumSize(750, 100)
+        
+        self.layout = QVBoxLayout(Dialog)
+        self.layout.setObjectName("layout")    
+        self.layout.addWidget(self.text_brow)             
+>>>>>>> extension
 
         self.buttonBox = QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setObjectName("buttonBox")
+<<<<<<< HEAD
         self.layout2.addWidget(self.buttonBox)
 
         self.layout2.addWidget(self.btn_save)
+=======
+        self.layout.addWidget(self.buttonBox)
+
+        self.layout.addWidget(self.btn_save)
+        self.layout.addWidget(self.btn_Start)
+>>>>>>> extension
 
         # self.retranslateUi(Dialog) 
         # self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
+<<<<<<< HEAD
 
         try:
             output_path = self.get_save_path() + '\\'
@@ -52,6 +95,20 @@ class Ui_Dialog(QDialog, QWidget, object):
         except: 
             print('please choose your files') 
 
+=======
+        
+        try:
+            save_path = get_save_path(dir)
+            if save_path != '':
+                self.btn_Start.setText("Save Data In The Previous Path")
+                self.text_brow.setText("\t\t\tPrevious Saving Path:\n\t" + save_path)
+            else:
+                self.btn_save.setText("Choose A Saving Path!")
+                self.text_brow.setText("\t\t\tSaving Path Not Found...")
+        except:
+            self.btn_save.setText("Choose A Saving Path!")
+            self.text_brow.setText("\t\t\tSaving Path Not Found...")
+>>>>>>> extension
 
     def event(self, event):
         if event.type()==QtCore.QEvent.EnterWhatsThisMode:
@@ -61,6 +118,7 @@ class Ui_Dialog(QDialog, QWidget, object):
 
     def slot_btn_save(self):
         save = QFileDialog.getExistingDirectory(self,"Choose save",self.cwd) # 起始路径
+<<<<<<< HEAD
         if save == "":
             print("\nchoose canceled")
             return
@@ -111,13 +169,66 @@ def main():
     version = "0.2.1"
     dirs = AppDirs(appname, appauthor, version)
     dir = dirs.user_data_dir
+=======
+        # write extension into user_data_dir
+        if save != '':
+            write_msg('save_path', save)
+        self.btn_Start.setText("Save Data In The New Path!")
+        self.text_brow.setText("\t\t\tNew Saving Path:\n\t" + save)
+
+    def Load(self, Dialog):
+        global check_code
+        check_code = 'app closed'
+        Dialog.reject()
+        # self.my_signal.emit(check_code)
+
+def get_save_path(dir):
+    s_file = open(dir + '/' + 'save_path.txt', 'r')
+    s_path = s_file.readline()
+    s_file.close()
+    # print('-======- s_path', s_path)
+    return s_path 
+
+
+def main():
+    global check_code
+    check_code = "app_running"
+>>>>>>> extension
     mkdir(path=dir)
     # create qt app
     app = QApplication(sys.argv)
     Dialog = QDialog()
     ui = Ui_Dialog()
     ui.setupUi(Dialog)
+<<<<<<< HEAD
     Dialog.show()
     app.exec()
     return 'app closed'
 
+=======
+    # Dialog.show()
+    # bring window to top and act like a "normal" window!
+    Dialog.setWindowFlags(Dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)  # set always on top flag, makes window disappear
+    Dialog.show() # makes window reappear, but it's ALWAYS on top
+    '''Dialog.setWindowFlags(Dialog.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint) # clear always on top flag, makes window disappear
+    Dialog.show()  # makes window reappear, acts like normal window now (on top now but can be underneath if you raise another window)'''
+    app.exec()
+    return check_code
+ 
+'''def write_msg(name, msg):
+    path = dir + "/" + name + '.txt'
+    # print("-========- path:", path)
+    with open(path, "w") as f:
+        f.truncate(0)
+        f.close()
+    file = open(path, 'w')
+    file.write(msg)
+    file.close()'''
+ 
+'''def mkdir(path):
+    isExists = os.path.exists(path)
+    if not isExists:
+        os.makedirs(path)
+        # print(path + ' successful creat')
+        return True'''
+>>>>>>> extension

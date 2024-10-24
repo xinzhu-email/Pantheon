@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 '''from multiprocessing import freeze_support
 freeze_support()'''
 
@@ -22,6 +23,22 @@ try:
 except:
     from scpantheon import source # import from online
     warnings.warn('source import failed',ImportWarning)
+=======
+# -*- coding: utf-8 -*-
+
+from multiprocessing import freeze_support
+import multiprocessing
+import pkg_resources
+import subprocess
+from scpantheon import source
+from scpantheon.app import bokeh_qt
+from scpantheon.front_end import data_qt
+from bokeh.server.server import Server
+import sys
+
+version = pkg_resources.get_distribution("scpantheon").version
+server = None  # 声明全局变量 server
+>>>>>>> extension
 
 def run():
     global server
@@ -32,6 +49,7 @@ def run():
     server.show()
 
 def app():
+<<<<<<< HEAD
     if data_qt.main() == 'app closed':
         print('choosing finished')
         if bokeh_qt.main() == 'app closed':
@@ -43,11 +61,29 @@ def app():
     
 
 def main():
+=======
+    global server
+    if data_qt.main() == 'app closed':
+        if bokeh_qt.main() == 'app closed':
+            print('app ended')
+    else: 
+        print("app failed")
+    p1.terminate()
+
+def main():
+    print("freeze support")
+    freeze_support()
+>>>>>>> extension
     global p1
     p1 = multiprocessing.Process(target=run)
     p1.start()
     app()
 
+<<<<<<< HEAD
 
 if __name__ == '__main__':
     main()
+=======
+if __name__ == '__main__':
+    main()
+>>>>>>> extension

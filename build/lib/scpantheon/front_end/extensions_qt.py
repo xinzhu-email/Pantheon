@@ -93,17 +93,10 @@ class Ui_Dialog(QDialog, QWidget, object):
         # self.my_signal.emit(check_code)
 
 def get_extensions_path(dir):
-<<<<<<< HEAD
-    s_file = open(dir + '/' + 'extensions_path.txt', 'r')
-    s_path = s_file.readline()
-    s_file.close()
-    return s_path 
-=======
     e_file = open(dir + '/' + 'extensions_path.txt', 'r')
     e_path = e_file.readline()
     e_file.close()
     return e_path 
->>>>>>> extension
 
 
 def main():
