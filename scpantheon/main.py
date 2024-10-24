@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-from multiprocessing import freeze_support
-
-import multiprocessing
-import pkg_resources, subprocess
-=======
 # # -*- coding: utf-8 -*-
 
 from multiprocessing import freeze_support
@@ -23,7 +17,6 @@ import subprocess
 # from multiprocessing import freeze_support
 # import multiprocessing
 # import pkg_resources, subprocess
->>>>>>> extension
 try: 
     # !!! from scpantheon import source
     import source
@@ -40,11 +33,8 @@ except:
     version = pkg_resources.get_distribution("scpantheon").version
 
 from bokeh.server.server import Server
-<<<<<<< HEAD
-=======
 server = None  # 声明全局变量 server
 import sys
->>>>>>> extension
 
 def run():
     global server
@@ -55,10 +45,7 @@ def run():
     server.show()
 
 def app():
-<<<<<<< HEAD
-=======
     global server
->>>>>>> extension
     if data_qt.main() == 'app closed':
         if bokeh_qt.main() == 'app closed':
             print('app ended')
@@ -66,16 +53,6 @@ def app():
         print("app failed")
     p1.terminate()
 
-<<<<<<< HEAD
-if __name__ == '__main__':
-    print("freeze support")
-    freeze_support()
-    global p1
-    p1 = multiprocessing.Process(target=run)
-    p1.start()
-    app()
-
-=======
 def main():
     print("freeze support")
     freeze_support()
@@ -112,4 +89,3 @@ if __name__ == '__main__':
 #     p1 = multiprocessing.Process(target=run)
 #     p1.start()
 #     app()
->>>>>>> extension
