@@ -1,5 +1,6 @@
 from bokeh.models import CustomJS ,Select, Button, CheckboxGroup, TextInput, ColorPicker, AutocompleteInput, ColumnDataSource, Div
 from bokeh.layouts import row, column
+from bokeh.io import curdoc
 from myplot import Plot
 import data as dt
 import tabs as tb
@@ -250,35 +251,47 @@ class Widgets:
         change select list of x, y axis 
         update self.plot_source by coordinates 
         """
-        self.init_coordinates()
-        self.update_plot_source_by_coords()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def update_var_next(self):
+            self.init_coordinates()
+            self.update_plot_source_by_coords()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : update_var_next(self))
 
     def update_axis(self, widget_key, attr, old, new):
         """
         switch axis and update visualized stuff of this tab
         """
-        self.widgets_dict[widget_key].value = new
-        self.update_plot_source_by_coords()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def update_axis_next(self, widget_key, attr, old, new):
+            self.widgets_dict[widget_key].value = new
+            self.update_plot_source_by_coords()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : update_axis_next(self, widget_key, attr, old, new))
     
     def update_log(self, attr, old, new):
         """
         switch axis and update visualized stuff of this tab
         """
-        if self.widgets_dict['is_log'].active == [0, 1]:
-            if old == [0]:
-                self.widgets_dict['is_log'].active = [1]
-            else:
-                self.widgets_dict['is_log'].active = [0]
-        self.update_plot_source_by_coords()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def update_log_next(self, old):
+            if self.widgets_dict['is_log'].active == [0, 1]:
+                if old == [0]:
+                    self.widgets_dict['is_log'].active = [1]
+                else:
+                    self.widgets_dict['is_log'].active = [0]
+            self.update_plot_source_by_coords()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : update_log_next(self, old))
     
     def create_group_select(self,
         group_name: str | None = None
@@ -290,27 +303,34 @@ class Widgets:
         then update cluster_checkbox    
         finally visualize by uns
         """
-        group_list = self.widgets_dict['group_select'].options
-        if not group_name:
-            group_name = self.widgets_dict['group_name'].value        
-            if group_name == '':
-                print("Reject: name should not be empty")
-                return
-            elif group_name == 'Please create a group':
-                print("Reject: name conflict, 'Please create a group' is reserved")
-                return
-            elif group_name in group_list:
-                print("Reject: name already exists")
-                return
-            self.widgets_dict['group_name'].value = ''
-        if group_name not in dt.adata.uns['group_dict']:
-            dt.init_uns(dt.adata, group_name, default = False)     
-        self.init_group_select(group_name)
-        self.init_cluster_select()
-        self.update_plot_source_by_colors()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def create_group_select_next(self, group_name):
+            group_list = self.widgets_dict['group_select'].options
+            if not group_name:
+                group_name = self.widgets_dict['group_name'].value        
+                if group_name == '':
+                    print("Reject: name should not be empty")
+                    tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                    return
+                elif group_name == 'Please create a group':
+                    print("Reject: name conflict, 'Please create a group' is reserved")
+                    tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                    return
+                elif group_name in group_list:
+                    print("Reject: name already exists")
+                    tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                    return
+                self.widgets_dict['group_name'].value = ''
+            if group_name not in dt.adata.uns['group_dict']:
+                dt.init_uns(dt.adata, group_name, default = False)     
+            self.init_group_select(group_name)
+            self.init_cluster_select()
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : create_group_select_next(self, group_name))
 
     def rename_group_select(self):
         """
@@ -320,27 +340,35 @@ class Widgets:
         then update group_select    
         finally visualize
         """
-        group_list = self.widgets_dict['group_select'].options
-        group_name = self.widgets_dict['group_select'].value
-        new_name = self.widgets_dict['group_name'].value
-        if group_name != 'Please create a group':
-            if  new_name == 'Please create a group':
-                print("Reject: name conflict")
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def rename_group_select_next(self):
+            group_list = self.widgets_dict['group_select'].options
+            group_name = self.widgets_dict['group_select'].value
+            new_name = self.widgets_dict['group_name'].value
+            if group_name != 'Please create a group':
+                if  new_name == 'Please create a group':
+                    print("Reject: name conflict")
+                    tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                    return
+                elif new_name == '':
+                    print("Reject: group name shouldn't be empty")
+                    tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                    return
+                elif new_name in group_list:
+                    print("Reject: name already exists")
+                    tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                    return
+            else: 
+                print("Please create a group first")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
                 return
-            elif new_name == '':
-                print("Reject: group name shouldn't be empty")
-                return
-            elif new_name in group_list:
-                print("Reject: name already exists")
-                return
-        else: 
-            print("Please create a group first")
-            return
-        dt.adata.obs.rename(columns = {group_name: new_name}, inplace=True)
-        dt.adata.uns['group_dict'][new_name] = dt.adata.uns['group_dict'].pop(group_name)
-        self.init_group_select(new_name)
-        self.update_layout()
-        self.view_tab()
+            dt.adata.obs.rename(columns = {group_name: new_name}, inplace=True)
+            dt.adata.uns['group_dict'][new_name] = dt.adata.uns['group_dict'].pop(group_name)
+            self.init_group_select(new_name)
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : rename_group_select_next(self))
 
     def delete_group_select(self):
         """
@@ -350,20 +378,24 @@ class Widgets:
         then update cluster_select    
         finally update self.plot_source and visualize
         """
-        group_list = self.widgets_dict['group_select'].options
-        group_name = self.widgets_dict['group_select'].value
-        if group_name in group_list:
-            group_list.remove(group_name)
-            del dt.adata.obs[group_name]
-            del dt.adata.uns['group_dict'][group_name]
-        if group_list == []:
-            group_list = ['Please create a group']
-        self.init_group_select(group_list[0])
-        self.init_cluster_select()
-        self.update_plot_source_by_colors()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def delete_group_select_next(self):
+            group_list = self.widgets_dict['group_select'].options
+            group_name = self.widgets_dict['group_select'].value
+            if group_name in group_list:
+                group_list.remove(group_name)
+                del dt.adata.obs[group_name]
+                del dt.adata.uns['group_dict'][group_name]
+            if group_list == []:
+                group_list = ['Please create a group']
+            self.init_group_select(group_list[0])
+            self.init_cluster_select()
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : delete_group_select_next(self))
 
     def update_group(self):
         """
@@ -372,11 +404,15 @@ class Widgets:
         then update colors according to uns  
         finally visualize
         """
-        self.init_cluster_select()
-        self.update_plot_source_by_colors()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def update_group_next(self):
+            self.init_cluster_select()
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : update_group_next(self))
 
     def create_cluster_select(self):
         """
@@ -386,44 +422,52 @@ class Widgets:
         then init cluster_checkbox and update colors according to uns
         finally visualize
         """
-        curgroup = self.widgets_dict['group_select'].value
-        curclsname = self.widgets_dict['cluster_name'].value
-        self.widgets_dict['cluster_name'].value = ''
-        curcolor = self.widgets_dict['color_picker'].color
-        selected_list = self.figure.source.selected.indices
-        if curgroup == 'Please create a group':
-            group_name = self.widgets_dict['group_name'].value
-            if group_name == '':
-                curgroup = self.widgets_dict['x_varname'].value + '+' + self.widgets_dict['y_varname'].value
-            elif group_name == 'Please create a group':
-                print("Reject: name conflict, 'Please create a group' is reserved")
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def create_cluster_select_next(self):
+            curgroup = self.widgets_dict['group_select'].value
+            curclsname = self.widgets_dict['cluster_name'].value
+            self.widgets_dict['cluster_name'].value = ''
+            curcolor = self.widgets_dict['color_picker'].color
+            selected_list = self.figure.source.selected.indices
+            if curgroup == 'Please create a group':
+                group_name = self.widgets_dict['group_name'].value
+                if group_name == '':
+                    curgroup = self.widgets_dict['x_varname'].value + '+' + self.widgets_dict['y_varname'].value
+                elif group_name == 'Please create a group':
+                    print("Reject: name conflict, 'Please create a group' is reserved")
+                    tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                    return
+                elif group_name in self.widgets_dict['group_select'].options:
+                    print("Reject: name already exists")
+                    tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                    return
+                else:
+                    curgroup = group_name
+                    self.widgets_dict['group_name'].value = ''
+                dt.init_uns(dt.adata, curgroup, default = False)
+                self.init_group_select(curgroup)
+            clusterlist = dt.adata.uns['group_dict'][curgroup].index.tolist()
+            if curclsname == '':
+                print("Reject: empty cluster name is not allowed")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
                 return
-            elif group_name in self.widgets_dict['group_select'].options:
-                print("Reject: name already exists")
+            elif curclsname in clusterlist:
+                print("Reject: cluster name already existed")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
                 return
-            else:
-                curgroup = group_name
-                self.widgets_dict['group_name'].value = ''
-            dt.init_uns(dt.adata, curgroup, default = False)
-            self.init_group_select(curgroup)
-        clusterlist = dt.adata.uns['group_dict'][curgroup].index.tolist()
-        if curclsname == '':
-            print("Reject: empty cluster name is not allowed")
-            return
-        elif curclsname in clusterlist:
-            print("Reject: cluster name already existed")
-            return
-        for i in selected_list:
-            curindex = dt.adata.obs.index[i]
-            dt.adata.obs.loc[curindex, curgroup] = curclsname
-            dt.adata.obs.loc[curindex, 'color'] = curcolor
-        dt.adata.uns['group_dict'][curgroup].loc[curclsname] = [curcolor, 0]
-        dt.update_uns_by_obs(dt.adata, curgroup)
-        self.init_cluster_select()
-        self.update_plot_source_by_colors()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+            for i in selected_list:
+                curindex = dt.adata.obs.index[i]
+                dt.adata.obs.loc[curindex, curgroup] = curclsname
+                dt.adata.obs.loc[curindex, 'color'] = curcolor
+            dt.adata.uns['group_dict'][curgroup].loc[curclsname] = [curcolor, 0]
+            dt.update_uns_by_obs(dt.adata, curgroup)
+            self.init_cluster_select()
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : create_cluster_select_next(self))
     
     def rename_cluster_select(self):
         """
@@ -432,40 +476,50 @@ class Widgets:
         then update cluster name in obs and uns 
         finally init cluster_checkbox and visualize
         """
-        active_cls = self.widgets_dict['cluster_checkbox'].active
-        if len(active_cls) > 2:
-            print("Reject: multiple clusters with the same name is not allowed")
-            return
-        curgroup = self.widgets_dict['group_select'].value
-        clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
-        clusterlist_active = [clusterlist[i] for i in active_cls if i < len(clusterlist)]
-        if 'unassigned' in clusterlist_active:
-            print("Warning: 'unassigned' can't be renamed")
-            clusterlist_active.remove('unassigned')
-        if len(clusterlist_active) == 2:
-            print("Reject: multiple clusters with the same name is not allowed")
-            return
-        elif len(clusterlist_active) == 0:
-            print("Warning: No cluster renamed")
-            return
-        cluster_name_old =  clusterlist[active_cls[0]]
-        cluster_name_new = self.widgets_dict['cluster_name'].value
-        self.widgets_dict['cluster_name'].value = ''
-        if cluster_name_new == 'unassigned':
-            print("Reject: default cluster name 'unassigned' is reserved")
-            return
-        elif cluster_name_new in clusterlist:
-            print("Reject: new cluster name already exists")
-            return
-        elif cluster_name_new == '':
-            print("Reject: empty cluster name not allowed")
-            return
-        dt.adata.obs[curgroup] = dt.adata.obs[curgroup].replace(cluster_name_old, cluster_name_new)   
-        dt.adata.uns['group_dict'][curgroup].loc[cluster_name_new] = dt.adata.uns['group_dict'][curgroup].loc[cluster_name_old]
-        dt.adata.uns['group_dict'][curgroup] = dt.adata.uns['group_dict'][curgroup].drop(cluster_name_old, axis = 0)
-        self.init_cluster_select()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def rename_cluster_select_next(self):
+            active_cls = self.widgets_dict['cluster_checkbox'].active
+            if len(active_cls) > 2:
+                print("Reject: multiple clusters with the same name is not allowed")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            curgroup = self.widgets_dict['group_select'].value
+            clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
+            clusterlist_active = [clusterlist[i] for i in active_cls if i < len(clusterlist)]
+            if 'unassigned' in clusterlist_active:
+                print("Warning: 'unassigned' can't be renamed")
+                clusterlist_active.remove('unassigned')
+            if len(clusterlist_active) == 2:
+                print("Reject: multiple clusters with the same name is not allowed")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            elif len(clusterlist_active) == 0:
+                print("Warning: No cluster renamed")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            cluster_name_old =  clusterlist[active_cls[0]]
+            cluster_name_new = self.widgets_dict['cluster_name'].value
+            self.widgets_dict['cluster_name'].value = ''
+            if cluster_name_new == 'unassigned':
+                print("Reject: default cluster name 'unassigned' is reserved")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            elif cluster_name_new in clusterlist:
+                print("Reject: new cluster name already exists")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            elif cluster_name_new == '':
+                print("Reject: empty cluster name not allowed")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            dt.adata.obs[curgroup] = dt.adata.obs[curgroup].replace(cluster_name_old, cluster_name_new)   
+            dt.adata.uns['group_dict'][curgroup].loc[cluster_name_new] = dt.adata.uns['group_dict'][curgroup].loc[cluster_name_old]
+            dt.adata.uns['group_dict'][curgroup] = dt.adata.uns['group_dict'][curgroup].drop(cluster_name_old, axis = 0)
+            self.init_cluster_select()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : rename_cluster_select_next(self))
 
     def delete_cluster_select(self):
         """
@@ -475,24 +529,29 @@ class Widgets:
         then init cluster_checkbox  
         finally update self.plot_source by color and visualize
         """
-        active_cls = self.widgets_dict['cluster_checkbox'].active
-        if 0 in active_cls:
-            print("Warning: default cluster 'unassigned' won't be deleted")
-            active_cls.remove(0)
-        if len(active_cls) == 0:
-            print("Warning: No cluster deleted")
-            return
-        curgroup = self.widgets_dict['group_select'].value
-        clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
-        clusterlist_active = [clusterlist[i] for i in active_cls if i < len(clusterlist)]
-        dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = 'unassigned'
-        dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
-        dt.update_uns_by_obs(dt.adata, curgroup)
-        self.init_cluster_select()
-        self.update_plot_source_by_colors()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def delete_cluster_select_next(self):
+            active_cls = self.widgets_dict['cluster_checkbox'].active
+            if 0 in active_cls:
+                print("Warning: default cluster 'unassigned' won't be deleted")
+                active_cls.remove(0)
+            if len(active_cls) == 0:
+                print("Warning: No cluster deleted")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            curgroup = self.widgets_dict['group_select'].value
+            clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
+            clusterlist_active = [clusterlist[i] for i in active_cls if i < len(clusterlist)]
+            dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = 'unassigned'
+            dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
+            dt.update_uns_by_obs(dt.adata, curgroup)
+            self.init_cluster_select()
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : delete_cluster_select_next(self))
 
     def merge_cluster_select(self):
         """
@@ -502,43 +561,48 @@ class Widgets:
         then update obs and uns 
         finally update clusterlist, self.plot_source and visualize
         """
-        active_cls = self.widgets_dict['cluster_checkbox'].active
-        if len(active_cls) <= 1:
-            print("Warning: at least 2 cluster should be choosed")
-            return
-        curclsname = self.widgets_dict['cluster_name'].value
-        self.widgets_dict['cluster_name'].value = ''
-        curgroup = self.widgets_dict['group_select'].value
-        clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
-        clusterlist_active = [clusterlist[i] for i in active_cls if i < len(clusterlist)]
-        curcolor = self.widgets_dict['color_picker'].color
-        exist_color = dt.adata.uns['group_dict'][curgroup]['color'].tolist()
-        active_color = [exist_color[i] for i in active_cls if i < len(exist_color)]
-        if 'unassigned' in clusterlist_active:
-            curclsname = 'unassigned'
-            curcolor = dt.adata.uns['group_dict'][curgroup].loc['unassigned', 'color']
-            print("Warning: merge into 'unassigned', namely delete other clusters selected")
-        elif curclsname == '':
-            curclsname = clusterlist_active[0]
-            print("Warning: no cluster name input, take first selected cluster as default")
-        elif (curclsname in clusterlist) and (curclsname not in clusterlist_active):
-            curclsname = clusterlist_active[0]
-            print("Warning: name already exist, take first selected cluster name as default")
-        if curclsname in clusterlist_active:
-            clusterlist_active.remove(curclsname)
-        if (curcolor in exist_color) and (curcolor not in active_color):
-            curcolor = active_color[0]
-            print("Warning: color selected, take first selected cluster color as default")
-        dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = curclsname
-        dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), 'color'] = curcolor
-        dt.adata.uns['group_dict'][curgroup].loc[curclsname] = {'color': curcolor}
-        dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
-        dt.update_uns_by_obs(dt.adata, curgroup)
-        self.init_cluster_select()
-        self.update_plot_source_by_colors()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def merge_cluster_select_next(self):
+            active_cls = self.widgets_dict['cluster_checkbox'].active
+            if len(active_cls) <= 1:
+                print("Warning: at least 2 cluster should be choosed")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            curclsname = self.widgets_dict['cluster_name'].value
+            self.widgets_dict['cluster_name'].value = ''
+            curgroup = self.widgets_dict['group_select'].value
+            clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
+            clusterlist_active = [clusterlist[i] for i in active_cls if i < len(clusterlist)]
+            curcolor = self.widgets_dict['color_picker'].color
+            exist_color = dt.adata.uns['group_dict'][curgroup]['color'].tolist()
+            active_color = [exist_color[i] for i in active_cls if i < len(exist_color)]
+            if 'unassigned' in clusterlist_active:
+                curclsname = 'unassigned'
+                curcolor = dt.adata.uns['group_dict'][curgroup].loc['unassigned', 'color']
+                print("Warning: merge into 'unassigned', namely delete other clusters selected")
+            elif curclsname == '':
+                curclsname = clusterlist_active[0]
+                print("Warning: no cluster name input, take first selected cluster as default")
+            elif (curclsname in clusterlist) and (curclsname not in clusterlist_active):
+                curclsname = clusterlist_active[0]
+                print("Warning: name already exist, take first selected cluster name as default")
+            if curclsname in clusterlist_active:
+                clusterlist_active.remove(curclsname)
+            if (curcolor in exist_color) and (curcolor not in active_color):
+                curcolor = active_color[0]
+                print("Warning: color selected, take first selected cluster color as default")
+            dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = curclsname
+            dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), 'color'] = curcolor
+            dt.adata.uns['group_dict'][curgroup].loc[curclsname] = {'color': curcolor}
+            dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
+            dt.update_uns_by_obs(dt.adata, curgroup)
+            self.init_cluster_select()
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : merge_cluster_select_next(self))
 
     def add_to(self):
         """
@@ -547,29 +611,36 @@ class Widgets:
         then update obs and uns 
         finally update clusterlist, self.plot_source and visualize
         """
-        selected_list = self.figure.source.selected.indices
-        if not selected_list:
-            print("Warning: no point selected")
-            return
-        active_cls = self.widgets_dict['cluster_checkbox'].active
-        if not active_cls:
-            print("Warning: no cluster selected")
-            return
-        elif len(active_cls) > 1:
-            print("Reject: a point can't be in multiple clusters in the same group")
-            return
-        curgroup = self.widgets_dict['group_select'].value
-        cls_name = dt.adata.uns['group_dict'][curgroup].index.tolist()
-        active_cls_name = cls_name[active_cls[0]]
-        cell_list = dt.adata.obs.index.tolist()
-        for i in selected_list:
-            dt.adata.obs.loc[cell_list[i], curgroup] = active_cls_name
-        dt.update_uns_by_obs(dt.adata, curgroup)
-        self.init_cluster_select()
-        self.update_plot_source_by_colors()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def add_to_next(self):
+            selected_list = self.figure.source.selected.indices
+            if not selected_list:
+                print("Warning: no point selected")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            active_cls = self.widgets_dict['cluster_checkbox'].active
+            if not active_cls:
+                print("Warning: no cluster selected")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            elif len(active_cls) > 1:
+                print("Reject: a point can't be in multiple clusters in the same group")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            curgroup = self.widgets_dict['group_select'].value
+            cls_name = dt.adata.uns['group_dict'][curgroup].index.tolist()
+            active_cls_name = cls_name[active_cls[0]]
+            cell_list = dt.adata.obs.index.tolist()
+            for i in selected_list:
+                dt.adata.obs.loc[cell_list[i], curgroup] = active_cls_name
+            dt.update_uns_by_obs(dt.adata, curgroup)
+            self.init_cluster_select()
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : add_to_next(self))
 
     def remove_from(self):
         """
@@ -578,30 +649,37 @@ class Widgets:
         then update obs and uns 
         finally update clusterlist, self.plot_source and visualize
         """
-        selected_list = self.figure.source.selected.indices
-        if not selected_list:
-            print("Warning: no point selected")
-            return
-        active_cls = self.widgets_dict['cluster_checkbox'].active
-        if not active_cls:
-            print("Warning: no cluster selected")
-            return
-        curgroup = self.widgets_dict['group_select'].value
-        cls_name = dt.adata.uns['group_dict'][curgroup].index.tolist()
-        active_cls_name = [cls_name[i] for i in active_cls]
-        if active_cls_name == ['unassigned']:
-            print("Warning: can't be removed from 'unassigned'")
-            return
-        cell_list = dt.adata.obs.index.tolist()
-        for i in selected_list:
-            if dt.adata.obs.loc[cell_list[i], curgroup] in active_cls_name:
-                dt.adata.obs.loc[cell_list[i], curgroup] = 'unassigned'
-        dt.update_uns_by_obs(dt.adata, curgroup)
-        self.init_cluster_select()
-        self.update_plot_source_by_colors()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def remove_from_next(self):
+            selected_list = self.figure.source.selected.indices
+            if not selected_list:
+                print("Warning: no point selected")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            active_cls = self.widgets_dict['cluster_checkbox'].active
+            if not active_cls:
+                print("Warning: no cluster selected")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            curgroup = self.widgets_dict['group_select'].value
+            cls_name = dt.adata.uns['group_dict'][curgroup].index.tolist()
+            active_cls_name = [cls_name[i] for i in active_cls]
+            if active_cls_name == ['unassigned']:
+                print("Warning: can't be removed from 'unassigned'")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            cell_list = dt.adata.obs.index.tolist()
+            for i in selected_list:
+                if dt.adata.obs.loc[cell_list[i], curgroup] in active_cls_name:
+                    dt.adata.obs.loc[cell_list[i], curgroup] = 'unassigned'
+            dt.update_uns_by_obs(dt.adata, curgroup)
+            self.init_cluster_select()
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : remove_from_next(self))
 
     def update(self):
         """
@@ -611,40 +689,49 @@ class Widgets:
         then update obs and uns 
         finally update clusterlist, self.plot_source and visualize
         """
-        selected_list = self.figure.source.selected.indices
-        if not selected_list:
-            print("Warning: no point selected")
-            return
-        active_cls = self.widgets_dict['cluster_checkbox'].active
-        if not active_cls:
-            print("Warning: no cluster selected")
-            return
-        elif len(active_cls) > 2:
-            print("Reject: a point can't be in multiple clusters in the same group")
-            return 
-        curgroup = self.widgets_dict['group_select'].value
-        cls_name = dt.adata.uns['group_dict'][curgroup].index.tolist()
-        active_cls_name = [cls_name[i] for i in active_cls]
-        if 'unassigned' in active_cls_name and len(active_cls) == 1:
-            print("Warning: 'unassigned' can't be updated independently")
-            return
-        elif 'unassigned' not in active_cls_name and len(active_cls) == 2:
-            print("Reject: a point can't be in multiple clusters in the same group")
-            return
-        elif 'unassigned' in active_cls_name and len(active_cls) == 2:
-            active_cls_name.remove('unassigned')
-        dt.adata.obs.loc[dt.adata.obs[curgroup].isin(active_cls_name), curgroup] = 'unassigned'
-        curcolor = dt.adata.uns['group_dict'][curgroup].loc[active_cls_name[0], 'color']
-        cell_list = dt.adata.obs.index.to_list()
-        for i in selected_list:
-            dt.adata.obs.loc[cell_list[i], curgroup] = active_cls_name[0]
-            dt.adata.obs.loc[cell_list[i], 'color'] = curcolor
-        dt.update_uns_by_obs(dt.adata, curgroup)
-        self.init_cluster_select()
-        self.update_plot_source_by_colors()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def update_next(self):
+            selected_list = self.figure.source.selected.indices
+            if not selected_list:
+                print("Warning: no point selected")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            active_cls = self.widgets_dict['cluster_checkbox'].active
+            if not active_cls:
+                print("Warning: no cluster selected")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            elif len(active_cls) > 2:
+                print("Reject: a point can't be in multiple clusters in the same group")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return 
+            curgroup = self.widgets_dict['group_select'].value
+            cls_name = dt.adata.uns['group_dict'][curgroup].index.tolist()
+            active_cls_name = [cls_name[i] for i in active_cls]
+            if 'unassigned' in active_cls_name and len(active_cls) == 1:
+                print("Warning: 'unassigned' can't be updated independently")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            elif 'unassigned' not in active_cls_name and len(active_cls) == 2:
+                print("Reject: a point can't be in multiple clusters in the same group")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            elif 'unassigned' in active_cls_name and len(active_cls) == 2:
+                active_cls_name.remove('unassigned')
+            dt.adata.obs.loc[dt.adata.obs[curgroup].isin(active_cls_name), curgroup] = 'unassigned'
+            curcolor = dt.adata.uns['group_dict'][curgroup].loc[active_cls_name[0], 'color']
+            cell_list = dt.adata.obs.index.to_list()
+            for i in selected_list:
+                dt.adata.obs.loc[cell_list[i], curgroup] = active_cls_name[0]
+                dt.adata.obs.loc[cell_list[i], 'color'] = curcolor
+            dt.update_uns_by_obs(dt.adata, curgroup)
+            self.init_cluster_select()
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : update_next(self))
 
     def change_cluster_color(self):
         """
@@ -653,44 +740,53 @@ class Widgets:
         then update obs and uns 
         finally update clusterlist, self.plot_source and visualize
         """
-        curcolor = self.widgets_dict['color_picker'].color
-        curgroup = self.widgets_dict['group_select'].value
-        active_cls = self.widgets_dict['cluster_checkbox'].active
-        cls_name = dt.adata.uns['group_dict'][curgroup].index.tolist()
-        active_name = [cls_name[i] for i in active_cls]
-        if 'unassigned' in active_name:
-            print("Warning: color of 'unassigned' cluster won't be changed")
-            active_name.remove('unassigned')
-        if len(active_name) == 0:
-            print("Warning: no cluster other than 'unassigned' is selected")
-            return
-        elif len(active_name) > 1:
-            print("Warning: 2 or more clusters will be given the same color")
-        exist_color = dt.adata.uns['group_dict'][curgroup]['color'].tolist()
-        active_color = [exist_color[i] for i in active_cls]
-        if (curcolor in exist_color) and (curcolor not in active_color):
-            print("Warning: color conflict with other clusters")
-        for name in active_name:
-            dt.adata.uns['group_dict'][curgroup].loc[name, 'color'] = curcolor
-            dt.adata.obs.loc[dt.adata.obs[curgroup].isin(active_name), 'color'] = curcolor
-        self.init_cluster_select()
-        self.update_plot_source_by_colors()
-        self.plot_coordinates()
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def change_cluster_color_next(self):
+            curcolor = self.widgets_dict['color_picker'].color
+            curgroup = self.widgets_dict['group_select'].value
+            active_cls = self.widgets_dict['cluster_checkbox'].active
+            cls_name = dt.adata.uns['group_dict'][curgroup].index.tolist()
+            active_name = [cls_name[i] for i in active_cls]
+            if 'unassigned' in active_name:
+                print("Warning: color of 'unassigned' cluster won't be changed")
+                active_name.remove('unassigned')
+            if len(active_name) == 0:
+                print("Warning: no cluster other than 'unassigned' is selected")
+                tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+                return
+            elif len(active_name) > 1:
+                print("Warning: 2 or more clusters will be given the same color")
+            exist_color = dt.adata.uns['group_dict'][curgroup]['color'].tolist()
+            active_color = [exist_color[i] for i in active_cls]
+            if (curcolor in exist_color) and (curcolor not in active_color):
+                print("Warning: color conflict with other clusters")
+            for name in active_name:
+                dt.adata.uns['group_dict'][curgroup].loc[name, 'color'] = curcolor
+                dt.adata.obs.loc[dt.adata.obs[curgroup].isin(active_name), 'color'] = curcolor
+            self.init_cluster_select()
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : change_cluster_color_next(self))
 
     def show_select(self):
-        curgroup = self.widgets_dict['group_select'].value
-        active_cls = self.widgets_dict['cluster_checkbox'].active
-        cls_name = dt.adata.uns['group_dict'][curgroup].index.tolist()
-        active_cls_name = [cls_name[i] for i in active_cls]
-        selected = [
-            idx for idx, cellname in enumerate(dt.adata.obs.index)
-            if dt.adata.obs.at[cellname, curgroup] in active_cls_name
-        ]
-        self.figure.source.selected.indices = selected
-        self.update_layout()
-        self.view_tab()
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def show_select_next(self):
+            curgroup = self.widgets_dict['group_select'].value
+            active_cls = self.widgets_dict['cluster_checkbox'].active
+            cls_name = dt.adata.uns['group_dict'][curgroup].index.tolist()
+            active_cls_name = [cls_name[i] for i in active_cls]
+            selected = [
+                idx for idx, cellname in enumerate(dt.adata.obs.index)
+                if dt.adata.obs.at[cellname, curgroup] in active_cls_name
+            ]
+            self.figure.source.selected.indices = selected
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda: show_select_next(self))
     
 
     """
@@ -705,7 +801,6 @@ class Widgets:
             varlist = dt.adata.var.index.to_list()
         else:
             varlist = dt.adata.obsm[curmap].columns.tolist()
-            print(varlist)
         return varlist 
     
     def get_log_status(self):
@@ -857,4 +952,4 @@ class Widgets:
     
     def view_tab(self):
         tb.curpanel = self.name
-        tb.view_panel(tb.panel_dict, tb.ext_layout, tb.curpanel)
+        tb.view_panel(tb.panel_dict, tb.ext_layout, tb.ext_widgets, tb.curpanel)
