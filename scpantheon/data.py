@@ -32,7 +32,7 @@ def load_path():
         print("error input")
 
 def init_data(
-        adata: sc.AnnData,
+        adata: sc.AnnData
     ):
     if not isinstance(adata.X, np.ndarray): # judge dense matrix
         adata.uns["is_dense"] = False
@@ -55,15 +55,19 @@ def init_data(
         )
     adata.obs['color'] = color_list[0]
     adata.obs['Please create a group'] = 'unassigned'
+    # for obs_key in adata.obs_keys():
+        # if obs_key != 'color':
+        #     adata.obs[obs_key] = pd.Categorical(adata.obs[obs_key], ordered = True)
+    adata.obs = adata.obs.apply(lambda x: x.astype(object))
     adata.uns['group_dict'] = dict()
-    init_uns(adata, 'Please create a group', default = True)
+    init_uns(adata, 'Please create a group', True)
     update_uns_all(adata)
+
 
 def init_uns(
     adata: sc.AnnData,
     group_name: str,
-    default: bool | None = None,
-    obs_exist: bool | None = False
+    default: bool | None = None
 ):
     empty_group_uns = pd.DataFrame(
         index = ['unassigned'],
@@ -76,8 +80,8 @@ def init_uns(
         empty_group_uns.loc['unassigned', 'color'] = color_list[18]
     empty_group_uns.index = empty_group_uns.index.astype('category')
     adata.uns['group_dict'][group_name] = empty_group_uns
-    if obs_exist == False:
-        adata.obs[group_name] = 'unassigned'
+    if group_name not in adata.obs_keys():
+        adata.obs[group_name] = pd.Categorical(['unassigned'], categories=['unassigned'], ordered=True)
 
 def update_data_obsm(
     adata: sc.AnnData    
@@ -101,7 +105,7 @@ def update_uns_all(
     for group_name in adata.obs_keys():
         if group_name != 'color' and group_name != 'Please create a group':
             if group_name not in adata.uns['group_dict'].keys():
-                init_uns(adata, group_name, obs_exist = True)
+                init_uns(adata, group_name)
             update_uns_hybrid_obs(adata, group_name)
 
 def update_uns_hybrid_obs(
@@ -124,9 +128,3 @@ def update_uns_hybrid_obs(
             adata.uns['group_dict'][group_name].loc[clustername,'color'] = color_list[(18 + clusterlist.index(clustername))%20]
 
 adata = None
-# adata = load_path()
-# print(adata.obs.dtypes)
-# print(adata.uns)
-# init_data(adata)
-# print(adata.uns)
-# print(adata)

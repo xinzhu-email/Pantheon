@@ -46,7 +46,6 @@ class Widgets:
         """
         when the tab already exists, update itself by adata
         """
-        print("switch")
         curmap = self.widgets_dict['choose_map'].value
         curgroup = self.widgets_dict['group_select'].value
         self.init_map(curmap)
@@ -226,14 +225,19 @@ class Widgets:
         merged_dict = {**self.widgets_dict, **widgets_dict}
         self.widgets_dict = merged_dict
     
-    def init_cluster_select(self):
+    def init_cluster_select(self,
+        active_cluster = None
+    ):
         """
         init cluster_checkbox according to uns
         """
-        clusterlist = self.get_cluster_list()
+        active_list = []
+        clusterlist, active_prompt = self.get_cluster_list(active_cluster)
+        if active_prompt in clusterlist:
+            active_list.append(clusterlist.index(active_prompt))
         cluster_checkbox = CheckboxGroup(
             labels = clusterlist,
-            active = [],
+            active = active_list,
             css_classes = ["cluster_checkbox_label"]
         )        
         cluster_checkbox.on_change('active', lambda attr, old, new: self.show_select())
@@ -456,6 +460,7 @@ class Widgets:
                 print("Reject: cluster name already existed")
                 tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
                 return
+            # dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories(curclsname)
             for i in selected_list:
                 curindex = dt.adata.obs.index[i]
                 dt.adata.obs.loc[curindex, curgroup] = curclsname
@@ -516,7 +521,7 @@ class Widgets:
             dt.adata.obs[curgroup] = dt.adata.obs[curgroup].replace(cluster_name_old, cluster_name_new)   
             dt.adata.uns['group_dict'][curgroup].loc[cluster_name_new] = dt.adata.uns['group_dict'][curgroup].loc[cluster_name_old]
             dt.adata.uns['group_dict'][curgroup] = dt.adata.uns['group_dict'][curgroup].drop(cluster_name_old, axis = 0)
-            self.init_cluster_select()
+            self.init_cluster_select(cluster_name_new)
             self.update_layout()
             self.view_tab()
             tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
@@ -543,6 +548,8 @@ class Widgets:
             curgroup = self.widgets_dict['group_select'].value
             clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
             clusterlist_active = [clusterlist[i] for i in active_cls if i < len(clusterlist)]
+            # if 'unassigned' not in dt.adata.obs[curgroup].cat.categories:
+            #     dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories('unassigned')
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = 'unassigned'
             dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
             dt.update_uns_hybrid_obs(dt.adata, curgroup)
@@ -814,18 +821,23 @@ class Widgets:
             return "log info: original data probably log-scaled already"
 
     
-    def get_cluster_list(self):
+    def get_cluster_list(self,
+        active_cluster = None
+    ):
         """
         organize text of cluster checkbox by uns    
         return option list of cluster_checkbox
         """
         curgroup = self.widgets_dict['group_select'].value
         cluster_promtlist = []
+        active_prompt = None
         for cluster_name in dt.adata.uns['group_dict'][curgroup].index:
             cellnum = dt.adata.uns['group_dict'][curgroup].loc[cluster_name, 'cell_num']
             cluster_prompt = str(cluster_name) + ": cell_nums = " + str(cellnum)
             cluster_promtlist.append(cluster_prompt)
-        return cluster_promtlist
+            if cluster_name == active_cluster:
+                active_prompt = cluster_prompt
+        return cluster_promtlist, active_prompt
     
     # def show_cluster_color(self):
     #     para_color = Div(text='0', visible=False, css_classes=['hide'])
@@ -914,7 +926,6 @@ class Widgets:
             x_data = list(self.plot_source['x'].values())[0]
             y_data = list(self.plot_source['y'].values())[0]
         else:
-            print(list(self.plot_source['x'].values())[0])
             x_data = np.array(list(self.plot_source['x'].values())[0]).flatten()
             y_data = np.array(list(self.plot_source['y'].values())[0]).flatten()
         source = ColumnDataSource(
