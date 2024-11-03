@@ -31,7 +31,9 @@ def load_path():
     else:
         print("error input")
 
-def init_data(adata: sc.AnnData,):
+def init_data(
+        adata: sc.AnnData,
+    ):
     if not isinstance(adata.X, np.ndarray): # judge dense matrix
         adata.uns["is_dense"] = False
     else:
@@ -44,14 +46,18 @@ def init_data(adata: sc.AnnData,):
         adata.uns["original_log"] = False
     else: 
         adata.uns["original_log"] = True
-    adata.obs = pd.DataFrame(
-        index = adata.obs_names,
-        columns = ['color', 'Please create a group']
-    )
+    if adata.obsm.keys():
+        update_data_obsm(adata)
+    if adata.obs.empty: # reserved column names: 'color', 'Please create a group'
+        adata.obs = pd.DataFrame(
+            index = adata.obs_names,
+            columns = ['color', 'Please create a group']
+        )
     adata.obs['color'] = color_list[0]
     adata.obs['Please create a group'] = 'unassigned'
     adata.uns['group_dict'] = dict()
     init_uns(adata, 'Please create a group', default = True)
+    update_uns_all(adata)
 
 def init_uns(
     adata: sc.AnnData,
@@ -74,27 +80,29 @@ def init_uns(
         adata.obs[group_name] = 'unassigned'
 
 def update_data_obsm(
-    adata: sc.AnnData,
-    obsm_key: str    
+    adata: sc.AnnData    
 ):
-    if type(adata.obsm[obsm_key]) == np.ndarray:
-        column_names = list([obsm_key + str(i) for i in range(adata.obsm[obsm_key].shape[1])])
-        adata.obsm[obsm_key] = pd.DataFrame(
-            adata.obsm[obsm_key],
-            index = adata.obs_names,
-            columns = column_names
-        )
+    for obsm_key in adata.obsm_keys():
+        if type(adata.obsm[obsm_key]) == np.ndarray:
+            column_names = list([obsm_key + str(i) for i in range(adata.obsm[obsm_key].shape[1])])
+            adata.obsm[obsm_key] = pd.DataFrame(
+                adata.obsm[obsm_key],
+                index = adata.obs_names,
+                columns = column_names
+            )
 
-def update_uns_by_obs(
+def update_uns_all(
     adata: sc.AnnData,
-    group_name: str | None = None,
 ):
     """
     cases to call: 
     when a cluster is created, obs is updated first, uns cluster not defined
     """
-    cluster_counts_series = pd.Series(adata.obs[group_name].value_counts())
-    adata.uns['group_dict'][group_name]['cell_num'] = adata.uns['group_dict'][group_name]['cell_num'].index.map(cluster_counts_series).fillna(0).astype(int)
+    for group_name in adata.obs_keys():
+        if group_name != 'color' and group_name != 'Please create a group':
+            if group_name not in adata.uns['group_dict'].keys():
+                init_uns(adata, group_name, obs_exist = True)
+            update_uns_hybrid_obs(adata, group_name)
 
 def update_uns_hybrid_obs(
     adata: sc.AnnData,
@@ -116,3 +124,9 @@ def update_uns_hybrid_obs(
             adata.uns['group_dict'][group_name].loc[clustername,'color'] = color_list[(18 + clusterlist.index(clustername))%20]
 
 adata = None
+# adata = load_path()
+# print(adata.obs.dtypes)
+# print(adata.uns)
+# init_data(adata)
+# print(adata.uns)
+# print(adata)

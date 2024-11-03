@@ -18,6 +18,7 @@ class Widgets:
         pd.Dataframe's index are cluster names, columns are color and cell_num  
         denotes each cluster's color and cell number
         """
+        dt.update_data_obsm(dt.adata)
         self.new_panel = True
         self.name = name
         self.widgets_dict = dict()
@@ -460,7 +461,7 @@ class Widgets:
                 dt.adata.obs.loc[curindex, curgroup] = curclsname
                 dt.adata.obs.loc[curindex, 'color'] = curcolor
             dt.adata.uns['group_dict'][curgroup].loc[curclsname] = [curcolor, 0]
-            dt.update_uns_by_obs(dt.adata, curgroup)
+            dt.update_uns_hybrid_obs(dt.adata, curgroup)
             self.init_cluster_select()
             self.update_plot_source_by_colors()
             self.plot_coordinates()
@@ -544,7 +545,7 @@ class Widgets:
             clusterlist_active = [clusterlist[i] for i in active_cls if i < len(clusterlist)]
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = 'unassigned'
             dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
-            dt.update_uns_by_obs(dt.adata, curgroup)
+            dt.update_uns_hybrid_obs(dt.adata, curgroup)
             self.init_cluster_select()
             self.update_plot_source_by_colors()
             self.plot_coordinates()
@@ -595,7 +596,7 @@ class Widgets:
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), 'color'] = curcolor
             dt.adata.uns['group_dict'][curgroup].loc[curclsname] = {'color': curcolor}
             dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
-            dt.update_uns_by_obs(dt.adata, curgroup)
+            dt.update_uns_hybrid_obs(dt.adata, curgroup)
             self.init_cluster_select()
             self.update_plot_source_by_colors()
             self.plot_coordinates()
@@ -633,7 +634,7 @@ class Widgets:
             cell_list = dt.adata.obs.index.tolist()
             for i in selected_list:
                 dt.adata.obs.loc[cell_list[i], curgroup] = active_cls_name
-            dt.update_uns_by_obs(dt.adata, curgroup)
+            dt.update_uns_hybrid_obs(dt.adata, curgroup)
             self.init_cluster_select()
             self.update_plot_source_by_colors()
             self.plot_coordinates()
@@ -672,7 +673,7 @@ class Widgets:
             for i in selected_list:
                 if dt.adata.obs.loc[cell_list[i], curgroup] in active_cls_name:
                     dt.adata.obs.loc[cell_list[i], curgroup] = 'unassigned'
-            dt.update_uns_by_obs(dt.adata, curgroup)
+            dt.update_uns_hybrid_obs(dt.adata, curgroup)
             self.init_cluster_select()
             self.update_plot_source_by_colors()
             self.plot_coordinates()
@@ -724,7 +725,7 @@ class Widgets:
             for i in selected_list:
                 dt.adata.obs.loc[cell_list[i], curgroup] = active_cls_name[0]
                 dt.adata.obs.loc[cell_list[i], 'color'] = curcolor
-            dt.update_uns_by_obs(dt.adata, curgroup)
+            dt.update_uns_hybrid_obs(dt.adata, curgroup)
             self.init_cluster_select()
             self.update_plot_source_by_colors()
             self.plot_coordinates()
@@ -913,8 +914,9 @@ class Widgets:
             x_data = list(self.plot_source['x'].values())[0]
             y_data = list(self.plot_source['y'].values())[0]
         else:
-            x_data = list(self.plot_source['y'].values())[0].toarray().flatten()
-            y_data = list(self.plot_source['y'].values())[0].toarray().flatten()
+            print(list(self.plot_source['x'].values())[0])
+            x_data = np.array(list(self.plot_source['x'].values())[0]).flatten()
+            y_data = np.array(list(self.plot_source['y'].values())[0]).flatten()
         source = ColumnDataSource(
             data = {
                 list(self.plot_source['x'].keys())[0] : x_data,
