@@ -899,8 +899,9 @@ class Widgets:
             varnames = dt.adata.obsm[choose_map].columns.tolist()
             if (x_varname in varnames) and (y_varname in varnames):
                 if choose_map in dt.adata.uns['sparse']:
-                    x_list = dt.adata.obsm[choose_map](dt.adata.var_names.tolist().index(x_varname)).toarray().flatten() # wrong
-                    y_list = dt.adata.obsm[choose_map](dt.adata.var_names.tolist().index(y_varname)).toarray().flatten()
+                    # x_list = dt.adata.obsm[choose_map](dt.adata.var_names.tolist().index(x_varname)).toarray().flatten() # wrong
+                    # y_list = dt.adata.obsm[choose_map](dt.adata.var_names.tolist().index(y_varname)).toarray().flatten()
+                    print("Fatal: sparse matrix in obsm not supported ")
                 else: 
                     x_list = dt.adata.obsm[choose_map][x_varname].tolist()
                     y_list = dt.adata.obsm[choose_map][y_varname].tolist()
