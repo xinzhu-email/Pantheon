@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from bokeh.palettes import d3
+from scipy.sparse import csr_matrix
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from scpantheon.front_end.data_qt import dir, read_path
 
@@ -34,14 +35,12 @@ def load_path():
 def init_data(
         adata: sc.AnnData
     ):
-    if not isinstance(adata.X, np.ndarray): # judge dense matrix
-        adata.uns["is_dense"] = False
-    else:
-        adata.uns["is_dense"] = True
-    if adata.uns["is_dense"] is True:
-        judge = adata.X[:, 0]
-    else:
+    adata.uns['sparse'] = []
+    if type(adata.X) == csr_matrix:
         judge = adata.X[:, 0].toarray().flatten()
+        adata.uns['sparse'].append('X') # require: X reserved for obsm name
+    else:
+        judge = adata.X[:, 0]
     if np.isclose(judge.shape[0], np.trunc(judge)).all():
         adata.uns["original_log"] = False
     else: 
@@ -55,9 +54,6 @@ def init_data(
         )
     adata.obs['color'] = color_list[0]
     adata.obs['Please create a group'] = 'unassigned'
-    # for obs_key in adata.obs_keys():
-        # if obs_key != 'color':
-        #     adata.obs[obs_key] = pd.Categorical(adata.obs[obs_key], ordered = True)
     adata.obs = adata.obs.apply(lambda x: x.astype(object))
     adata.uns['group_dict'] = dict()
     init_uns(adata, 'Please create a group', True)
@@ -87,6 +83,8 @@ def update_data_obsm(
     adata: sc.AnnData    
 ):
     for obsm_key in adata.obsm_keys():
+        if type(adata.obsm[obsm_key]) == csr_matrix:
+            adata.uns['sparse'].append(obsm_key)
         if type(adata.obsm[obsm_key]) == np.ndarray:
             column_names = list([obsm_key + str(i) for i in range(adata.obsm[obsm_key].shape[1])])
             adata.obsm[obsm_key] = pd.DataFrame(

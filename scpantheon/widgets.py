@@ -18,7 +18,8 @@ class Widgets:
         pd.Dataframe's index are cluster names, columns are color and cell_num  
         denotes each cluster's color and cell number
         """
-        dt.update_data_obsm(dt.adata)
+        dt.adata = dt.load_path()
+        dt.init_data(dt.adata)
         self.new_panel = True
         self.name = name
         self.widgets_dict = dict()
@@ -885,16 +886,24 @@ class Widgets:
             if (x_varname in dt.adata.var.index.tolist()) and (y_varname in dt.adata.var.index.tolist()):
                 x_index = dt.adata.var.index.get_loc(x_varname)
                 y_index = dt.adata.var.index.get_loc(y_varname)
-                x_list = dt.adata.X[:, x_index]
-                y_list = dt.adata.X[:, y_index]    
+                if 'X' in dt.adata.uns['sparse']:
+                    x_list = dt.adata.X.getcol(dt.adata.var_names.tolist().index(x_varname)).toarray().flatten()
+                    y_list = dt.adata.X.getcol(dt.adata.var_names.tolist().index(y_varname)).toarray().flatten()
+                else: 
+                    x_list = dt.adata.X[:, x_index]
+                    y_list = dt.adata.X[:, y_index]    
             else: 
                 print("Fatal: 'generic_columns' Plot.__get_source: variable not exist")
                 return None
         elif choose_map in dt.adata.obsm_keys():
             varnames = dt.adata.obsm[choose_map].columns.tolist()
             if (x_varname in varnames) and (y_varname in varnames):
-                x_list = dt.adata.obsm [choose_map] [x_varname].tolist()
-                y_list = dt.adata.obsm [choose_map] [y_varname].tolist()
+                if choose_map in dt.adata.uns['sparse']:
+                    x_list = dt.adata.obsm[choose_map](dt.adata.var_names.tolist().index(x_varname)).toarray().flatten() # wrong
+                    y_list = dt.adata.obsm[choose_map](dt.adata.var_names.tolist().index(y_varname)).toarray().flatten()
+                else: 
+                    x_list = dt.adata.obsm[choose_map][x_varname].tolist()
+                    y_list = dt.adata.obsm[choose_map][y_varname].tolist()
             else: 
                 print("Fatal: 'keys' Plot.__get_source: variable not exist")
                 return None
@@ -922,12 +931,8 @@ class Widgets:
         """
         update self.figure by self.plot_source
         """
-        if dt.adata.uns["is_dense"]:
-            x_data = list(self.plot_source['x'].values())[0]
-            y_data = list(self.plot_source['y'].values())[0]
-        else:
-            x_data = np.array(list(self.plot_source['x'].values())[0]).flatten()
-            y_data = np.array(list(self.plot_source['y'].values())[0]).flatten()
+        x_data = list(self.plot_source['x'].values())[0]
+        y_data = list(self.plot_source['y'].values())[0]
         source = ColumnDataSource(
             data = {
                 list(self.plot_source['x'].keys())[0] : x_data,

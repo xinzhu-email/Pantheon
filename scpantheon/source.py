@@ -9,9 +9,6 @@ def upload_callback():
 def main(doc): 
     
     """starting page with loading remind"""
-    dt.adata = dt.load_path()
-    dt.init_data(dt.adata)
-    print("main")
     loading_remind = Div(text='Loading data……')
     doc.add_root(loading_remind) 
     print('===loading finished=====')
