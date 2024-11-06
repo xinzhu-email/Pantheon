@@ -63,7 +63,6 @@ class Widgets_Color(Widgets):
             super().init_map('X_pca')
             super().init_coordinates()
             super().update_plot_source_by_coords()
-            print(dt.adata.var_names)
             super().plot_coordinates()
             self.update_layout()
             self.view_tab()
@@ -73,12 +72,10 @@ class Widgets_Color(Widgets):
     def neighborhood_graph(self, neighbor_num, pc_num, resolution):
         tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
         def next_neighborhood_graph(self, neighbor_num, pc_num, resolution):
+            dt.adata.obsm['X_pca'] = dt.adata.obsm["X_pca"].to_numpy()
             sc.pp.neighbors(dt.adata, n_neighbors=int(neighbor_num), n_pcs=int(pc_num))
             sc.tl.umap(dt.adata)
             sc.tl.leiden(dt.adata, resolution=float(resolution), flavor="igraph", n_iterations=2, directed=False)
-            # dt.update_data_obsm(dt.adata, key)
-            # dt.init_uns(dt.adata, 'leiden', default = False, obs_exist = True)
-            # dt.update_uns_hybrid_obs(dt.adata, 'leiden')
             dt.init_data(dt.adata)
             super().init_map('X_umap')
             super().init_coordinates()
