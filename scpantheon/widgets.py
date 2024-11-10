@@ -1,4 +1,4 @@
-from bokeh.models import CustomJS ,Select, Button, CheckboxGroup, TextInput, ColorPicker, AutocompleteInput, ColumnDataSource, Div
+from bokeh.models import Select, Button, CheckboxGroup, TextInput, ColorPicker, AutocompleteInput, ColumnDataSource, Div
 from bokeh.layouts import row, column
 from bokeh.io import curdoc
 from myplot import Plot
@@ -24,7 +24,10 @@ class Widgets:
         self.name = name
         self.widgets_dict = dict()
         self.plot_source = {'x': dict(), 'y': dict(), 'color': list()}
-        self.figure = Plot()
+        if name == 'highlight spatial':
+            self.figure = Plot(is_marker = True)
+        else:
+            self.figure = Plot(is_marker = False)
         self.layout = column([])
         if self.name == 'gene relations':
             self.init_tab()
@@ -47,6 +50,7 @@ class Widgets:
         """
         when the tab already exists, update itself by adata
         """
+        print(self.widgets_dict.keys())
         curmap = self.widgets_dict['choose_map'].value
         curgroup = self.widgets_dict['group_select'].value
         self.init_map(curmap)
@@ -801,11 +805,16 @@ class Widgets:
     """
     following are other supportive functions called above
     """
-    def get_var(self):
+    def get_var(self,
+        isMarker: bool | None = False
+    ):
         """
         return variables according to current map
         """
-        curmap = self.widgets_dict['choose_map'].value
+        if isMarker:
+            curmap = self.widgets_dict['marker_map'].value
+        else:
+            curmap = self.widgets_dict['choose_map'].value
         if curmap == 'generic_columns':
             varlist = dt.adata.var.index.to_list()
         else:

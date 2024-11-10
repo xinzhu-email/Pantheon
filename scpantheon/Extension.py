@@ -2,11 +2,13 @@ from bokeh.models import Select, Button, TextInput
 from bokeh.layouts import column
 from bokeh.io import curdoc
 from widgets import Widgets
+from hlwidgets import Hlwidgets
 import os
 from subprocess import check_call
 import importlib
 import sys
 import tabs as tb
+import data as dt
 try:
     from scpantheon.front_end import extensions_qt 
     from scpantheon.front_end.extensions_qt import get_extensions_path
@@ -141,6 +143,9 @@ class Extension:
                 else: 
                     tb.panel_dict['gene relations'] = cur_panel
                     tb.curpanel = 'gene relations'
+            if 'spatial' in dt.adata.obsm_keys() and 'spatial' not in tb.panel_dict:
+                hlpanel = Hlwidgets('highlight spatial')
+                tb.panel_dict['highlight spatial'] = hlpanel
             tb.view_panel(tb.panel_dict, tb.ext_layout, tb.ext_widgets, tb.curpanel)
             tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
         curdoc().add_next_tick_callback(lambda : load_module_next(self))

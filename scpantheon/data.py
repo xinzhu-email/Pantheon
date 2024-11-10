@@ -128,6 +128,7 @@ def update_uns_hybrid_obs(
 adata = None
 # adata = load_path()
 # init_data(adata)
+# print(list(adata.obs_names))
 # sc.tl.pca(adata, svd_solver='arpack')
 # init_data(adata)
 # print(adata.obsm['X_pca'])
