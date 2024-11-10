@@ -46,7 +46,8 @@ class Plot:
                     selection_line_width = 0.5,
                     # source = self.source
                     )
-                self.color_bar = ColorBar(color_mapper=color_mapper, location=(0, 0))
+                color_bar = ColorBar(color_mapper=color_mapper, location=(0, 0))
+                plot.add_layout(color_bar, 'right')
 
             else:
                 glyphs = plot.scatter(

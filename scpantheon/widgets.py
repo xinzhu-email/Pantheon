@@ -51,7 +51,6 @@ class Widgets:
         """
         when the tab already exists, update itself by adata
         """
-        print(self.widgets_dict.keys())
         curmap = self.widgets_dict['choose_map'].value
         self.init_map(curmap)
         self.init_coordinates()
@@ -955,5 +954,6 @@ class Widgets:
         self.layout = row([self.figure.plot, row([column([layout_coords, layout_color]), layout_group, layout_cluster])])
     
     def view_tab(self):
-        tb.curpanel = self.name
+        if self.name != 'highlight_spatial':
+            tb.curpanel = self.name
         tb.view_panel(tb.panel_dict, tb.ext_layout, tb.ext_widgets, tb.curpanel)

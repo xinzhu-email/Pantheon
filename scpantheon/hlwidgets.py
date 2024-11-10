@@ -72,7 +72,6 @@ class Hlwidgets(Widgets):
         self.plot_source['color'] = []
         marker_map = self.widgets_dict['marker_map'].value
         marker = self.widgets_dict['marker'].value
-        print(marker_map)
         if marker_map == 'generic_columns':
             if 'X' in dt.adata.uns['sparse']:
                 self.plot_source['color'] = dt.adata.X.getcol(dt.adata.var_names.tolist().index(marker)).toarray().flatten()
