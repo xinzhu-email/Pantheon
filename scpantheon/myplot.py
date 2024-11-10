@@ -33,7 +33,7 @@ class Plot:
                     )
                 glyphs = plot.scatter(
                     x = self.source.column_names[0],
-                    y = self.source.column_names[1],
+                    y = self.source.column_names[-2],
                     source = self.source,
                     color = linear_cmap(
                         'color',
@@ -51,8 +51,8 @@ class Plot:
             else:
                 glyphs = plot.scatter(
                     x = self.source.column_names[0],
-                    y = self.source.column_names[1],
-                    color = self.source.column_names[2],
+                    y = self.source.column_names[-2],
+                    color = self.source.column_names[-1],
                     nonselection_alpha = 0.1,
                     selection_line_color = 'black',
                     selection_line_width = 0.5,

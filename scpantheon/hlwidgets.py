@@ -29,13 +29,12 @@ class Hlwidgets(Widgets):
             value = map_list[0],
             options = map_list
         )
-        marker_map.on_change('value',lambda attr, old, new :self.update_marker())
+        marker_map.on_change('value',lambda attr, old, new :self.update_marker_map(attr, old, new))
         widgets_dict = {'marker_map' : marker_map}
         merged_dict = {**self.widgets_dict, **widgets_dict}
         self.widgets_dict = merged_dict
     
     def init_marker(self):
-        print(self.widgets_dict)
         varlist = super().get_var(isMarker = True)
         marker = AutocompleteInput(
             title = "marker:", 
@@ -43,26 +42,38 @@ class Hlwidgets(Widgets):
             completions = varlist, 
             min_characters = 1
         )
+        marker.on_change("value", lambda attr, old, new : self.update_marker(attr, old, new))
         widgets_dict = {'marker' : marker}
         merged_dict = {**self.widgets_dict, **widgets_dict}
         self.widgets_dict = merged_dict
     
-    def update_marker(self):
+    def update_marker_map(self, attr, old, new):
         tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
-        def update_var_next(self):
+        def update_marker_map_next(self):
             self.init_marker()
             self.update_plot_source_by_colors()
             self.plot_coordinates()
             self.update_layout()
             self.view_tab()
             tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
-        curdoc().add_next_tick_callback(lambda : update_var_next(self))
+        curdoc().add_next_tick_callback(lambda : update_marker_map_next(self))
+
+    def update_marker(self,attr, old, new):
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def update_marker_next(self):
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda : update_marker_next(self))
 
     def update_plot_source_by_colors(self):
         self.plot_source['color'] = []
         marker_map = self.widgets_dict['marker_map'].value
         marker = self.widgets_dict['marker'].value
-        if marker_map == 'generic columns':
+        print(marker_map)
+        if marker_map == 'generic_columns':
             if 'X' in dt.adata.uns['sparse']:
                 self.plot_source['color'] = dt.adata.X.getcol(dt.adata.var_names.tolist().index(marker)).toarray().flatten()
             else:
@@ -76,18 +87,4 @@ class Hlwidgets(Widgets):
         coords_key = ['choose_map', 'x_varname', 'y_varname', 'is_log', 'log_info', 'marker_map', 'marker'] 
         values = [self.widgets_dict[key] for key in coords_key if key in self.widgets_dict]
         layout_coords = column(values)
-
-        group_key = ['group_name', 'create_group', 'rename_group', 'delete_group', 'group_select']
-        values = [self.widgets_dict[key] for key in group_key if key in self.widgets_dict]
-        layout_group = column(values)
-
-        color_key = ['color_picker']
-        values = [self.widgets_dict[key] for key in color_key if key in self.widgets_dict]
-        layout_color = column(values)
-
-        cluster_key = ['cluster_name', 'create_cluster', 'rename_cluster', 'delete_cluster', 'merge_cluster',
-            'add_to', 'remove_from', 'update', 'change_cluster_color', 'cluster_checkbox']
-        values = [self.widgets_dict[key] for key in cluster_key if key in self.widgets_dict]
-        layout_cluster = column(values)
-
-        self.layout = row([self.figure.plot, row([column([layout_coords, layout_color]), layout_group, layout_cluster])])
+        self.layout = row([self.figure.plot, layout_coords])

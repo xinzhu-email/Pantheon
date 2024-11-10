@@ -36,11 +36,12 @@ class Widgets:
         self.init_map()
         self.init_coordinates()
         self.update_plot_source_by_coords()
-        self.init_group()
-        self.init_group_select()
-        self.init_color()
-        self.init_cluster()
-        self.init_cluster_select()
+        if self.name != 'highlight spatial':
+            self.init_group()
+            self.init_group_select()
+            self.init_color()
+            self.init_cluster()
+            self.init_cluster_select()
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
@@ -52,12 +53,13 @@ class Widgets:
         """
         print(self.widgets_dict.keys())
         curmap = self.widgets_dict['choose_map'].value
-        curgroup = self.widgets_dict['group_select'].value
         self.init_map(curmap)
         self.init_coordinates()
         self.update_plot_source_by_coords()
-        self.init_group_select(curgroup)
-        self.init_cluster_select()
+        if self.name != 'highlight spatial':
+            curgroup = self.widgets_dict['group_select'].value
+            self.init_group_select(curgroup)
+            self.init_cluster_select()
         self.update_plot_source_by_colors()
         self.plot_coordinates()
         self.update_layout()
@@ -848,32 +850,6 @@ class Widgets:
             if cluster_name == active_cluster:
                 active_prompt = cluster_prompt
         return cluster_promtlist, active_prompt
-    
-    # def show_cluster_color(self):
-    #     para_color = Div(text='0', visible=False, css_classes=['hide'])
-    #     trigger_color = Div(text='1', visible=False)
-    #     trigger_color.js_on_change('text', CustomJS(code="""            
-    #         setTimeout(function(){
-    #             const collection = document.getElementsByClassName("cluster_checkbox_label");
-    #             var str = document.getElementsByClassName('hide')[0].children[0].innerHTML;
-    #             console.log(document.getElementsByClassName('hide')[0].children[0].innerHTML);
-    #             const color = str.split(' ');
-    #             var k = color.length;
-    #             console.log(k,color);
-    #             for (var i=0;i<k;i++)
-    #             {
-    #                 collection[0].children[0].children[i].style.color = color[i];
-    #             }
-    #             console.log('collection:' + collection[0].children[0].innerHTML);
-    #         }, 100);            
-    #     """))
-
-    #     curgroup = self.widgets_dict['group_select'].value
-    #     clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
-    #     for clustername in clusterlist:
-    #         color_js = dt.adata.uns['group_dict'][curgroup].loc[clustername, 'color'] + ' '
-    #     para_color.text = color_js[:-1]
-    #     trigger_color.text = trigger_color.text + '1'
     
     def update_plot_source_by_coords(self):
         """
