@@ -137,7 +137,7 @@ def update_uns_hybrid_obs(
         adata.uns['group_dict'][group_name]['cell_num'] = adata.uns['group_dict'][group_name]['cell_num'].index.map(cluster_counts_series).fillna(0).astype(int)
         for clustername in clusterlist:
             if pd.isna(adata.uns['group_dict'][group_name].loc[clustername, 'color']):
-                adata.uns['group_dict'][group_name].loc[clustername,'color'] = color_list[(18 + clusterlist.index(clustername))%20]
+                adata.uns['group_dict'][group_name].loc[clustername,'color'] = color_list[(clusterlist.index(clustername))%20]
     elif mode == 'uns':
         uns_clusterlist = adata.uns['group_dict'][group_name].index
         adata.uns['group_dict'][group_name] = adata.uns['group_dict'][group_name].reindex(clusterlist)
@@ -148,10 +148,10 @@ def update_uns_hybrid_obs(
                 adata.uns['group_dict'][group_name] = adata.uns['group_dict'][group_name].drop(clustername)
 
 adata = None
-# adata = load_path()
+adata = load_path()
 # print(adata.obs)
 # sc.tl.pca(adata, svd_solver='arpack')
-# init_data(adata)
+init_data(adata)
 # print(adata.obsm['X_pca'])
 # X = adata.obsm["X_pca"].to_numpy()[:, :4]
 # print(adata.obsm['X_pca'])

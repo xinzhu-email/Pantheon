@@ -99,16 +99,6 @@ def get_save_path(dir):
     # print('-======- s_path', s_path)
     return s_path
 
-def text_cover(dir, msg):
-        path = dir + '/data_file.txt'
-        with open(path, "w") as f:
-            f.truncate(0)
-            f.close()
-        file = open(path, 'w')
-        file.write(msg)
-        file.close() 
-
-
 def main():
     global check_code
     check_code = "app_running"

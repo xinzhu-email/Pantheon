@@ -544,8 +544,6 @@ class Widgets:
             self.init_cluster_select(cluster_name_new)
             self.update_layout()
             self.view_tab()
-            print(dt.adata.obs[curgroup].cat.categories)
-            print(dt.adata.uns['group_dict'][curgroup])
             tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
         curdoc().add_next_tick_callback(lambda : rename_cluster_select_next(self))
 
