@@ -483,7 +483,7 @@ class Widgets:
                 dt.adata.obs.loc[curindex, curgroup] = curclsname
                 dt.adata.obs.loc[curindex, 'color'] = curcolor
             dt.adata.uns['group_dict'][curgroup].loc[curclsname] = [curcolor, 0]
-            dt.update_uns_hybrid_obs(dt.adata, curgroup)
+            dt.update_uns_hybrid_obs(dt.adata, curgroup, 'merge')
             self.init_cluster_select()
             self.update_plot_source_by_colors()
             self.plot_coordinates()
@@ -535,7 +535,7 @@ class Widgets:
                 print("Reject: empty cluster name not allowed")
                 tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
                 return
-            dt.adata.obs[curgroup].cat.remove_categories([cluster_name_old])
+            # dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories([cluster_name_old])
             if cluster_name_new not in dt.adata.obs[curgroup].cat.categories:
                 dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories([cluster_name_new])
             dt.adata.obs[curgroup] = dt.adata.obs[curgroup].replace(cluster_name_old, cluster_name_new)   
@@ -568,11 +568,11 @@ class Widgets:
             curgroup = self.widgets_dict['group_select'].value
             clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
             clusterlist_active = [clusterlist[i] for i in active_cls if i < len(clusterlist)]
-            dt.adata.obs[curgroup].cat.remove_categories(clusterlist_active)
+            # dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories(clusterlist_active)
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = 'unassigned'
             dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
+            dt.update_uns_hybrid_obs(dt.adata, curgroup, 'uns')
             print(dt.adata.uns['group_dict'][curgroup])
-            dt.update_uns_hybrid_obs(dt.adata, curgroup)
             self.init_cluster_select()
             self.update_plot_source_by_colors()
             self.plot_coordinates()
@@ -616,6 +616,9 @@ class Widgets:
                 print("Warning: name already exist, take first selected cluster name as default")
             if curclsname in clusterlist_active:
                 clusterlist_active.remove(curclsname)
+            print(clusterlist_active)
+            # dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories(clusterlist_active)
+            print(dt.adata.obs[curgroup].cat.categories)
             if (curcolor in exist_color) and (curcolor not in active_color):
                 curcolor = active_color[0]
                 print("Warning: color selected, take first selected cluster color as default")
@@ -623,7 +626,7 @@ class Widgets:
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), 'color'] = curcolor
             dt.adata.uns['group_dict'][curgroup].loc[curclsname] = {'color': curcolor}
             dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
-            dt.update_uns_hybrid_obs(dt.adata, curgroup)
+            dt.update_uns_hybrid_obs(dt.adata, curgroup, 'merge')
             self.init_cluster_select()
             self.update_plot_source_by_colors()
             self.plot_coordinates()
