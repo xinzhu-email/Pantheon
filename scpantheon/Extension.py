@@ -12,14 +12,14 @@ import data as dt
 try:
     from scpantheon.front_end import extensions_qt 
     from scpantheon.front_end.extensions_qt import get_extensions_path
-    from scpantheon.front_end import load_qt
+    from scpantheon.front_end import load_qt, save_qt
     from scpantheon.front_end.data_qt import dir, extract_online_packages, read_path
 
 except:
     check_call(['pip3', 'install', "scpantheon"])
     from scpantheon.front_end import extensions_qt 
     from scpantheon.front_end.extensions_qt import get_extensions_path
-    from scpantheon.front_end import  load_qt
+    from scpantheon.front_end import  load_qt, save_qt
     from scpantheon.front_end.data_qt import dir, extract_online_packages, read_path
 
 
@@ -37,6 +37,7 @@ class Extension:
         self.extensions_list = ['Please load an extension']
         self.init_widget_ext()
         self.init_modules()
+        self.init_save()
         self.load_module()
         self.update_layout()
 
@@ -109,6 +110,32 @@ class Extension:
         Extension.widget_ext_dict['modules_select'] = modules_select
         tb.ext_widgets = Extension.widget_ext_dict
     
+    def init_save(self):
+        save_data = Button(label='Export Results')
+        save_data.on_click(lambda : self.save_data())
+        Extension.widget_ext_dict['save_data'] = save_data
+        tb.ext_widgets = Extension.widget_ext_dict
+
+    def save_data(self):
+        tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        def save_data_callback():
+            check_code = save_qt.main()
+            if check_code == 'app closed':
+                # print('choosing finished')
+                path = save_qt.get_save_path(dir) + '/'
+                save_qt.text_cover(dir, path + 'result.h5ad') # write the output anndata to cover the data
+                print("path covered to " + path + "result.h5ad")
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                for col in dt.adata.obs.columns:
+                    if dt.adata.obs[col].dtype != 'category':
+                        dt.adata.obs[col] = dt.adata.obs[col].astype('category')
+                store_data = dt.adata
+                del store_data.uns['group_dict']
+                store_data.write_h5ad(path + "result.h5ad")
+            tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
+        curdoc().add_next_tick_callback(lambda: save_data_callback())
+
     def update_layout(self):
         tb.ext_layout = column(list(Extension.widget_ext_dict.values()))
         tb.view_panel(tb.panel_dict, tb.ext_layout, tb.ext_widgets, tb.curpanel)

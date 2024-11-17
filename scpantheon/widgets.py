@@ -5,6 +5,7 @@ from myplot import Plot
 import data as dt
 import tabs as tb
 import numpy as np
+import pandas as pd
 
 class Widgets:
     def __init__(self,
@@ -440,6 +441,7 @@ class Widgets:
             self.widgets_dict['cluster_name'].value = ''
             curcolor = self.widgets_dict['color_picker'].color
             selected_list = self.figure.source.selected.indices
+            print(curgroup)
             if curgroup == 'Please create a group':
                 group_name = self.widgets_dict['group_name'].value
                 if group_name == '':
@@ -466,7 +468,16 @@ class Widgets:
                 print("Reject: cluster name already existed")
                 tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
                 return
-            # dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories(curclsname)
+            if curgroup not in dt.adata.obs.columns:
+                dt.adata.obs[curgroup] = pd.Categorical(
+                    list(np.full(dt.adata.n_obs, 'unassigned')), 
+                    categories = ['unassigned'], 
+                    ordered = True
+                )
+            if curclsname not in dt.adata.obs[curgroup].cat.categories:
+                dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories([curclsname])
+            if curcolor not in dt.adata.obs['color'].cat.categories:
+                dt.adata.obs['color'] = dt.adata.obs['color'].cat.add_categories([curcolor])
             for i in selected_list:
                 curindex = dt.adata.obs.index[i]
                 dt.adata.obs.loc[curindex, curgroup] = curclsname
@@ -524,6 +535,9 @@ class Widgets:
                 print("Reject: empty cluster name not allowed")
                 tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
                 return
+            dt.adata.obs[curgroup].cat.remove_categories([cluster_name_old])
+            if cluster_name_new not in dt.adata.obs[curgroup].cat.categories:
+                dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories([cluster_name_new])
             dt.adata.obs[curgroup] = dt.adata.obs[curgroup].replace(cluster_name_old, cluster_name_new)   
             dt.adata.uns['group_dict'][curgroup].loc[cluster_name_new] = dt.adata.uns['group_dict'][curgroup].loc[cluster_name_old]
             dt.adata.uns['group_dict'][curgroup] = dt.adata.uns['group_dict'][curgroup].drop(cluster_name_old, axis = 0)
@@ -554,10 +568,10 @@ class Widgets:
             curgroup = self.widgets_dict['group_select'].value
             clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
             clusterlist_active = [clusterlist[i] for i in active_cls if i < len(clusterlist)]
-            # if 'unassigned' not in dt.adata.obs[curgroup].cat.categories:
-            #     dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories('unassigned')
+            dt.adata.obs[curgroup].cat.remove_categories(clusterlist_active)
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = 'unassigned'
             dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
+            print(dt.adata.uns['group_dict'][curgroup])
             dt.update_uns_hybrid_obs(dt.adata, curgroup)
             self.init_cluster_select()
             self.update_plot_source_by_colors()

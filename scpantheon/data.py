@@ -52,13 +52,21 @@ def init_data(
             index = adata.obs_names,
             columns = ['color', 'Please create a group']
         )
-    adata.obs['color'] = color_list[0]
-    adata.obs['Please create a group'] = 'unassigned'
-    adata.obs = adata.obs.apply(lambda x: x.astype(object))
+    adata.obs['color'] = pd.Categorical(
+        list(np.full(adata.n_obs, color_list[0])),
+        categories = color_list, 
+        ordered = True
+    )
+    adata.obs['Please create a group'] = pd.Categorical(
+        list(np.full(adata.n_obs, 'unassigned')), 
+        categories = ['unassigned'], 
+        ordered = True
+    )
+    adata.obs = adata.obs.apply(lambda x: x.astype('category'))
     adata.uns['group_dict'] = dict()
     init_uns(adata, 'Please create a group', True)
     update_uns_all(adata)
-
+    
 
 def init_uns(
     adata: sc.AnnData,
@@ -76,8 +84,12 @@ def init_uns(
         empty_group_uns.loc['unassigned', 'color'] = color_list[18]
     empty_group_uns.index = empty_group_uns.index.astype('category')
     adata.uns['group_dict'][group_name] = empty_group_uns
-    if group_name not in adata.obs_keys():
-        adata.obs[group_name] = pd.Categorical(['unassigned'], categories=['unassigned'], ordered=True)
+    if group_name not in adata.obs.columns:
+        adata.obs['Please create a group'] = pd.Categorical(
+            list(np.full(adata.n_obs, 'unassigned')), 
+            categories = ['unassigned'], 
+            ordered = True
+        )
 
 def update_data_obsm(
     adata: sc.AnnData    
@@ -126,9 +138,8 @@ def update_uns_hybrid_obs(
             adata.uns['group_dict'][group_name].loc[clustername,'color'] = color_list[(18 + clusterlist.index(clustername))%20]
 
 adata = None
-# adata = load_path()
-# init_data(adata)
-# print(list(adata.obs_names))
+adata = load_path()
+print(adata.obs)
 # sc.tl.pca(adata, svd_solver='arpack')
 # init_data(adata)
 # print(adata.obsm['X_pca'])
