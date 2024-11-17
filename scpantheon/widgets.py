@@ -239,7 +239,7 @@ class Widgets:
         init cluster_checkbox according to uns
         """
         active_list = []
-        clusterlist, active_prompt = self.get_cluster_list(active_cluster)
+        clusterlist, active_prompt = self.get_cluster_list_prompt(active_cluster)
         if active_prompt in clusterlist:
             active_list.append(clusterlist.index(active_prompt))
         cluster_checkbox = CheckboxGroup(
@@ -441,7 +441,6 @@ class Widgets:
             self.widgets_dict['cluster_name'].value = ''
             curcolor = self.widgets_dict['color_picker'].color
             selected_list = self.figure.source.selected.indices
-            print(curgroup)
             if curgroup == 'Please create a group':
                 group_name = self.widgets_dict['group_name'].value
                 if group_name == '':
@@ -538,12 +537,15 @@ class Widgets:
             # dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories([cluster_name_old])
             if cluster_name_new not in dt.adata.obs[curgroup].cat.categories:
                 dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories([cluster_name_new])
-            dt.adata.obs[curgroup] = dt.adata.obs[curgroup].replace(cluster_name_old, cluster_name_new)   
+            dt.adata.obs[curgroup] = dt.adata.obs[curgroup].replace(cluster_name_old, cluster_name_new)
+            dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories([cluster_name_old])   
             dt.adata.uns['group_dict'][curgroup].loc[cluster_name_new] = dt.adata.uns['group_dict'][curgroup].loc[cluster_name_old]
             dt.adata.uns['group_dict'][curgroup] = dt.adata.uns['group_dict'][curgroup].drop(cluster_name_old, axis = 0)
             self.init_cluster_select(cluster_name_new)
             self.update_layout()
             self.view_tab()
+            print(dt.adata.obs[curgroup].cat.categories)
+            print(dt.adata.uns['group_dict'][curgroup])
             tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
         curdoc().add_next_tick_callback(lambda : rename_cluster_select_next(self))
 
@@ -557,22 +559,20 @@ class Widgets:
         """
         tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
         def delete_cluster_select_next(self):
-            active_cls = self.widgets_dict['cluster_checkbox'].active
-            if 0 in active_cls:
+            active_index = self.widgets_dict['cluster_checkbox'].active
+            active_cls = self.get_active_cluster_list(active_index)
+            if 'unassigned' in active_cls:
                 print("Warning: default cluster 'unassigned' won't be deleted")
-                active_cls.remove(0)
+                active_cls.remove('unassigned')
             if len(active_cls) == 0:
                 print("Warning: No cluster deleted")
                 tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
                 return
             curgroup = self.widgets_dict['group_select'].value
-            clusterlist = dt.adata.uns['group_dict'][curgroup].index.to_list()
-            clusterlist_active = [clusterlist[i] for i in active_cls if i < len(clusterlist)]
-            # dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories(clusterlist_active)
-            dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = 'unassigned'
-            dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
+            dt.adata.obs.loc[dt.adata.obs[curgroup].isin(active_cls), curgroup] = 'unassigned'
+            dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories(active_cls)
+            dt.adata.uns['group_dict'][curgroup].drop(active_cls, inplace = True)
             dt.update_uns_hybrid_obs(dt.adata, curgroup, 'uns')
-            print(dt.adata.uns['group_dict'][curgroup])
             self.init_cluster_select()
             self.update_plot_source_by_colors()
             self.plot_coordinates()
@@ -616,14 +616,12 @@ class Widgets:
                 print("Warning: name already exist, take first selected cluster name as default")
             if curclsname in clusterlist_active:
                 clusterlist_active.remove(curclsname)
-            print(clusterlist_active)
-            # dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories(clusterlist_active)
-            print(dt.adata.obs[curgroup].cat.categories)
             if (curcolor in exist_color) and (curcolor not in active_color):
                 curcolor = active_color[0]
                 print("Warning: color selected, take first selected cluster color as default")
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = curclsname
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), 'color'] = curcolor
+            dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories(clusterlist_active)
             dt.adata.uns['group_dict'][curgroup].loc[curclsname] = {'color': curcolor}
             dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
             dt.update_uns_hybrid_obs(dt.adata, curgroup, 'merge')
@@ -791,6 +789,8 @@ class Widgets:
             active_color = [exist_color[i] for i in active_cls]
             if (curcolor in exist_color) and (curcolor not in active_color):
                 print("Warning: color conflict with other clusters")
+            if curcolor not in dt.adata.obs['color'].cat.categories:
+                dt.adata.obs['color'] = dt.adata.obs['color'].cat.add_categories([curcolor])
             for name in active_name:
                 dt.adata.uns['group_dict'][curgroup].loc[name, 'color'] = curcolor
                 dt.adata.obs.loc[dt.adata.obs[curgroup].isin(active_name), 'color'] = curcolor
@@ -848,8 +848,17 @@ class Widgets:
         else:
             return "log info: original data probably log-scaled already"
 
+    def get_active_cluster_list(self,
+        active_list: list | None = []
+    ):
+        curgroup = self.widgets_dict['group_select'].value
+        cluster_list = dt.adata.uns['group_dict'][curgroup].index
+        active_cluster = []
+        for index in active_list:
+            active_cluster.append(cluster_list[index])
+        return active_cluster
     
-    def get_cluster_list(self,
+    def get_cluster_list_prompt(self,
         active_cluster = None
     ):
         """
