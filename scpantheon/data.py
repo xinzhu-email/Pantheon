@@ -70,14 +70,22 @@ def init_data(
 
 def init_uns(
     adata: sc.AnnData,
-    group_name: str,
+    group_name: str | None = 'Please create a group',
     default: bool | None = None
 ):
     empty_group_uns = pd.DataFrame(
         index = ['unassigned'],
         columns = ['color', 'cell_num']
     )
+    for col in empty_group_uns.columns:
+        empty_group_uns[col] = empty_group_uns[col].astype('category')
+    if adata.n_obs not in empty_group_uns['cell_num'].cat.categories:
+        empty_group_uns['cell_num'] = empty_group_uns['cell_num'].cat.add_categories([adata.n_obs])
     empty_group_uns.loc['unassigned', 'cell_num'] = adata.n_obs
+    if color_list[0] not in empty_group_uns['color'].cat.categories:
+        empty_group_uns['color'] = empty_group_uns['color'].cat.add_categories([color_list[0]])
+    if color_list[18] not in empty_group_uns['color'].cat.categories:
+        empty_group_uns['color'] = empty_group_uns['color'].cat.add_categories([color_list[18]])
     if default:
         empty_group_uns.loc['unassigned', 'color'] = color_list[0]
     else:
@@ -85,7 +93,7 @@ def init_uns(
     empty_group_uns.index = empty_group_uns.index.astype('category')
     adata.uns['group_dict'][group_name] = empty_group_uns
     if group_name not in adata.obs.columns:
-        adata.obs['Please create a group'] = pd.Categorical(
+        adata.obs[group_name] = pd.Categorical(
             list(np.full(adata.n_obs, 'unassigned')), 
             categories = ['unassigned'], 
             ordered = True
@@ -137,7 +145,10 @@ def update_uns_hybrid_obs(
         adata.uns['group_dict'][group_name]['cell_num'] = adata.uns['group_dict'][group_name]['cell_num'].index.map(cluster_counts_series).fillna(0).astype(int)
         for clustername in clusterlist:
             if pd.isna(adata.uns['group_dict'][group_name].loc[clustername, 'color']):
-                adata.uns['group_dict'][group_name].loc[clustername,'color'] = color_list[(clusterlist.index(clustername))%20]
+                curcolor = color_list[(clusterlist.index(clustername))%20]
+                if curcolor not in adata.uns['group_dict'][group_name]['color'].cat.categories:
+                    adata.uns['group_dict'][group_name]['color'] = adata.uns['group_dict'][group_name]['color'].cat.add_categories([curcolor])
+                adata.uns['group_dict'][group_name].loc[clustername,'color'] = curcolor
     elif mode == 'uns':
         uns_clusterlist = adata.uns['group_dict'][group_name].index
         adata.uns['group_dict'][group_name] = adata.uns['group_dict'][group_name].reindex(clusterlist)
@@ -148,11 +159,11 @@ def update_uns_hybrid_obs(
                 adata.uns['group_dict'][group_name] = adata.uns['group_dict'][group_name].drop(clustername)
 
 adata = None
-adata = load_path()
+# adata = load_path()
 # print(adata.obs)
 # sc.tl.pca(adata, svd_solver='arpack')
-init_data(adata)
-# print(adata.obsm['X_pca'])
+# init_data(adata)
+# print(adata.uns['group_dict']['in_tissue'])
 # X = adata.obsm["X_pca"].to_numpy()[:, :4]
 # print(adata.obsm['X_pca'])
 # print(X)

@@ -10,6 +10,7 @@ import pandas as pd
 class Widgets:
     def __init__(self,
         name: str | None = 'generic columns',
+        ori_data: bool | None = False,
     ):
         """
         dt.adata: handle with anndata structure  
@@ -19,8 +20,9 @@ class Widgets:
         pd.Dataframe's index are cluster names, columns are color and cell_num  
         denotes each cluster's color and cell number
         """
-        dt.adata = dt.load_path()
-        dt.init_data(dt.adata)
+        if ori_data:
+            dt.adata = dt.load_path()
+            dt.init_data(dt.adata)
         self.new_panel = True
         self.name = name
         self.widgets_dict = dict()
@@ -376,6 +378,7 @@ class Widgets:
                 return
             dt.adata.obs.rename(columns = {group_name: new_name}, inplace=True)
             dt.adata.uns['group_dict'][new_name] = dt.adata.uns['group_dict'].pop(group_name)
+            self.widgets_dict['group_name'].value = ''
             self.init_group_select(new_name)
             self.update_layout()
             self.view_tab()
@@ -534,11 +537,12 @@ class Widgets:
                 print("Reject: empty cluster name not allowed")
                 tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
                 return
-            # dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories([cluster_name_old])
             if cluster_name_new not in dt.adata.obs[curgroup].cat.categories:
                 dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories([cluster_name_new])
             dt.adata.obs[curgroup] = dt.adata.obs[curgroup].replace(cluster_name_old, cluster_name_new)
-            dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories([cluster_name_old])   
+            print(dt.adata.obs[curgroup].cat.categories)
+            if cluster_name_old in dt.adata.obs[curgroup].cat.categories:
+                dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories([cluster_name_old])   
             dt.adata.uns['group_dict'][curgroup].loc[cluster_name_new] = dt.adata.uns['group_dict'][curgroup].loc[cluster_name_old]
             dt.adata.uns['group_dict'][curgroup] = dt.adata.uns['group_dict'][curgroup].drop(cluster_name_old, axis = 0)
             self.init_cluster_select(cluster_name_new)
@@ -567,6 +571,8 @@ class Widgets:
                 tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
                 return
             curgroup = self.widgets_dict['group_select'].value
+            if 'unassigned' not in dt.adata.obs[curgroup].cat.categories:
+                dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories(['unassigned'])
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(active_cls), curgroup] = 'unassigned'
             dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories(active_cls)
             dt.adata.uns['group_dict'][curgroup].drop(active_cls, inplace = True)
@@ -619,7 +625,11 @@ class Widgets:
                 print("Warning: color selected, take first selected cluster color as default")
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = curclsname
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), 'color'] = curcolor
-            dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories(clusterlist_active)
+            for cluster in clusterlist_active:
+                if cluster in dt.adata.obs[curgroup].cat.categories:
+                    dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories([cluster])
+            if curcolor not in dt.adata.obs['color'].cat.categories:
+                dt.adata.obs['color'].cat.add_categories(curcolor)
             dt.adata.uns['group_dict'][curgroup].loc[curclsname] = {'color': curcolor}
             dt.adata.uns['group_dict'][curgroup].drop(clusterlist_active, inplace = True)
             dt.update_uns_hybrid_obs(dt.adata, curgroup, 'merge')
@@ -929,6 +939,7 @@ class Widgets:
     
     def update_plot_source_by_colors(self):
         curgroup = self.widgets_dict['group_select'].value
+        print(dt.adata.uns['group_dict'])
         for cell_name in dt.adata.obs.index:
             cell_type = dt.adata.obs.loc[cell_name, curgroup]
             dt.adata.obs.loc[cell_name, 'color'] = dt.adata.uns['group_dict'][curgroup].loc[cell_type, 'color']

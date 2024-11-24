@@ -121,7 +121,6 @@ class Extension:
         def save_data_callback(self):
             check_code = save_qt.main()
             if check_code == 'app closed':
-                # print('choosing finished')
                 path = save_qt.get_save_path(dir) + '/'
                 self.text_cover(dir, path + 'result.h5ad') # write the output anndata to cover the data
                 print("path covered to " + path + "result.h5ad")
@@ -130,9 +129,7 @@ class Extension:
                 for col in dt.adata.obs.columns:
                     if dt.adata.obs[col].dtype != 'category':
                         dt.adata.obs[col] = dt.adata.obs[col].astype('category')
-                print("before")
-                store_data = dt.adata
-                print("after")
+                store_data = dt.adata.copy()
                 del store_data.uns['group_dict']
                 store_data.write_h5ad(path + "result.h5ad")
             tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
@@ -166,7 +163,11 @@ class Extension:
             if tb.curpanel in tb.panel_dict:
                 tb.panel_dict[tb.curpanel].switch_tab()
             elif module_name == 'gene relations':
-                cur_panel = Widgets(module_name)
+                if tb.panel_dict: 
+                    ori_data = False
+                else:
+                    ori_data = True
+                cur_panel = Widgets(module_name, ori_data)
                 tb.panel_dict['gene relations'] = cur_panel
                 tb.curpanel = 'gene relations'
             else:

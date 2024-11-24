@@ -53,13 +53,14 @@ class Widgets_Color(Widgets):
         def next_pca(self):
             sc.tl.pca(dt.adata, svd_solver='arpack')
             dt.init_data(dt.adata)
-            sc.pl.pca_variance_ratio(dt.adata, log=True, save='.png')
-            img = open('figures/pca_variance_ratio.png','rb')
-            img_base64 = base64.b64encode(img.read()).decode("ascii")
-            pca_img = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
-            widgets_dict = {'pca_img': pca_img}
-            merged_dict = {**self.widgets_dict, **widgets_dict}
-            self.widgets_dict = merged_dict
+            # sc.pl.pca_variance_ratio(dt.adata, log=True)
+            # sc.pl.pca_variance_ratio(dt.adata, log=True, save='.png')
+            # img = open('figures/pca_variance_ratio.png','rb')
+            # img_base64 = base64.b64encode(img.read()).decode("ascii")
+            # pca_img = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
+            # widgets_dict = {'pca_img': pca_img}
+            # merged_dict = {**self.widgets_dict, **widgets_dict}
+            # self.widgets_dict = merged_dict
             super().init_map('X_pca')
             super().init_coordinates()
             super().update_plot_source_by_coords()
