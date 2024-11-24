@@ -36,7 +36,10 @@ class Widgets:
             self.init_tab()
     
     def init_tab(self):
-        self.init_map()
+        if self.name == 'highlight spatial':
+            self.init_map('spatial')
+        else:
+            self.init_map()
         self.init_coordinates()
         self.update_plot_source_by_coords()
         if self.name != 'highlight spatial':

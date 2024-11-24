@@ -39,7 +39,7 @@ class Plot:
                         'color',
                         palette = cc.kbc[::-1],
                         low = min(self.source.data['color']),
-                        high=max(self.source.data['color'])
+                        high = max(self.source.data['color']),
                         ),
                     nonselection_alpha = 0.1,
                     selection_line_color = 'black',

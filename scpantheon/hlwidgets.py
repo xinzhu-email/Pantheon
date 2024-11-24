@@ -2,6 +2,7 @@ from bokeh.models import CheckboxGroup, AutocompleteInput, Select
 from bokeh.layouts import row, column
 from bokeh.io import curdoc
 from widgets import Widgets
+import numpy as np
 import data as dt
 import tabs as tb
 
@@ -23,7 +24,7 @@ class Hlwidgets(Widgets):
         super().init_tab()
     
     def init_marker_map(self):
-        map_list = dt.adata.obsm_keys() + ['generic_columns'] 
+        map_list = dt.adata.obsm_keys() + ['generic_columns']
         marker_map = Select(
             title = 'Marker map:',
             value = map_list[0],
