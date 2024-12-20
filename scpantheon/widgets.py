@@ -123,10 +123,10 @@ class Widgets:
         log_axis = CheckboxGroup(labels = ['Log-scaled axis', 'Exponential-scaled axis'], active = active_status)
         log_axis.on_change('active',lambda attr, old, new : self.update_log(attr, old, new))
 
-        log_status = self.get_log_status()
-        log_info = Div(text = log_status)
+        # log_status = self.get_log_status()
+        # log_info = Div(text = log_status)
 
-        widgets_dict = {'x_varname': x_axis, 'y_varname': y_axis, 'is_log': log_axis, 'log_info': log_info}
+        widgets_dict = {'x_varname': x_axis, 'y_varname': y_axis, 'is_log': log_axis}
         merged_dict = {**self.widgets_dict, **widgets_dict}
         self.widgets_dict = merged_dict       
     
@@ -244,17 +244,27 @@ class Widgets:
         init cluster_checkbox according to uns
         """
         active_list = []
-        clusterlist, active_prompt = self.get_cluster_list_prompt(active_cluster)
+        clusterlist, clusterlabel, active_prompt = self.get_cluster_list_prompt(active_cluster)
         if active_prompt in clusterlist:
             active_list.append(clusterlist.index(active_prompt))
+        # css = """
+        # <style>
+        # .custom-checkbox-group .bk-checkbox-button {
+        #     height: 100px;
+        # }
+        # </style>
+        # """
+        # curdoc().add_root(Div(text=css, render_as_text=True))
         cluster_checkbox = CheckboxGroup(
-            labels = clusterlist,
+            labels = [''] * len(clusterlist),
             active = active_list,
-            css_classes = ["cluster_checkbox_label"]
-        )        
+            width = 10,
+            height = 20,
+            sizing_mode = 'fixed'
+        )
         cluster_checkbox.on_change('active', lambda attr, old, new: self.show_select())
         # cluster_checkbox.on_change('labels', lambda attr, old, new: self.show_cluster_color())
-        widgets_dict = {'cluster_checkbox' : cluster_checkbox}
+        widgets_dict = {'cluster_checkbox' : cluster_checkbox, 'cluster_label': clusterlabel}
         merged_dict = {**self.widgets_dict, **widgets_dict}
         self.widgets_dict = merged_dict
 
@@ -543,7 +553,6 @@ class Widgets:
             if cluster_name_new not in dt.adata.obs[curgroup].cat.categories:
                 dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories([cluster_name_new])
             dt.adata.obs[curgroup] = dt.adata.obs[curgroup].replace(cluster_name_old, cluster_name_new)
-            print(dt.adata.obs[curgroup].cat.categories)
             if cluster_name_old in dt.adata.obs[curgroup].cat.categories:
                 dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.remove_categories([cluster_name_old])   
             dt.adata.uns['group_dict'][curgroup].loc[cluster_name_new] = dt.adata.uns['group_dict'][curgroup].loc[cluster_name_old]
@@ -783,6 +792,8 @@ class Widgets:
         tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
         def change_cluster_color_next(self):
             curcolor = self.widgets_dict['color_picker'].color
+            if type(curcolor) != 'category':
+                curcolor = pd.Categorical([curcolor])[0]
             curgroup = self.widgets_dict['group_select'].value
             active_cls = self.widgets_dict['cluster_checkbox'].active
             cls_name = dt.adata.uns['group_dict'][curgroup].index.tolist()
@@ -802,6 +813,8 @@ class Widgets:
                 print("Warning: color conflict with other clusters")
             if curcolor not in dt.adata.obs['color'].cat.categories:
                 dt.adata.obs['color'] = dt.adata.obs['color'].cat.add_categories([curcolor])
+            if curcolor not in dt.adata.uns['group_dict'][curgroup]['color'].cat.categories:
+                dt.adata.uns['group_dict'][curgroup]['color'] = dt.adata.uns['group_dict'][curgroup]['color'].cat.add_categories([curcolor])
             for name in active_name:
                 dt.adata.uns['group_dict'][curgroup].loc[name, 'color'] = curcolor
                 dt.adata.obs.loc[dt.adata.obs[curgroup].isin(active_name), 'color'] = curcolor
@@ -878,14 +891,18 @@ class Widgets:
         """
         curgroup = self.widgets_dict['group_select'].value
         cluster_promtlist = []
+        label_divlist = []
         active_prompt = None
         for cluster_name in dt.adata.uns['group_dict'][curgroup].index:
             cellnum = dt.adata.uns['group_dict'][curgroup].loc[cluster_name, 'cell_num']
             cluster_prompt = str(cluster_name) + ": cell_nums = " + str(cellnum)
+            cluster_color = dt.adata.uns['group_dict'][curgroup].loc[cluster_name, 'color']
+            cluster_label = Div (text = cluster_prompt, height = 8, style = {'background-color': cluster_color})
+            label_divlist.append(cluster_label)
             cluster_promtlist.append(cluster_prompt)
             if cluster_name == active_cluster:
                 active_prompt = cluster_prompt
-        return cluster_promtlist, active_prompt
+        return cluster_promtlist, column(label_divlist, height = 30 * len(cluster_prompt)), active_prompt
     
     def update_plot_source_by_coords(self):
         """
@@ -942,7 +959,6 @@ class Widgets:
     
     def update_plot_source_by_colors(self):
         curgroup = self.widgets_dict['group_select'].value
-        print(dt.adata.uns['group_dict'])
         for cell_name in dt.adata.obs.index:
             cell_type = dt.adata.obs.loc[cell_name, curgroup]
             dt.adata.obs.loc[cell_name, 'color'] = dt.adata.uns['group_dict'][curgroup].loc[cell_type, 'color']
@@ -968,28 +984,38 @@ class Widgets:
         plot_dict = {'source' : source}
         self.figure.update_source(**plot_dict)
     
+    def make_layout(self, widget_dict, width_param):
+        values = []
+        for key in widget_dict:
+            if key in self.widgets_dict: 
+                self.widgets_dict[key].width = width_param
+                values.append(self.widgets_dict[key])
+        layout_cur = column(values)
+        return layout_cur
+    
     def update_layout(self):
         """
         modify current tab and visualize
         """
-        coords_key = ['choose_map', 'x_varname', 'y_varname', 'is_log', 'log_info'] 
-        values = [self.widgets_dict[key] for key in coords_key if key in self.widgets_dict]
-        layout_coords = column(values)
+        
+        width_param = 200
+        coords_key = ['choose_map', 'x_varname', 'y_varname', 'is_log', 'log_info']
+        layout_coords = self.make_layout(coords_key, width_param)
 
         group_key = ['group_name', 'create_group', 'rename_group', 'delete_group', 'group_select']
-        values = [self.widgets_dict[key] for key in group_key if key in self.widgets_dict]
-        layout_group = column(values)
+        layout_group = self.make_layout(group_key, width_param)
 
         color_key = ['color_picker']
-        values = [self.widgets_dict[key] for key in color_key if key in self.widgets_dict]
-        layout_color = column(values)
+        layout_color = self.make_layout(color_key, width_param)
 
         cluster_key = ['cluster_name', 'create_cluster', 'rename_cluster', 'delete_cluster', 'merge_cluster',
-            'add_to', 'remove_from', 'update', 'change_cluster_color', 'cluster_checkbox']
-        values = [self.widgets_dict[key] for key in cluster_key if key in self.widgets_dict]
-        layout_cluster = column(values)
+            'add_to', 'remove_from', 'update', 'change_cluster_color']
+        layout_cluster = self.make_layout(cluster_key, width_param)
 
-        self.layout = row([self.figure.plot, row([column([layout_coords, layout_color]), layout_group, layout_cluster])])
+        cluster_label = Div(text = "Cluster list:")
+        cluster_list = column ([cluster_label, row([self.widgets_dict['cluster_checkbox'], self.widgets_dict['cluster_label']])])
+
+        self.layout = row([row([self.figure.plot, row([column([layout_coords, layout_color]), layout_group, layout_cluster])]), cluster_list])
     
     def view_tab(self):
         if self.name != 'highlight_spatial':
