@@ -897,7 +897,7 @@ class Widgets:
             cellnum = dt.adata.uns['group_dict'][curgroup].loc[cluster_name, 'cell_num']
             cluster_prompt = str(cluster_name) + ": cell_nums = " + str(cellnum)
             cluster_color = dt.adata.uns['group_dict'][curgroup].loc[cluster_name, 'color']
-            cluster_label = Div (text = cluster_prompt, height = 8, style = {'background-color': cluster_color})
+            cluster_label = Div (text = cluster_prompt, height = 8, style = {'color': cluster_color})
             label_divlist.append(cluster_label)
             cluster_promtlist.append(cluster_prompt)
             if cluster_name == active_cluster:
