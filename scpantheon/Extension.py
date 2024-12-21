@@ -111,19 +111,27 @@ class Extension:
         tb.ext_widgets = Extension.widget_ext_dict
     
     def init_save(self):
+        output_name = TextInput(title = 'Output File Name: ', value = '')
         save_data = Button(label='Export Results')
         save_data.on_click(lambda : self.save_data())
+        Extension.widget_ext_dict['output_name'] = output_name
         Extension.widget_ext_dict['save_data'] = save_data
         tb.ext_widgets = Extension.widget_ext_dict
 
     def save_data(self):
         tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
-        def save_data_callback(self):
+        filename = tb.ext_widgets['output_name'].value
+        def save_data_callback(
+            self,
+            filename : str | None = ''
+        ):
+            if filename == '' or filename == None:
+                filename = 'result'
             check_code = save_qt.main()
             if check_code == 'app closed':
                 path = save_qt.get_save_path(dir) + '/'
-                self.text_cover(dir, path + 'result.h5ad') # write the output anndata to cover the data
-                print("path covered to " + path + "result.h5ad")
+                self.text_cover(dir, path + filename + '.h5ad') # write the output anndata to cover the data
+                print("path covered to " + path + filename + '.h5ad')
                 if not os.path.exists(path):
                     os.makedirs(path)
                 for col in dt.adata.obs.columns:
@@ -131,9 +139,10 @@ class Extension:
                         dt.adata.obs[col] = dt.adata.obs[col].astype('category')
                 store_data = dt.adata.copy()
                 del store_data.uns['group_dict']
-                store_data.write_h5ad(path + "result.h5ad")
+                store_data.write_h5ad(path + filename + '.h5ad')
             tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
-        curdoc().add_next_tick_callback(lambda: save_data_callback(self))
+            filename = tb.ext_widgets['output_name'].value = ''
+        curdoc().add_next_tick_callback(lambda: save_data_callback(self, filename))
 
     def text_cover(self, dir, msg):
         path = dir + '/data_file.txt'
