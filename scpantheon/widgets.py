@@ -635,6 +635,8 @@ class Widgets:
             if (curcolor in exist_color) and (curcolor not in active_color):
                 curcolor = active_color[0]
                 print("Warning: color selected, take first selected cluster color as default")
+            if curclsname not in dt.adata.obs[curgroup].cat.categories:
+                dt.adata.obs[curgroup] = dt.adata.obs[curgroup].cat.add_categories([curclsname])
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), curgroup] = curclsname
             dt.adata.obs.loc[dt.adata.obs[curgroup].isin(clusterlist_active), 'color'] = curcolor
             for cluster in clusterlist_active:

@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 bokeh==2.4.3
 pandas
 anndata==0.8.0
@@ -7,28 +5,9 @@ colorcet
 scanpy
 numpy
 PyQt5==5.15.6
-=======
-bokeh==2.4.3
-pandas
-anndata
-colorcet
-scanpy
-numpy
-PyQt5
->>>>>>> extension
 PyQtWebEngine
 appdirs
 requests
 leidenalg
-<<<<<<< HEAD
-=======
-
-[leidenalg]
-leidenalg
-
-[tomas]
 tomas
->>>>>>> f66edc8215cb97ac3992d7f3fd2b48b56be5ea62
-=======
 setuptools_scm
->>>>>>> extension

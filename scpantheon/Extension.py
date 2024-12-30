@@ -184,7 +184,7 @@ class Extension:
                 name = module_name
                 module_name = name + '.module'           
                 mod = importlib.import_module(module_name)
-                cur_panel = mod.Widgets_Color(name)
+                cur_panel = mod.Widgets_Ext(name)
                 if cur_panel.new_panel: 
                     tb.panel_dict[name] = cur_panel
                     tb.curpanel = name

@@ -13,7 +13,7 @@ import data as dt
 import tabs as tb
 
 
-class Widgets_Color(Widgets):
+class Widgets_Ext(Widgets):
     def __init__(self,
         name: str | None = 'generic columns',
     ):

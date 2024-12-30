@@ -1,13 +1,16 @@
 # -*- mode: python ; coding: utf-8 -*-
-
+import sys ; sys.setrecursionlimit(sys.getrecursionlimit() * 5)
+import os
+from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import copy_metadata
 
 a = Analysis(
-    ['main.py'],
+    ['/home/zw/novellab/softwareUI/installer/pantheon_src/scpantheon/main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
-    hiddenimports=[],
-    hookspath=[],
+    datas=copy_metadata('scikit-learn'),
+    hiddenimports=collect_submodules('sklearn'),
+    hookspath=['.'],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
@@ -35,5 +38,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['ptheon.ico'],
 )

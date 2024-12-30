@@ -4,7 +4,9 @@ from multiprocessing import freeze_support
 from multiprocessing import Process
 import pkg_resources
 import subprocess
-
+import numpy as np
+if not hasattr(np, 'bool8'):
+    np.bool8 = np.bool_
 # from scpantheon import source
 # # !!! 
 # from app import bokeh_qt
