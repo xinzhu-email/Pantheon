@@ -33,20 +33,22 @@ def load_path():
         print("error input")
 
 def init_data(
-        adata: sc.AnnData
+        adata: sc.AnnData,
+        obsm_only: str | None = None
     ):
-    adata.uns['sparse'] = []
-    if type(adata.X) == csr_matrix:
-        judge = adata.X[:, 0].toarray().flatten()
-        adata.uns['sparse'].append('X') # require: X reserved for obsm name
-    else:
-        judge = adata.X[:, 0]
-    if np.isclose(judge.shape[0], np.trunc(judge)).all():
-        adata.uns["original_log"] = False
-    else: 
-        adata.uns["original_log"] = True
+    if not obsm_only:
+        adata.uns['sparse'] = []
+        if type(adata.X) == csr_matrix:
+            judge = adata.X[:, 0].toarray().flatten()
+            adata.uns['sparse'].append('X') # require: X reserved for obsm name
+        else:
+            judge = adata.X[:, 0]
+        if np.isclose(judge.shape[0], np.trunc(judge)).all():
+            adata.uns["original_log"] = False
+        else: 
+            adata.uns["original_log"] = True
     if adata.obsm.keys():
-        update_data_obsm(adata)
+        update_data_obsm(adata, obsm_only)
     if adata.obs.empty: # reserved column names: 'color', 'Please create a group'
         adata.obs = pd.DataFrame(
             index = adata.obs_names,
@@ -100,9 +102,21 @@ def init_uns(
         )
 
 def update_data_obsm(
-    adata: sc.AnnData    
+    adata: sc.AnnData,
+    obsm_key: str | None = None    
 ):
-    for obsm_key in adata.obsm_keys():
+    if not obsm_key or obsm_key == 'all':
+        for obsm_key in adata.obsm_keys():
+            if type(adata.obsm[obsm_key]) == csr_matrix:
+                adata.uns['sparse'].append(obsm_key)
+            if type(adata.obsm[obsm_key]) == np.ndarray:
+                column_names = list([obsm_key + str(i) for i in range(adata.obsm[obsm_key].shape[1])])
+                adata.obsm[obsm_key] = pd.DataFrame(
+                    adata.obsm[obsm_key],
+                    index = adata.obs_names,
+                    columns = column_names
+                )
+    else:
         if type(adata.obsm[obsm_key]) == csr_matrix:
             adata.uns['sparse'].append(obsm_key)
         if type(adata.obsm[obsm_key]) == np.ndarray:
@@ -112,6 +126,7 @@ def update_data_obsm(
                 index = adata.obs_names,
                 columns = column_names
             )
+
 
 def update_uns_all(
     adata: sc.AnnData,

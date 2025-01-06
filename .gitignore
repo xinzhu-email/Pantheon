@@ -1,10 +1,7 @@
 figures/
-<<<<<<< HEAD
-=======
 output/
 data/
 scpantheon/data/
 build/
 dist/
 tests/
->>>>>>> extension

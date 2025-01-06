@@ -52,6 +52,29 @@ class Widgets:
         self.plot_coordinates()
         self.update_layout()
         self.view_tab()
+
+    def update_tab(self,
+        new_obsm: str | None = None,
+        new_map: str | None = None,
+        new_group: str | None = None,
+        ):
+        if not new_obsm:
+            pass
+        else:
+            dt.init_data(dt.adata, new_obsm)
+        if not new_map:
+            pass
+        else:
+            self.init_map(new_map)
+            self.init_coordinates()
+        if not new_group:
+            self.update_plot_source_by_coords()
+            self.update_plot_source_by_colors()
+            self.plot_coordinates()
+            self.update_layout()
+            self.view_tab()
+        else:
+            self.create_group_select(new_group)    
     
     def switch_tab(self):
         """
@@ -122,9 +145,6 @@ class Widgets:
 
         log_axis = CheckboxGroup(labels = ['Log-scaled axis', 'Exponential-scaled axis'], active = active_status)
         log_axis.on_change('active',lambda attr, old, new : self.update_log(attr, old, new))
-
-        # log_status = self.get_log_status()
-        # log_info = Div(text = log_status)
 
         widgets_dict = {'x_varname': x_axis, 'y_varname': y_axis, 'is_log': log_axis}
         merged_dict = {**self.widgets_dict, **widgets_dict}
@@ -247,14 +267,6 @@ class Widgets:
         clusterlist, clusterlabel, active_prompt = self.get_cluster_list_prompt(active_cluster)
         if active_prompt in clusterlist:
             active_list.append(clusterlist.index(active_prompt))
-        # css = """
-        # <style>
-        # .custom-checkbox-group .bk-checkbox-button {
-        #     height: 100px;
-        # }
-        # </style>
-        # """
-        # curdoc().add_root(Div(text=css, render_as_text=True))
         cluster_checkbox = CheckboxGroup(
             labels = [''] * len(clusterlist),
             active = active_list,
