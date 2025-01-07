@@ -12,14 +12,14 @@ import data as dt
 try:
     from scpantheon.front_end import extensions_qt 
     from scpantheon.front_end.extensions_qt import get_extensions_path
-    from scpantheon.front_end import load_qt, save_qt
+    from scpantheon.front_end import save_qt
     from scpantheon.front_end.data_qt import dir, extract_online_packages, read_path
 
 except:
     check_call(['pip3', 'install', "scpantheon"])
     from scpantheon.front_end import extensions_qt 
     from scpantheon.front_end.extensions_qt import get_extensions_path
-    from scpantheon.front_end import  load_qt, save_qt
+    from scpantheon.front_end import save_qt
     from scpantheon.front_end.data_qt import dir, extract_online_packages, read_path
 
 
@@ -67,15 +67,12 @@ class Extension:
             else:
                 zip_file_url = Extension.widget_ext_dict['extension_url'].value
             Extension.widget_ext_dict['extension_url'].value = ''
-            check_code = load_qt.main()
-            if check_code == 'app closed':
-                extract_path = load_qt.get_load_path() + '/online_extension/'
-                print(extract_path)
-                self.extensions_path, _ = read_path(dir)
-                if zip_file_url:
-                    extract_online_packages(self.extensions_path, extract_path, zip_file_url)
-                else:
-                    extract_online_packages(self.extensions_path, extract_path)
+            extract_path = dir
+            self.extensions_path, _ = read_path(dir)
+            if zip_file_url:
+                extract_online_packages(self.extensions_path, extract_path, zip_file_url)
+            else:
+                extract_online_packages(self.extensions_path, extract_path)
             try:
                 self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
             except:
