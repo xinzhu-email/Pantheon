@@ -7,11 +7,11 @@ from bokeh.models import Button, TextInput, Div
 color_list = d3['Category20c'][20]
 sys.path.append(str(Path(__file__).resolve().parents[3]))
 from bokeh.layouts import row, column
-from Pantheon.scpantheon.widgets import Widgets
-from Pantheon.scpantheon.buttons import Widget_type, make_widget
+from scpantheon.widgets import Widgets
+from scpantheon.buttons import Widget_type, make_widget
 from bokeh.io import curdoc
-import data as dt
-import tabs as tb
+from scpantheon import data as dt
+from scpantheon import tabs as tb
 
 
 class Widgets_Ext(Widgets):

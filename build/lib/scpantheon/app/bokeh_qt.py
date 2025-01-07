@@ -12,7 +12,7 @@ import pkg_resources, subprocess
 try:
     version = pkg_resources.get_distribution("scpantheon").version
 except pkg_resources.DistributionNotFound:
-    subprocess.check_call(['pip', 'install', "scpantheon"])
+    subprocess.check_call(['pip3', 'install', "scpantheon"])
     version = pkg_resources.get_distribution("scpantheon").version
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -42,7 +42,7 @@ class Ui_Dialog(QWidget, object):
         url = "http://localhost:5006/"
         self.webEngineView.load(QUrl(url))
         self.layout.addWidget(self.webEngineView)
-
+        print("webengine widget added!")
 
         self.buttonBox = QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -57,13 +57,15 @@ class Ui_Dialog(QWidget, object):
 
 
     def loadPage(self):
-        # self.webEngineView.load(QUrl("http://baidu.com"))
-        Func = open("embed.html","w")
-        Func.write("<!doctype html>\n<html>\n<iframe src='http://localhost:5006/'\nname='thumbnails'\nframeborder='0'\nstyle='width: 100%; height: 2000px;'>\n</html>")
+        print("Load Page!")
+        self.webEngineView.load(QUrl("http://baidu.com"))
+        print("Load Page!")
+        '''Func = open("embed.html","w")
+        Func.write("<!doctype html>\n<html>\n<iframe src='http://localhost:5006/'\nname='thumbnails'\nframeborder='0'\nstyle='width: 100%; height: 1500px;'>\n</html>")
         Func.close()
         with open('embed.html', 'r') as f:
             html = f.read()
-            self.webEngineView.setHtml(html)
+            self.webEngineView.setHtml(html)'''
 
     '''def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate

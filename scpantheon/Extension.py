@@ -13,14 +13,14 @@ try:
     from scpantheon.front_end import extensions_qt 
     from scpantheon.front_end.extensions_qt import get_extensions_path
     from scpantheon.front_end import save_qt
-    from scpantheon.front_end.data_qt import dir, extract_online_packages, read_path
+    from scpantheon.front_end.data_qt import dir, extract_online_packages
 
 except:
     check_call(['pip3', 'install', "scpantheon"])
     from scpantheon.front_end import extensions_qt 
     from scpantheon.front_end.extensions_qt import get_extensions_path
     from scpantheon.front_end import save_qt
-    from scpantheon.front_end.data_qt import dir, extract_online_packages, read_path
+    from scpantheon.front_end.data_qt import dir, extract_online_packages
 
 
 class Extension:
@@ -68,7 +68,10 @@ class Extension:
                 zip_file_url = Extension.widget_ext_dict['extension_url'].value
             Extension.widget_ext_dict['extension_url'].value = ''
             extract_path = dir
-            self.extensions_path, _ = read_path(dir)
+            if not os.path.exists(os.path.join(dir, 'Pantheon-Extension')):
+                os.mkdir(os.path.join(dir, 'Pantheon-Extension'))
+            self.extensions_path = os.path.join(dir, 'Pantheon-Extension')
+            print("extension path:", self.extensions_path)
             if zip_file_url:
                 extract_online_packages(self.extensions_path, extract_path, zip_file_url)
             else:

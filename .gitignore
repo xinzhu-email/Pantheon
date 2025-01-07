@@ -5,3 +5,4 @@ scpantheon/data/
 build/
 dist/
 tests/
+*.pyc
