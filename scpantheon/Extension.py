@@ -62,7 +62,7 @@ class Extension:
         tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
         def load_online_extensions_callback(self):
             if Extension.widget_ext_dict['extension_url'].value == '':
-                print("Warning: default url as 'https://github.com/xinzhu-email/Pantheon/archive/refs/heads/main.zip'")
+                print("Warning: default url as 'https://github.com/xinzhu-email/Pantheon/archive/refs/heads/Extension.zip'")
                 zip_file_url = None
             else:
                 zip_file_url = Extension.widget_ext_dict['extension_url'].value
@@ -70,6 +70,7 @@ class Extension:
             check_code = load_qt.main()
             if check_code == 'app closed':
                 extract_path = load_qt.get_load_path() + '/online_extension/'
+                print(extract_path)
                 self.extensions_path, _ = read_path(dir)
                 if zip_file_url:
                     extract_online_packages(self.extensions_path, extract_path, zip_file_url)
