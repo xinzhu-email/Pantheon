@@ -1,8 +1,7 @@
-from bokeh.models import CheckboxGroup, AutocompleteInput, Select
+from bokeh.models import AutocompleteInput, Select
 from bokeh.layouts import row, column
 from bokeh.io import curdoc
 from widgets import Widgets
-import numpy as np
 import data as dt
 import tabs as tb
 

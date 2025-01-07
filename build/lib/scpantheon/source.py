@@ -1,7 +1,6 @@
 from bokeh.io import curdoc
 from bokeh.models import Div
 from Extension import Extension
-import data as dt
 
 def upload_callback():
     Extension()

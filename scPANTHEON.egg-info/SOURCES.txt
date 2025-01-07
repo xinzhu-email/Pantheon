@@ -442,6 +442,13 @@ scpantheon/ptheon.ico
 scpantheon/source.py
 scpantheon/tabs.py
 scpantheon/widgets.py
+scpantheon/__pycache__/Extension.cpython-311.pyc
+scpantheon/__pycache__/data.cpython-311.pyc
+scpantheon/__pycache__/hlwidgets.cpython-311.pyc
+scpantheon/__pycache__/myplot.cpython-311.pyc
+scpantheon/__pycache__/source.cpython-311.pyc
+scpantheon/__pycache__/tabs.cpython-311.pyc
+scpantheon/__pycache__/widgets.cpython-311.pyc
 scpantheon/app/__init__.py
 scpantheon/app/bokeh_qt.py
 scpantheon/data/ADT.csv
@@ -451,3 +458,5 @@ scpantheon/front_end/data_qt.py
 scpantheon/front_end/extensions_qt.py
 scpantheon/front_end/load_qt.py
 scpantheon/front_end/save_qt.py
+scpantheon/front_end/__pycache__/__init__.cpython-311.pyc
+scpantheon/front_end/__pycache__/data_qt.cpython-311.pyc

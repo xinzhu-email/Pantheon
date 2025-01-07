@@ -10,8 +10,8 @@ from bokeh.layouts import row, column
 from scpantheon.widgets import Widgets
 from scpantheon.buttons import Widget_type, make_widget
 from bokeh.io import curdoc
-from scpantheon import data as dt
-from scpantheon import tabs as tb
+import tabs as tb
+import data as dt
 
 
 class Widgets_Ext(Widgets):
@@ -99,3 +99,5 @@ class Widgets_Ext(Widgets):
         values = [self.widgets_dict[key] for key in pca_img_key if key in self.widgets_dict]
         layout_pca_img = column(values)
         self.layout = column([self.layout, row([layout_sccluster, layout_pca_img])])
+
+print(globals())

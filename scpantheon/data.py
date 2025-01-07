@@ -1,12 +1,9 @@
 import scanpy as sc
 import os
-import sys
-from pathlib import Path
 import pandas as pd
 import numpy as np
 from bokeh.palettes import d3
 from scipy.sparse import csr_matrix
-sys.path.append(str(Path(__file__).resolve().parents[1]))
 from scpantheon.front_end.data_qt import dir, read_path
 
 color_list = d3['Category20c'][20]

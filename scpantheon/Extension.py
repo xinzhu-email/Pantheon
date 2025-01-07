@@ -1,8 +1,8 @@
 from bokeh.models import Select, Button, TextInput
 from bokeh.layouts import column
 from bokeh.io import curdoc
-from widgets import Widgets
-from hlwidgets import Hlwidgets
+from scpantheon.widgets import Widgets
+from scpantheon.hlwidgets import Hlwidgets
 import os
 from subprocess import check_call
 import importlib
@@ -198,4 +198,3 @@ class Extension:
             tb.view_panel(tb.panel_dict, tb.ext_layout, tb.ext_widgets, tb.curpanel)
             tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
         curdoc().add_next_tick_callback(lambda : load_module_next(self))
-    
