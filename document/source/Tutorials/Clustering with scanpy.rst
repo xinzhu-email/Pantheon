@@ -1,2 +1,0 @@
-Clustering with scanpy
-======================
