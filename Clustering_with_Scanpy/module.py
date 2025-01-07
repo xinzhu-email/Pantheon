@@ -10,8 +10,8 @@ from bokeh.layouts import row, column
 from scpantheon.widgets import Widgets
 from scpantheon.buttons import Widget_type, make_widget
 from bokeh.io import curdoc
-from scpantheon import data as dt
-from scpantheon import tabs as tb
+import data as dt
+import tabs as tb
 
 
 class Widgets_Ext(Widgets):
