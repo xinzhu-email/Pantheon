@@ -156,20 +156,10 @@ class Ui_Dialog(QDialog, QWidget, object):
         Dialog.reject() 
 
 # extract online extension zip
-def extract_online_packages(extensions_path, extract_path, url: str | None ='https://github.com/xinzhu-email/Pantheon/archive/refs/heads/main.zip'):
+def extract_online_packages(extract_path, url: str | None ='https://github.com/xinzhu-email/Pantheon/archive/refs/heads/Extension.zip'):
+    print("extract_path:", extract_path)
     r = requests.get(url, stream=True) 
-    try:
-        z = zipfile.ZipFile(io.BytesIO(r.content))
-        z.extractall(extract_path)
-        print("get zip file")
-    except zipfile.BadZipFile:
-        try:
-            t = tarfile.open(fileobj=io.BytesIO(r.content), mode="r:gz")  
-            t.extractall(extract_path)
-            print("get tar file")
-        except tarfile.ReadError:
-            print("zip or tar file is needed")
-    
+
     # Find all the directory from new local extension that has module.py
     module_path_list = []
     def find_module(path):
@@ -186,26 +176,54 @@ def extract_online_packages(extensions_path, extract_path, url: str | None ='htt
                 # module_path_list.append(os.path.join(path, f))
         if flag: 
             module_path_list.append(path)
-
     find_module(extract_path)
     print('module path list:\n', module_path_list)
+    
+    try:
+        z = zipfile.ZipFile(io.BytesIO(r.content))
+        print("get zip file")
+        z_files = z.namelist()
+        z_modules = [name for name in z_files if name.endswith('module.py')]
+        for z_module in z_modules:
+            target_file = z_module
+            rel_target = os.path.dirname(os.path.dirname(target_file))
+            relative_path = os.path.relpath(target_file, rel_target)
+            file_pwd = os.path.join(extract_path, relative_path)
+            final_path = os.path.dirname(file_pwd)
+            print("final_path:", final_path)
+            with z.open(target_file) as file_in_zip:
+                if not os.path.exists(final_path):
+                    os.mkdir(final_path)
+                    with open(file_pwd, 'wb') as file_out:
+                        file_out.write(file_in_zip.read())
+            # print("relative_path", relative_path)
+            # z.extract(z_module, path = final_path)
+        
+    except zipfile.BadZipFile:
+        try:
+            t = tarfile.open(fileobj=io.BytesIO(r.content), mode="r:gz")  
+            t.extractall(extract_path)
+            print("get tar file")
+        except tarfile.ReadError:
+            print("zip or tar file is needed")
+
     # Copy all the extension module to extension path
     for module_directory in module_path_list:
         module_directory += '/'
         folder_name = os.path.basename(module_directory[:-1])
         try: 
-            shutil.copytree(module_directory, extensions_path+'/'+folder_name+'/')
+            shutil.copytree(module_directory, extract_path+'/'+folder_name+'/')
             print('Module', folder_name, 'added')
         except:
             print('Module', folder_name, 'already exists')
     print('Online packages download finished!')
-    auto_pip_install(extensions_path)
+    auto_pip_install(extract_path)
 
 # fetch every module from each module.py in extension folder
 def auto_pip_install(folder_path):
     try:
         all_imports = {'import': set(), 'from': set()}
-        for root, dirs, files in os.walk(folder_path):
+        for root, files in os.walk(folder_path):
             for file_name in files:
                 if file_name == 'module.py':
                     file_path = os.path.join(root, file_name)
@@ -276,25 +294,19 @@ def read_path(dir):
         new_extensions_path = e_file.readline()
         if(new_extensions_path == ''):
             new_extensions_path = dir + '/extensions'
-            new_extract_path = dir + '/online_extract'
             if not os.path.exists(new_extensions_path):
                 os.makedirs(new_extensions_path)
-            if not os.path.exists(new_extract_path):
-                os.makedirs(new_extract_path)
             write_msg('extensions_path', new_extensions_path)
-            extract_online_packages(new_extensions_path, new_extract_path)
+            extract_online_packages(new_extensions_path)
         e_file.close()
         # print('-======- e_path:', new_extensions_path)
     except:
         # self create extensions path and automatically download Default patheon extensions
         new_extensions_path = dir + '/extensions'
-        new_extract_path = dir + '/online_extract'
         if not os.path.exists(new_extensions_path):
             os.makedirs(new_extensions_path)
-        if not os.path.exists(new_extract_path):
-            os.makedirs(new_extract_path)
         write_msg('extensions_path', new_extensions_path)
-        extract_online_packages(new_extensions_path, new_extract_path)
+        extract_online_packages(new_extensions_path)
 
     try:
         d_file = open(dir + '/' + 'data_file.txt', 'r')

@@ -67,15 +67,14 @@ class Extension:
             else:
                 zip_file_url = Extension.widget_ext_dict['extension_url'].value
             Extension.widget_ext_dict['extension_url'].value = ''
-            extract_path = dir
-            if not os.path.exists(os.path.join(dir, 'Pantheon-Extension')):
-                os.mkdir(os.path.join(dir, 'Pantheon-Extension'))
-            self.extensions_path = os.path.join(dir, 'Pantheon-Extension')
+            if not os.path.exists(os.path.join(dir, 'extensions')):
+                os.mkdir(os.path.join(dir, 'extensions'))
+            self.extensions_path = os.path.join(dir, 'extensions')
             print("extension path:", self.extensions_path)
             if zip_file_url:
-                extract_online_packages(self.extensions_path, extract_path, zip_file_url)
+                extract_online_packages(self.extensions_path, zip_file_url)
             else:
-                extract_online_packages(self.extensions_path, extract_path)
+                extract_online_packages(self.extensions_path)
             try:
                 self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
             except:
