@@ -1,17 +1,17 @@
+# # -*- coding: utf-8 -*-
 import scanpy as sc
 import sys
 from bokeh.palettes import d3
 import base64
 from pathlib import Path
-from bokeh.models import Button, TextInput, Div
 color_list = d3['Category20c'][20]
 sys.path.append(str(Path(__file__).resolve().parents[3]))
 from bokeh.layouts import row, column
 from scpantheon.widgets import Widgets
 from scpantheon.buttons import Widget_type, make_widget
 from bokeh.io import curdoc
-import data as dt
 import tabs as tb
+import data as dt
 
 
 class Widgets_Ext(Widgets):
