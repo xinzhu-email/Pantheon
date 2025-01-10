@@ -264,7 +264,7 @@ def extract_online_packages(extract_path, url: str | None ='https://github.com/x
             print("zip or tar file is needed")
 
     module_path_list = []
-    find_module(module_path_list)
+    find_module(extract_path)
     print("Extensions list updated with modules:")
     for module_directory in module_path_list:
         module_directory += '/'

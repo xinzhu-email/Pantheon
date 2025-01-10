@@ -1,5 +1,7 @@
 import os, sys, io, ast, pkgutil, pkg_resources
 import subprocess
+import re
+import hashlib
 from PyQt5 import QtCore, QtGui
 # import mysql.connector
 from pathlib import Path
@@ -173,49 +175,101 @@ def extract_online_packages(extract_path, url: str | None ='https://github.com/x
         for f in files:
             if f == 'module.py':
                 flag = True
-                # module_path_list.append(os.path.join(path, f))
         if flag: 
             module_path_list.append(path)
     find_module(extract_path)
-    print('module path list:\n', module_path_list)
+
+    def get_md5(file_path):
+        md5 = hashlib.md5()
+        with open(file_path, 'rb') as f:
+            while True:
+                data = f.read(4096)
+                if not data:
+                    break
+                md5.update(data)
+        return md5.hexdigest()
     
-    try:
-        z = zipfile.ZipFile(io.BytesIO(r.content))
-        print("get zip file")
-        z_files = z.namelist()
-        z_modules = [name for name in z_files if name.endswith('module.py')]
-        for z_module in z_modules:
-            target_file = z_module
-            rel_target = os.path.dirname(os.path.dirname(target_file))
-            relative_path = os.path.relpath(target_file, rel_target)
-            file_pwd = os.path.join(extract_path, relative_path)
-            final_path = os.path.dirname(file_pwd)
-            print("final_path:", final_path)
+    max_versions = {}
+    pattern = re.compile(r'_(\d+)$')
+    for folder in module_path_list:
+        match = pattern.search(folder)
+        if match:
+            version = int(match.group(1))
+            prefix = os.path.basename(folder.rsplit('_', 1)[0])
+            if prefix not in max_versions or version > max_versions[prefix]:
+                max_versions[prefix] = version
+        elif os.path.basename(folder) not in max_versions:
+            prefix = os.path.basename(folder)
+            max_versions[prefix] = 0    
+    
+    def extract_module(target_file):
+        rel_target = os.path.dirname(os.path.dirname(target_file))
+        relative_path = os.path.relpath(target_file, rel_target)
+        module_name = os.path.dirname(relative_path)
+        if module_name not in max_versions.keys():
+            final_path = os.path.join(extract_path, module_name)
+            file_pwd = os.path.join(final_path, 'module.py')
             with z.open(target_file) as file_in_zip:
                 if not os.path.exists(final_path):
                     os.mkdir(final_path)
                     with open(file_pwd, 'wb') as file_out:
                         file_out.write(file_in_zip.read())
-            # print("relative_path", relative_path)
-            # z.extract(z_module, path = final_path)
+        else:
+            module_name_version = module_name + '_' + str(max_versions[module_name] + 1)
+            final_path = os.path.join(extract_path, module_name_version)
+            file_pwd = os.path.join(final_path, 'module.py')
+            with z.open(target_file) as file_in_zip:
+                if not os.path.exists(final_path):
+                    os.mkdir(final_path)
+                    with open(file_pwd, 'wb') as file_out:
+                        file_out.write(file_in_zip.read())
+            hash_new = get_md5(file_pwd)
+            pattern = re.compile(r'_(\d+)$')
+            for folder in module_path_list:
+                match = pattern.search(folder)
+                if match:
+                    version = int(match.group(1))
+                    prefix = os.path.basename(folder.rsplit('_', 1)[0])
+                    if prefix == module_name and version != max_versions[module_name] + 1:
+                        hash_local = get_md5(os.path.join(folder, 'module.py'))
+                        print("repeated local hash", hash_local, hash_new)
+                        if hash_local == hash_new:
+                            shutil.rmtree(final_path)
+                            print("New extension", module_name, "is the same as", os.path.basename(folder))
+                            return                    
+                elif max_versions[module_name] == 0 and os.path.basename(folder) == module_name:
+                    hash_local = get_md5(os.path.join(folder, 'module.py'))
+                    if hash_local == hash_new:
+                        shutil.rmtree(final_path)
+                        print("New extension", module_name, "is the same as", module_name)
+                        return            
+
+    try:
+        z = zipfile.ZipFile(io.BytesIO(r.content))
+        print("get zip file")
+        z_files = z.namelist()
+        z_modules = [name for name in z_files if name.endswith('module.py')]
+        for target_file in z_modules:
+            extract_module(target_file)
         
     except zipfile.BadZipFile:
         try:
             t = tarfile.open(fileobj=io.BytesIO(r.content), mode="r:gz")  
-            t.extractall(extract_path)
             print("get tar file")
+            t_files = t.getnames()
+            t_modules = [name for name in t_files if name.endswith('module.py')]
+            for target_file in t_modules:
+                extract_module(target_file)
         except tarfile.ReadError:
             print("zip or tar file is needed")
 
-    # Copy all the extension module to extension path
+    module_path_list = []
+    find_module(extract_path)
+    print("Extensions list updated with modules:")
     for module_directory in module_path_list:
         module_directory += '/'
         folder_name = os.path.basename(module_directory[:-1])
-        try: 
-            shutil.copytree(module_directory, extract_path+'/'+folder_name+'/')
-            print('Module', folder_name, 'added')
-        except:
-            print('Module', folder_name, 'already exists')
+        print(folder_name)
     print('Online packages download finished!')
     auto_pip_install(extract_path)
 

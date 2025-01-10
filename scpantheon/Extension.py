@@ -10,15 +10,15 @@ import sys
 import tabs as tb
 import data as dt
 try:
-    from scpantheon.front_end import extensions_qt 
-    from scpantheon.front_end.extensions_qt import get_extensions_path
+    # from scpantheon.front_end import extensions_qt 
+    # from scpantheon.front_end.extensions_qt import get_extensions_path
     from scpantheon.front_end import save_qt
     from scpantheon.front_end.data_qt import dir, extract_online_packages
 
 except:
     check_call(['pip3', 'install', "scpantheon"])
-    from scpantheon.front_end import extensions_qt 
-    from scpantheon.front_end.extensions_qt import get_extensions_path
+    # from scpantheon.front_end import extensions_qt 
+    # from scpantheon.front_end.extensions_qt import get_extensions_path
     from scpantheon.front_end import save_qt
     from scpantheon.front_end.data_qt import dir, extract_online_packages
 
@@ -86,12 +86,15 @@ class Extension:
     
     def load_local_extensions(self):
         tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
-        def load_local_extensions_callback(self):    
-            check_code = extensions_qt.main()
-            if check_code == 'app closed':
-                self.extensions_path = get_extensions_path(dir) + '/'
+        def load_local_extensions_callback(self): 
+            self.extensions_path = self.get_extensions_path(dir) + '/'
+            if not os.path.exists(self.extensions_path):
+                os.mkdir(self.extensions_path)
             try:
-                self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
+                if os.listdir(self.extensions_path) == []:
+                    self.extensions_list = ['No local extensions']
+                else:
+                    self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
             except:
                 self.extensions_list = ['Please load an extension']
             self.init_modules()
@@ -151,7 +154,13 @@ class Extension:
             f.close()
         file = open(path, 'w')
         file.write(msg)
-        file.close() 
+        file.close()
+
+    def get_extensions_path(self, dir):
+        e_file = open(dir + '/' + 'extensions_path.txt', 'r')
+        e_path = e_file.readline()
+        e_file.close()
+        return e_path  
 
     def update_layout(self):
         tb.ext_layout = column(list(Extension.widget_ext_dict.values()))
