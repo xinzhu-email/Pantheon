@@ -1,9 +1,9 @@
+# # -*- coding: utf-8 -*-
 import scanpy as sc
 import sys
 from bokeh.palettes import d3
 import base64
 from pathlib import Path
-from bokeh.models import Button, TextInput, Div
 color_list = d3['Category20c'][20]
 sys.path.append(str(Path(__file__).resolve().parents[3]))
 from bokeh.layouts import row, column
@@ -99,5 +99,3 @@ class Widgets_Ext(Widgets):
         values = [self.widgets_dict[key] for key in pca_img_key if key in self.widgets_dict]
         layout_pca_img = column(values)
         self.layout = column([self.layout, row([layout_sccluster, layout_pca_img])])
-
-print(globals())
