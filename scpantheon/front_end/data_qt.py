@@ -200,7 +200,7 @@ def extract_online_packages(extract_path, url: str | None ='https://github.com/x
                 max_versions[prefix] = version
         elif os.path.basename(folder) not in max_versions:
             prefix = os.path.basename(folder)
-            max_versions[prefix] = 0       
+            max_versions[prefix] = 0    
     
     def extract_module(target_file):
         rel_target = os.path.dirname(os.path.dirname(target_file))
@@ -214,38 +214,35 @@ def extract_online_packages(extract_path, url: str | None ='https://github.com/x
                     os.mkdir(final_path)
                     with open(file_pwd, 'wb') as file_out:
                         file_out.write(file_in_zip.read())
-                        print("New extension", module_name, "added")
         else:
-            hash_new = get_md5(target_file)
-            module_version = -1
-            pattern = re.compile(r'_(\d+)$')
-            for folder in module_path_list:
-                match = pattern.search(folder)
-                if match:
-                    prefix = os.path.basename(folder.rsplit('_', 1)[0])
-                    if prefix == module_name:
-                        hash_local = get_md5(os.path.join(folder, 'module.py'))
-                        print("repeated local hash", hash_local, hash_new)
-                        if hash_local == hash_new:
-                            print("New extension", module_name, "is the same as", os.path.basename(folder))
-                            return                    
-                elif module_version == -1 and os.path.basename(folder.rsplit('_', 1)[0]) == module_name:
-                    hash_local = get_md5(os.path.join(folder, 'module.py'))
-                    print("repeated local hash", hash_local, os.path.basename(folder))
-                    print(hash_local, hash_new)
-                    if hash_local == hash_new:
-                        print("New extension", module_name, "is the same as", module_name)
-                        return
             module_name_version = module_name + '_' + str(max_versions[module_name] + 1)
             final_path = os.path.join(extract_path, module_name_version)
             file_pwd = os.path.join(final_path, 'module.py')
-            print("final_path:", final_path)
             with z.open(target_file) as file_in_zip:
                 if not os.path.exists(final_path):
                     os.mkdir(final_path)
                     with open(file_pwd, 'wb') as file_out:
                         file_out.write(file_in_zip.read())
-                        print("New extension", module_name_version, "added")
+            hash_new = get_md5(file_pwd)
+            pattern = re.compile(r'_(\d+)$')
+            for folder in module_path_list:
+                match = pattern.search(folder)
+                if match:
+                    version = int(match.group(1))
+                    prefix = os.path.basename(folder.rsplit('_', 1)[0])
+                    if prefix == module_name and version != max_versions[module_name] + 1:
+                        hash_local = get_md5(os.path.join(folder, 'module.py'))
+                        print("repeated local hash", hash_local, hash_new)
+                        if hash_local == hash_new:
+                            shutil.rmtree(final_path)
+                            print("New extension", module_name, "is the same as", os.path.basename(folder))
+                            return                    
+                elif max_versions[module_name] == 0 and os.path.basename(folder) == module_name:
+                    hash_local = get_md5(os.path.join(folder, 'module.py'))
+                    if hash_local == hash_new:
+                        shutil.rmtree(final_path)
+                        print("New extension", module_name, "is the same as", module_name)
+                        return            
 
     try:
         z = zipfile.ZipFile(io.BytesIO(r.content))
@@ -258,20 +255,21 @@ def extract_online_packages(extract_path, url: str | None ='https://github.com/x
     except zipfile.BadZipFile:
         try:
             t = tarfile.open(fileobj=io.BytesIO(r.content), mode="r:gz")  
-            t.extractall(extract_path)
             print("get tar file")
+            t_files = t.getnames()
+            t_modules = [name for name in t_files if name.endswith('module.py')]
+            for target_file in t_modules:
+                extract_module(target_file)
         except tarfile.ReadError:
             print("zip or tar file is needed")
 
-    # Copy all the extension module to extension path
+    module_path_list = []
+    find_module(module_path_list)
+    print("Extensions list updated with modules:")
     for module_directory in module_path_list:
         module_directory += '/'
         folder_name = os.path.basename(module_directory[:-1])
-        try: 
-            shutil.copytree(module_directory, extract_path+'/'+folder_name+'/')
-            print('Module', folder_name, 'added')
-        except:
-            print('Module', folder_name, 'already exists')
+        print(folder_name)
     print('Online packages download finished!')
     auto_pip_install(extract_path)
 
