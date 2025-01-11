@@ -56,20 +56,20 @@ class Ui_Dialog(QWidget, object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
 
-    def loadPage(self):
-        print("Load Page!")
-        self.webEngineView.load(QUrl("http://baidu.com"))
-        print("Load Page!")
-        '''Func = open("embed.html","w")
-        Func.write("<!doctype html>\n<html>\n<iframe src='http://localhost:5006/'\nname='thumbnails'\nframeborder='0'\nstyle='width: 100%; height: 1500px;'>\n</html>")
-        Func.close()
-        with open('embed.html', 'r') as f:
-            html = f.read()
-            self.webEngineView.setHtml(html)'''
+    # def loadPage(self):
+    #     print("Load Page!")
+    #     self.webEngineView.load(QUrl("http://baidu.com"))
+    #     print("Load Page!")
+    #     '''Func = open("embed.html","w")
+    #     Func.write("<!doctype html>\n<html>\n<iframe src='http://localhost:5006/'\nname='thumbnails'\nframeborder='0'\nstyle='width: 100%; height: 1500px;'>\n</html>")
+    #     Func.close()
+    #     with open('embed.html', 'r') as f:
+    #         html = f.read()
+    #         self.webEngineView.setHtml(html)'''
 
-    '''def retranslateUi(self, Dialog):
-        _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("ScPantheon", "ScPantheon"))'''
+    # '''def retranslateUi(self, Dialog):
+    #     _translate = QtCore.QCoreApplication.translate
+    #     Dialog.setWindowTitle(_translate("ScPantheon", "ScPantheon"))'''
 
 
 def main():

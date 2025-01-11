@@ -33,8 +33,11 @@ class Extension:
         cls.widget_ext_dict: dict("Button_names" : Buttons), record whole info of 4 buttons
         """
         print("source")
-        self.extensions_path = None
-        self.extensions_list = ['Please load an extension']
+        self.extensions_path = self.get_extensions_path(dir)
+        if os.listdir(self.extensions_path) == []:
+            self.extensions_list = ['No local extensions']
+        else:
+            self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
         self.init_widget_ext()
         self.init_modules()
         self.init_save()
@@ -75,10 +78,10 @@ class Extension:
                 extract_online_packages(self.extensions_path, zip_file_url)
             else:
                 extract_online_packages(self.extensions_path)
-            try:
+            if os.listdir(self.extensions_path) == []:
+                self.extensions_list = ['No local extensions']
+            else:
                 self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
-            except:
-                self.extensions_list = ['Please load an extension']
             self.init_modules()
             self.update_layout()
             tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
@@ -90,13 +93,10 @@ class Extension:
             self.extensions_path = self.get_extensions_path(dir) + '/'
             if not os.path.exists(self.extensions_path):
                 os.mkdir(self.extensions_path)
-            try:
-                if os.listdir(self.extensions_path) == []:
-                    self.extensions_list = ['No local extensions']
-                else:
-                    self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
-            except:
-                self.extensions_list = ['Please load an extension']
+            if os.listdir(self.extensions_path) == []:
+                self.extensions_list = ['No local extensions']
+            else:
+                self.extensions_list = ['Please select a function'] + os.listdir(self.extensions_path)
             self.init_modules()
             self.update_layout()
             tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
@@ -173,7 +173,7 @@ class Extension:
         tb.mute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
         def load_module_next(self):
             module_name = Extension.widget_ext_dict['modules_select'].value
-            if module_name == 'Please select a function' or module_name == 'Please load an extension':
+            if module_name == 'Please select a function' or module_name == 'No local extensions':
                 module_name = 'gene relations'
             if module_name == tb.curpanel:
                 return

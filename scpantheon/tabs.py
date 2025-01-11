@@ -18,7 +18,10 @@ def view_panel(
     for key in panel_dict:
         key_layout = panel_dict[key].layout
         panel_layout = ext_layout
-        layout = column(key_layout, panel_layout)
+        if key == 'gene relations':
+            layout = column(key_layout, panel_layout)
+        else:
+            layout = key_layout
         panel_creat = Panel (child = layout, title = key)
         tab_list.append (panel_creat)
     panel_view = Tabs(tabs = tab_list)

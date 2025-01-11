@@ -160,7 +160,11 @@ class Ui_Dialog(QDialog, QWidget, object):
 # extract online extension zip
 def extract_online_packages(extract_path, url: str | None ='https://github.com/xinzhu-email/Pantheon/archive/refs/heads/Extension.zip'):
     print("extract_path:", extract_path)
-    r = requests.get(url, stream=True) 
+    try:
+        r = requests.get(url, stream=True)
+    except Exception as e:
+        print(e, "response aborted")
+        return 
 
     # Find all the directory from new local extension that has module.py
     module_path_list = []
