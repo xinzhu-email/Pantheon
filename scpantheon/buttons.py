@@ -1,11 +1,16 @@
 from enum import Enum
-from bokeh.models import Select, Button, CheckboxGroup, TextInput, ColorPicker, AutocompleteInput, ColumnDataSource, Div
+from bokeh.models import Select, Button, CheckboxGroup, TextInput, AutocompleteInput, Div, RadioButtonGroup, Slider, RangeSlider
 
 class Widget_type(Enum):
-    button = 'button'
-    text = 'text'
-    select = 'select'
-    checkboxgroup = 'checkboxgroup'
+    button = Button
+    text = TextInput
+    select = Select
+    checkBoxGroup = CheckboxGroup
+    autocompleteInput = AutocompleteInput
+    div = Div
+    radioButtonGroup = RadioButtonGroup
+    slider = Slider
+    rangeSlider = RangeSlider
 
 def make_widget(
     widget_type: Widget_type, 
@@ -19,6 +24,31 @@ def make_widget(
     | "text" | / | "title", "value" |
     """
     match widget_type:
+        case Widget_type.div:
+            necessary_param = ['text']
+            core_param = ['disable_math']
+            all_param = ['align', 'aspect_ratio', 'background', 'css_classes', 'default_size', 'disable_math', 
+                'disabled', 'height', 'height_policy', 'js_event_callbacks', 'js_property_callbacks', 'margin', 
+                'max_height', 'max_width', 'min_height', 'min_width', 'name', 'render_as_text', 'sizing_mode', 
+                'style', 'subscribed_events', 'syncable', 'tags', 'text', 'visible', 'width', 'width_policy']
+        case Widget_type.slider:
+            necessary_param = ['start', 'end', 'value', 'step']
+            core_param = ['title', 'format', 'orientation', 'show_value', 'bar_color']
+            all_param = ['align', 'aspect_ratio', 'background', 'bar_color', 'css_classes', 'default_size', 
+                'direction', 'disabled', 'end', 'format', 'height', 'height_policy', 'js_event_callbacks', 
+                'js_property_callbacks', 'margin', 'max_height', 'max_width', 'min_height', 'min_width', 
+                'name', 'orientation', 'show_value', 'sizing_mode', 'start', 'step', 'subscribed_events', 
+                'syncable', 'tags', 'title', 'tooltips', 'value', 'value_throttled', 'visible', 'width', 
+                'width_policy']
+        case Widget_type.rangeSlider:
+            necessary_param = ['start', 'end', 'value', 'step']
+            core_param = ['title', 'format', 'orientation', 'show_value', 'bar_color']
+            all_param = ['align', 'aspect_ratio', 'background', 'bar_color', 'css_classes', 'default_size', 
+                'direction', 'disabled', 'end', 'format', 'height', 'height_policy', 'js_event_callbacks', 
+                'js_property_callbacks', 'margin', 'max_height', 'max_width', 'min_height', 'min_width', 
+                'name', 'orientation', 'show_value', 'sizing_mode', 'start', 'step', 'subscribed_events', 
+                'syncable', 'tags', 'title', 'tooltips', 'value', 'value_throttled', 'visible', 'width', 
+                'width_policy']
         case  Widget_type.button:
             necessary_param = []
             core_param = ['label']
@@ -26,8 +56,6 @@ def make_widget(
                 'disabled', 'height', 'height_policy', 'icon', 'js_event_callbacks', 'js_property_callbacks',
                 'label', 'margin', 'max_height', 'max_width', 'min_height', 'min_width', 'name', 
                 'sizing_mode', 'subscribed_events', 'syncable', 'tags', 'visible', 'width', 'width_policy']
-            kwargs = examine_args(widget_type, necessary_param, core_param, all_param, **kwargs)
-            return Button(**kwargs)
         case  Widget_type.text:
             necessary_param = []
             core_param = ['title', 'value']
@@ -36,8 +64,6 @@ def make_widget(
                 'margin', 'max_height', 'max_length', 'max_width', 'min_height', 'min_width', 'name',
                 'placeholder', 'sizing_mode', 'subscribed_events', 'syncable', 'tags', 'title', 'value',
                 'value_input', 'visible', 'width', 'width_policy']
-            kwargs = examine_args(widget_type, necessary_param, core_param, all_param, **kwargs)
-            return TextInput(**kwargs)
         case Widget_type.select:
             necessary_param = []
             core_param = ['options']
@@ -45,17 +71,23 @@ def make_widget(
                 'height', 'height_policy', 'js_event_callbacks', 'js_property_callbacks', 'margin', 
                 'max_height', 'max_width', 'min_height', 'min_width', 'name', 'options', 'sizing_mode', 
                 'subscribed_events', 'syncable', 'tags', 'title', 'value', 'visible', 'width', 'width_policy']
-            kwargs = examine_args(widget_type, necessary_param, core_param, all_param, **kwargs)
-            return Select(**kwargs)
-        case Widget_type.checkboxgroup:
+        case Widget_type.checkBoxGroup:
             necessary_param = ['labels']
             core_param = ['active']
             all_param = ['active', 'align', 'aspect_ratio', 'background', 'css_classes', 'default_size', 
                 'disabled', 'height', 'height_policy', 'inline', 'js_event_callbacks', 'js_property_callbacks',
                 'labels', 'margin', 'max_height', 'max_width', 'min_height', 'min_width', 'name', 'sizing_mode',
                 'subscribed_events', 'syncable', 'tags', 'visible', 'width', 'width_policy']
-            kwargs = examine_args(widget_type, necessary_param, core_param, all_param, **kwargs)
-            return CheckboxGroup(**kwargs)
+        case Widget_type.radioButtonGroup:
+            necessary_param = ['labels']
+            core_param = ['active']
+            all_param = ['active', 'align', 'aspect_ratio', 'background', 'button_type', 'css_classes', 
+                'default_size', 'disabled', 'height', 'height_policy', 'js_event_callbacks', 
+                'js_property_callbacks', 'labels', 'margin', 'max_height', 'max_width', 'min_height', 'min_width',
+                'name', 'orientation', 'sizing_mode', 'subscribed_events', 'syncable', 'tags', 'visible', 'width', 
+                'width_policy']
+    kwargs = examine_args(widget_type, necessary_param, core_param, all_param, **kwargs)
+    return widget_type.value(**kwargs)
 
 def examine_args(
     widget_type: Widget_type,
