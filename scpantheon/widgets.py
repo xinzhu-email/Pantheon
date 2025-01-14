@@ -67,7 +67,7 @@ class Widgets:
         else:
             self.init_map(new_map)
             self.init_coordinates()
-        if not new_group:
+        if not new_group or new_group in list(dt.adata.uns['group_dict'].keys()):
             self.update_plot_source_by_coords()
             self.update_plot_source_by_colors()
             self.plot_coordinates()

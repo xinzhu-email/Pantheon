@@ -13,7 +13,8 @@ class Widget_type(Enum):
     rangeSlider = RangeSlider
 
 def make_widget(
-    widget_type: Widget_type, 
+    widget_type: Widget_type,
+    func = None, 
     **kwargs
 ):
     """
@@ -49,6 +50,7 @@ def make_widget(
                 'name', 'orientation', 'show_value', 'sizing_mode', 'start', 'step', 'subscribed_events', 
                 'syncable', 'tags', 'title', 'tooltips', 'value', 'value_throttled', 'visible', 'width', 
                 'width_policy']
+            
         case  Widget_type.button:
             necessary_param = []
             core_param = ['label']
@@ -56,6 +58,8 @@ def make_widget(
                 'disabled', 'height', 'height_policy', 'icon', 'js_event_callbacks', 'js_property_callbacks',
                 'label', 'margin', 'max_height', 'max_width', 'min_height', 'min_width', 'name', 
                 'sizing_mode', 'subscribed_events', 'syncable', 'tags', 'visible', 'width', 'width_policy']
+            event_name = 'button_click'
+
         case  Widget_type.text:
             necessary_param = []
             core_param = ['title', 'value']
@@ -87,7 +91,10 @@ def make_widget(
                 'name', 'orientation', 'sizing_mode', 'subscribed_events', 'syncable', 'tags', 'visible', 'width', 
                 'width_policy']
     kwargs = examine_args(widget_type, necessary_param, core_param, all_param, **kwargs)
-    return widget_type.value(**kwargs)
+    widget = widget_type.value(**kwargs)
+    if func and event_name:
+        widget.on_event(event_name, func)
+    return widget
 
 def examine_args(
     widget_type: Widget_type,
