@@ -6,4 +6,5 @@ Tutorials
 
    Navigation/contents
    Preprocessing with scanpy
-   Clustering with sacnpy
+   Clustering with scanpy
+   Customizing extensions

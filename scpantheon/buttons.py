@@ -17,13 +17,6 @@ def make_widget(
     func = None, 
     **kwargs
 ):
-    """
-    kwargs: widget_type == "button"
-    | widget_type | necessary params | core params |
-    |--|--|--|
-    | "button" | / | "label" |
-    | "text" | / | "title", "value" |
-    """
     match widget_type:
         case Widget_type.div:
             necessary_param = ['text']

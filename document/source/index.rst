@@ -12,6 +12,8 @@ Welcome to Pantheon's documentation!
    Introduction
    Download
    Tutorials/index
+   scpantheon
+   modules
 
 
 
