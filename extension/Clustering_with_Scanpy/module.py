@@ -84,17 +84,17 @@ class Widgets_Ext(Widgets):
             """
             If you want to display other widgets, it's also feasible to define customed widgets here
             """
-            # sc.pl.pca_variance_ratio(dt.adata, log=True)
-            # sc.pl.pca_variance_ratio(dt.adata, log=True, save='.png')
-            # img = open('figures/pca_variance_ratio.png','rb')
-            # img_base64 = base64.b64encode(img.read()).decode("ascii")
-            # pca_img = Div(text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
-            # widgets_dict = {'pca_img': pca_img}
-            # self.widgets_dict = {**self.widgets_dict, **widgets_dict}
+            sc.pl.pca_variance_ratio(dt.adata, log=True)
+            sc.pl.pca_variance_ratio(dt.adata, log=True, save='.png')
+            img = open('figures/pca_variance_ratio.png','rb')
+            img_base64 = base64.b64encode(img.read()).decode("ascii")
+            pca_img = make_widget(Widget_type.div, text="<img src=\'data:image/png;base64,{}\'/>".format(img_base64))
+            widgets_dict = {'pca_img': pca_img}
+            self.widgets_dict = {**self.widgets_dict, **widgets_dict}
             """
             Update visualization and format dt.adata back to the way scPantheon supports. 
             If only a certain obsm is modified, update with parameter new_obsm and corresponding obsm name
-            If multiple obsm is modified, update with new_obsm = "all". It can also be omitted and update the whole anndata by default.
+            If multiple obsm is modified, update with new_obsm = None. It updates the whole anndata by default.
             If a new coordinate system is generated, update with parameter new_map and corresponding obsm name
             If a new group is generated, update with parameter new_group and corresponding obs name
             """
@@ -107,7 +107,7 @@ class Widgets_Ext(Widgets):
         def next_neighborhood_graph(self, neighbor_num, pc_num, resolution):
             
             """
-            Th type of dt.adata.obsm is pd.Dataframe by default. 
+            The type of dt.adata.obsm is pd.Dataframe by default. 
             Format dt.adata.obsm if necessary in following operations
             """
             dt.adata.obsm['X_pca'] = dt.adata.obsm['X_pca'].to_numpy()
@@ -120,7 +120,7 @@ class Widgets_Ext(Widgets):
             """
             Update visualization and format dt.adata back to the way scPantheon supports. 
             If only a certain obsm is modified, update with parameter new_obsm and corresponding obsm name
-            If multiple obsm is modified, update with new_obsm = "all". It can also be omitted and update the whole anndata by default.
+            If multiple obsm is modified, update with new_obsm = None. It updates the whole anndata by default.
             If a new coordinate system is generated, update with parameter new_map and corresponding obsm name
             If a new group is generated, update with parameter new_group and corresponding obs name
             """

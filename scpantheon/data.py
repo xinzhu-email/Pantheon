@@ -33,6 +33,16 @@ def init_data(
         adata: sc.AnnData,
         obsm_only: str | None = None
     ):
+    """
+    Initialize or format data for the application.
+
+    :param adata: The AnnData object to initialize.
+    :type adata: sc.AnnData
+    :param obsm_only: The specific obsm key to initialize. Defaults to None. If obsm_only is the name of an obsm, the function only updates given obsm, or it updates all obsms.
+    :type obsm_only: str | None
+    :return: None
+    :rtype: None
+    """
     if not obsm_only:
         adata.uns['sparse'] = []
         if type(adata.X) == csr_matrix:
@@ -76,8 +86,16 @@ def init_uns(
         index = ['unassigned'],
         columns = ['color', 'cell_num']
     )
-    for col in empty_group_uns.columns:
-        empty_group_uns[col] = empty_group_uns[col].astype('category')
+    empty_group_uns['color'] = pd.Categorical(
+        ['unassigned'],
+        categories = color_list,
+        ordered = True
+    )
+    empty_group_uns['cell_num'] = pd.Categorical(
+        [adata.n_obs],
+        categories = [adata.n_obs],
+        ordered = True
+    )
     if adata.n_obs not in empty_group_uns['cell_num'].cat.categories:
         empty_group_uns['cell_num'] = empty_group_uns['cell_num'].cat.add_categories([adata.n_obs])
     empty_group_uns.loc['unassigned', 'cell_num'] = adata.n_obs
@@ -102,7 +120,7 @@ def update_data_obsm(
     adata: sc.AnnData,
     obsm_key: str | None = None    
 ):
-    if not obsm_key or obsm_key == 'all':
+    if not obsm_key:
         for obsm_key in adata.obsm_keys():
             if type(adata.obsm[obsm_key]) == csr_matrix:
                 adata.uns['sparse'].append(obsm_key)
@@ -114,6 +132,9 @@ def update_data_obsm(
                     columns = column_names
                 )
     else:
+        if obsm_key not in adata.obs_keys():
+            print("Warning: no obsm", obsm_key)
+            return
         if type(adata.obsm[obsm_key]) == csr_matrix:
             adata.uns['sparse'].append(obsm_key)
         if type(adata.obsm[obsm_key]) == np.ndarray:
@@ -169,5 +190,9 @@ def update_uns_hybrid_obs(
         for clustername in clusterlist:
             if clustername not in uns_clusterlist:
                 adata.uns['group_dict'][group_name] = adata.uns['group_dict'][group_name].drop(clustername)
+    if adata.uns['group_dict'][group_name]['color'].dtype != 'category':
+        adata.uns['group_dict'][group_name]['color'] = pd.Categorical(adata.uns['group_dict'][group_name]['color'])
+    if adata.uns['group_dict'][group_name]['cell_num'].dtype != 'category':
+        adata.uns['group_dict'][group_name]['cell_num'] = pd.Categorical(adata.uns['group_dict'][group_name]['cell_num'])
 
 adata = None

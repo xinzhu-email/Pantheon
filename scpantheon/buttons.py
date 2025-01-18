@@ -76,6 +76,16 @@ def make_widget(
                 'subscribed_events', 'syncable', 'tags', 'title', 'value', 'visible', 'width', 'width_policy']
             change_name = 'value'
         
+        case Widget_type.autocompleteInput:
+            necessary_param = ['completions']
+            core_param = ['min_characters', 'case_sensitive', 'value', 'title']
+            all_param = ['align', 'aspect_ratio', 'background', 'case_sensitive', 'completions', 'css_classes',
+                'default_size', 'disabled', 'height', 'height_policy', 'js_event_callbacks', 
+                'js_property_callbacks', 'margin', 'max_height', 'max_length', 'max_width', 'min_characters', 
+                'min_height', 'min_width', 'name', 'placeholder', 'restrict', 'sizing_mode', 'subscribed_events', 
+                'syncable', 'tags', 'title', 'value', 'value_input', 'visible', 'width', 'width_policy']
+            change_name = 'value'
+
         case Widget_type.checkBoxGroup:
             necessary_param = ['labels']
             core_param = ['active']
