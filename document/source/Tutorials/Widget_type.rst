@@ -127,6 +127,8 @@ Widget_type
             we only support change events triggered whenever <enter> is pressed by parameter text.value. You are not recommended to use the parameter ``value_input``
 
     .. class:: Widget_type.checkBoxGroup
+        
+        An alias of `CheckboxGroup <https://docs.bokeh.org/en/2.4.3/docs/reference/models/widgets/groups.html?highlight=checkboxgroup#checkboxgroup>`_
 
         .. data:: labels
             :type: List
@@ -142,8 +144,10 @@ Widget_type
 
             **core_param**, the list of indices of selected check boxes.
 
-    .. class:: Widget_type.radioButtonGroup = `RadioButtonGroup <https://docs.bokeh.org/en/2.4.3/docs/reference/models/widgets/groups.html#radiobuttongroup>`_
+    .. class:: Widget_type.radioButtonGroup
 
+        An alias of `RadioButtonGroup <https://docs.bokeh.org/en/2.4.3/docs/reference/models/widgets/groups.html#radiobuttongroup>`_
+        
         .. data:: labels
             :type: List
             :value: []
@@ -156,12 +160,156 @@ Widget_type
             :value: []
             :canonical: radioButtonGroup.active
 
-            **core_param**, the index of the selected radio box, or None if nothing is selected..
+            **core_param**, the index of the selected radio box, or None if nothing is selected.
 
 
     .. class:: Widget_type.slider
         
-        :class: `RadioButtonGroup <https://docs.bokeh.org/en/2.4.3/docs/reference/models/widgets/groups.html#radiobuttongroup>`_
+        An alias of `Slider <https://docs.bokeh.org/en/2.4.3/docs/reference/models/widgets/sliders.html?highlight=slider#slider>`_
+        
+        .. data:: start
+            :type: NonNullable(Float)
+            :value: Undefined
+            :canonical: Slider.start
 
+            **necessary_param**, the minimum allowable value.
+
+        .. data:: end
+            :type: NonNullable(Float)
+            :value: Undefined
+            :canonical: Slider.end
+
+            **necessary_param**, the maximum allowable value.
+        
+        .. data:: value
+            :type: NonNullable(Float)
+            :value: Undefined
+            :canonical: Slider.value
+
+            **necessary_param**, Initial or selected value.
+
+        .. data:: step
+            :type: Float
+            :value: 1
+            :canonical: Slider.active
+
+            **necessary_param**, the step between consecutive values.
+        
+        .. data:: title
+            :type: Nullable(String)
+            :value: ''
+            :canonical: Slider.title
+
+            **core_param**, label of Slider.
+        
+        .. data:: show_value
+            :type: bool
+            :value: True
+            :canonical: Slider.show_value
+
+            **core_param**, whether or not show slider's value..
+
+        .. data:: format
+            :type: Either(String, Instance(TickFormatter))
+            :value: '0[.]00'
+            :canonical: Slider.format
+
+            **core_param**, format of value display.
+        
+        .. data:: orientation
+            :type: Enum(Enumeration(horizontal, vertical))
+            :value: 'horizontal'
+            :canonical: Slider.orientation
+
+            **core_param**, orient the slider either horizontally (default) or vertically.
+        
+        .. data:: bar_color
+            :type: Color
+            :value: '#e6e6e6'
+            :canonical: Slider.bar_color
+
+            **core_param**, color of the range bar. Acceptable values are:
+
+            .. line-block::
+                1. any of the named CSS colors, e.g ``'green'``, ``'indigo'``
+                2. RGB(A) hex strings, e.g., ``'#FF0000'``, ``'#44444444'``
+                3. CSS4 color strings, e.g., ``'rgba(255, 0, 127, 0.6)'``, ``'rgb(0 127 0 / 1.0)'``, or ``'hsl(60deg 100% 50% / 1.0)'``
+                4. a 3-tuple of integers (r, g, b) between 0 and 255
+                5. a 4-tuple of (r, g, b, a) where r, g, b are integers between 0 and 255, and a is between 0 and 1
+                6. a 32-bit unsigned integer using the 0xRRGGBBAA byte order pattern.
+                 
+    
     .. class:: Widget_type.rangeSlider
 
+        An alias of `RangeSlider <https://docs.bokeh.org/en/2.4.3/docs/reference/models/widgets/sliders.html?highlight=slider#rangeslider>`_
+        
+        .. data:: start
+            :type: NonNullable(Float)
+            :value: Undefined
+            :canonical: rangeSlider.start
+
+            **necessary_param**, the minimum allowable value.
+
+        .. data:: end
+            :type: NonNullable(Float)
+            :value: Undefined
+            :canonical: rangeSlider.end
+
+            **necessary_param**, the maximum allowable value.
+        
+        .. data:: value
+            :type: NonNullable(Tuple(Float, Float))
+            :value: Undefined
+            :canonical: rangeSlider.value
+
+            **necessary_param**, Initial or selected range.
+
+        .. data:: step
+            :type: Float
+            :value: 1
+            :canonical: rangeSlider.active
+
+            **necessary_param**, the step between consecutive values.
+        
+        .. data:: title
+            :type: Nullable(String)
+            :value: ''
+            :canonical: rangeSlider.title
+
+            **core_param**, label of rangeSlider.
+        
+        .. data:: show_value
+            :type: bool
+            :value: True
+            :canonical: rangeSlider.show_value
+
+            **core_param**, whether or not show slider's value..
+
+        .. data:: format
+            :type: Either(String, Instance(TickFormatter))
+            :value: '0[.]00'
+            :canonical: rangeSlider.format
+
+            **core_param**, format of value display.
+        
+        .. data:: orientation
+            :type: Enum(Enumeration(horizontal, vertical))
+            :value: 'horizontal'
+            :canonical: rangeSlider.orientation
+
+            **core_param**, orient the slider either horizontally (default) or vertically.
+        
+        .. data:: bar_color
+            :type: Color
+            :value: '#e6e6e6'
+            :canonical: rangeSlider.bar_color
+
+            **core_param**, color of the range bar. Acceptable values are:
+
+            .. line-block::
+                1. any of the named CSS colors, e.g ``'green'``, ``'indigo'``
+                2. RGB(A) hex strings, e.g., ``'#FF0000'``, ``'#44444444'``
+                3. CSS4 color strings, e.g., ``'rgba(255, 0, 127, 0.6)'``, ``'rgb(0 127 0 / 1.0)'``, or ``'hsl(60deg 100% 50% / 1.0)'``
+                4. a 3-tuple of integers (r, g, b) between 0 and 255
+                5. a 4-tuple of (r, g, b, a) where r, g, b are integers between 0 and 255, and a is between 0 and 1
+                6. a 32-bit unsigned integer using the 0xRRGGBBAA byte order pattern.
