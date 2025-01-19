@@ -36,8 +36,8 @@ def init_data(
     """
     Initialize or format data for the application.
 
-    :param adata: The AnnData object to initialize.
-    :type adata: sc.AnnData
+    :param adata: The AnnData object to initialize, namely dt.adata in extension modules.
+    :type adata: AnnData
     :param obsm_only: The specific obsm key to initialize. Defaults to None. If obsm_only is the name of an obsm, the function only updates given obsm, or it updates all obsms.
     :type obsm_only: str | None
     :return: None
@@ -132,7 +132,7 @@ def update_data_obsm(
                     columns = column_names
                 )
     else:
-        if obsm_key not in adata.obs_keys():
+        if obsm_key not in adata.obsm_keys():
             print("Warning: no obsm", obsm_key)
             return
         if type(adata.obsm[obsm_key]) == csr_matrix:

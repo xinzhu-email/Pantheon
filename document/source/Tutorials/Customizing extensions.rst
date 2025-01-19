@@ -187,8 +187,10 @@ Customizing Extensions
               ``'name'``, ``'orientation'``, ``'show_value'``, ``'sizing_mode'``, ``'start'``, ``'step'``, ``'subscribed_events'``,\ 
               ``'syncable'``, ``'tags'``, ``'title'``, ``'tooltips'``, ``'value'``, ``'value_throttled'``, ``'visible'``, ``'width'``,\         
 
-    .. note:: To see detailed examples of all widget_types, please refer to ..
-        To learn more about original bokeh widgets, please refer to ..
+    .. note:: 
+        .. line-block::
+            To see detailed examples of all widget_types, please refer to :ref:`Widget_type`
+            To learn more about original bokeh widgets, please refer to `bokeh <https://bokeh.org/>`_
 
     .. code-block:: python
         :caption: example in Clustering_with_Scanpy
@@ -233,7 +235,7 @@ Customizing Extensions
     .. tip::
         .. line-block::
             For more information of parameters in ``dt.init_data``, please refer to :py:func:`~scpantheon.data.init_data`
-            For more information of parameters in ``update_tab``, please refer to :func:`scpantheon.widgets.update_tab`
+            For more information of parameters in ``update_tab``, please refer to :py:func:`~scpantheon.widgets.Widgets.update_tab`
 
     .. code-block:: python
         :caption: callback example 1: ``pca``

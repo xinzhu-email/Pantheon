@@ -15,88 +15,10 @@ setup.py
 zhijiang.png
 document/Makefile
 document/make.bat
-document/build/.buildinfo
-document/build/Download.html
-document/build/Introduction.html
-document/build/genindex.html
-document/build/index.html
-document/build/objects.inv
-document/build/search.html
-document/build/searchindex.js
-document/build/.doctrees/Download.doctree
-document/build/.doctrees/Introduction.doctree
-document/build/.doctrees/environment.pickle
-document/build/.doctrees/index.doctree
-document/build/.doctrees/Tutorials/Clustering with sacnpy.doctree
-document/build/.doctrees/Tutorials/Preprocessing with scanpy.doctree
-document/build/.doctrees/Tutorials/index.doctree
-document/build/.doctrees/Tutorials/Navigation/contents.doctree
-document/build/Tutorials/Clustering with sacnpy.html
-document/build/Tutorials/Preprocessing with scanpy.html
-document/build/Tutorials/index.html
-document/build/Tutorials/Navigation/contents.html
-document/build/_images/1overview0.png
-document/build/_images/2mouse1.png
-document/build/_images/3map.png
-document/build/_images/3map1.png
-document/build/_images/3map2.png
-document/build/_images/3map3.png
-document/build/_images/4plot1.png
-document/build/_images/5group1.png
-document/build/_images/6cluster1.png
-document/build/_images/6cluster2.png
-document/build/_images/7hlg1.png
-document/build/_sources/Download.rst.txt
-document/build/_sources/Introduction.rst.txt
-document/build/_sources/index.rst.txt
-document/build/_sources/Tutorials/Clustering with sacnpy.rst.txt
-document/build/_sources/Tutorials/Preprocessing with scanpy.rst.txt
-document/build/_sources/Tutorials/index.rst.txt
-document/build/_sources/Tutorials/Navigation/contents.rst.txt
-document/build/_static/_sphinx_javascript_frameworks_compat.js
-document/build/_static/alabaster.css
-document/build/_static/basic.css
-document/build/_static/custom.css
-document/build/_static/doctools.js
-document/build/_static/documentation_options.js
-document/build/_static/file.png
-document/build/_static/jquery-3.6.0.js
-document/build/_static/jquery.js
-document/build/_static/language_data.js
-document/build/_static/minus.png
-document/build/_static/plus.png
-document/build/_static/pygments.css
-document/build/_static/searchtools.js
-document/build/_static/underscore-1.13.1.js
-document/build/_static/underscore.js
-document/build/_static/css/badge_only.css
-document/build/_static/css/theme.css
-document/build/_static/css/fonts/Roboto-Slab-Bold.woff
-document/build/_static/css/fonts/Roboto-Slab-Bold.woff2
-document/build/_static/css/fonts/Roboto-Slab-Regular.woff
-document/build/_static/css/fonts/Roboto-Slab-Regular.woff2
-document/build/_static/css/fonts/fontawesome-webfont.eot
-document/build/_static/css/fonts/fontawesome-webfont.svg
-document/build/_static/css/fonts/fontawesome-webfont.ttf
-document/build/_static/css/fonts/fontawesome-webfont.woff
-document/build/_static/css/fonts/fontawesome-webfont.woff2
-document/build/_static/css/fonts/lato-bold-italic.woff
-document/build/_static/css/fonts/lato-bold-italic.woff2
-document/build/_static/css/fonts/lato-bold.woff
-document/build/_static/css/fonts/lato-bold.woff2
-document/build/_static/css/fonts/lato-normal-italic.woff
-document/build/_static/css/fonts/lato-normal-italic.woff2
-document/build/_static/css/fonts/lato-normal.woff
-document/build/_static/css/fonts/lato-normal.woff2
-document/build/_static/js/badge_only.js
-document/build/_static/js/html5shiv-printshiv.min.js
-document/build/_static/js/html5shiv.min.js
-document/build/_static/js/theme.js
 document/build/doctrees/Download.doctree
 document/build/doctrees/Introduction.doctree
 document/build/doctrees/environment.pickle
 document/build/doctrees/index.doctree
-document/build/doctrees/Tutorials/Clustering with sacnpy.doctree
 document/build/doctrees/Tutorials/Preprocessing with scanpy.doctree
 document/build/doctrees/Tutorials/index.doctree
 document/build/doctrees/Tutorials/Navigation/contents.doctree
@@ -108,7 +30,6 @@ document/build/html/index.html
 document/build/html/objects.inv
 document/build/html/search.html
 document/build/html/searchindex.js
-document/build/html/Tutorials/Clustering with sacnpy.html
 document/build/html/Tutorials/Preprocessing with scanpy.html
 document/build/html/Tutorials/index.html
 document/build/html/Tutorials/Navigation/contents.html
@@ -126,7 +47,6 @@ document/build/html/_images/7hlg1.png
 document/build/html/_sources/Download.rst.txt
 document/build/html/_sources/Introduction.rst.txt
 document/build/html/_sources/index.rst.txt
-document/build/html/_sources/Tutorials/Clustering with sacnpy.rst.txt
 document/build/html/_sources/Tutorials/Preprocessing with scanpy.rst.txt
 document/build/html/_sources/Tutorials/index.rst.txt
 document/build/html/_sources/Tutorials/Navigation/contents.rst.txt
@@ -135,15 +55,12 @@ document/build/html/_static/basic.css
 document/build/html/_static/doctools.js
 document/build/html/_static/documentation_options.js
 document/build/html/_static/file.png
-document/build/html/_static/jquery-3.6.0.js
 document/build/html/_static/jquery.js
 document/build/html/_static/language_data.js
 document/build/html/_static/minus.png
 document/build/html/_static/plus.png
 document/build/html/_static/pygments.css
 document/build/html/_static/searchtools.js
-document/build/html/_static/underscore-1.13.1.js
-document/build/html/_static/underscore.js
 document/build/html/_static/css/badge_only.css
 document/build/html/_static/css/theme.css
 document/build/html/_static/css/fonts/Roboto-Slab-Bold.woff
@@ -164,15 +81,17 @@ document/build/html/_static/css/fonts/lato-normal-italic.woff2
 document/build/html/_static/css/fonts/lato-normal.woff
 document/build/html/_static/css/fonts/lato-normal.woff2
 document/build/html/_static/js/badge_only.js
-document/build/html/_static/js/html5shiv-printshiv.min.js
-document/build/html/_static/js/html5shiv.min.js
 document/build/html/_static/js/theme.js
 document/source/Download.rst
 document/source/Introduction.rst
 document/source/conf.py
 document/source/index.rst
-document/source/Tutorials/Clustering with sacnpy.rst
+document/source/modules.rst
+document/source/scpantheon.app.rst
+document/source/scpantheon.front_end.rst
+document/source/scpantheon.rst
 document/source/Tutorials/Clustering with scanpy.rst
+document/source/Tutorials/Customizing extensions.rst
 document/source/Tutorials/Preprocessing with scanpy.rst
 document/source/Tutorials/index.rst
 document/source/Tutorials/Navigation/contents.rst

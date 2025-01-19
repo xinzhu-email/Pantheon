@@ -98,7 +98,7 @@ class Widgets_Ext(Widgets):
             If a new coordinate system is generated, update with parameter new_map and corresponding obsm name
             If a new group is generated, update with parameter new_group and corresponding obs name
             """
-            super().update_tab(new_map = 'X_pca' )
+            super().update_tab(new_obsm = 'X_pca', new_map = 'X_pca' )
             tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets)
         curdoc().add_next_tick_callback(lambda: next_pca(self))
 

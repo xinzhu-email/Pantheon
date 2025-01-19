@@ -2,12 +2,12 @@ from enum import Enum
 from bokeh.models import Select, Button, CheckboxGroup, TextInput, AutocompleteInput, Div, RadioButtonGroup, Slider, RangeSlider
 
 class Widget_type(Enum):
-    button = Button
-    text = TextInput
-    select = Select
-    checkBoxGroup = CheckboxGroup
-    autocompleteInput = AutocompleteInput
     div = Div
+    text = TextInput
+    button = Button
+    select = Select
+    autocompleteInput = AutocompleteInput
+    checkBoxGroup = CheckboxGroup
     radioButtonGroup = RadioButtonGroup
     slider = Slider
     rangeSlider = RangeSlider

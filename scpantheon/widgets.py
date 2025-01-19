@@ -58,6 +58,17 @@ class Widgets:
         new_map: str | None = None,
         new_group: str | None = None,
         ):
+        """
+        update visualization of a tab according to ``dt.adata``
+         
+        :param new_obsm: The key of newly generated or updated obsm that needs to be formatted to pandas Dataframe required by scPantheon. Defaults to None. 
+        :type new_obsm: str | None
+        :param new_map: The name of the new map to be added for visualization. Defaults to None.
+        :type new_map: str | None
+        :param new_group: The name of the new map to be added for visualization. Defaults to None.
+        :type new_group: str | None
+        :return: None
+        """
         if not new_obsm:
             pass
         else:
@@ -951,8 +962,6 @@ class Widgets:
             varnames = dt.adata.obsm[choose_map].columns.tolist()
             if (x_varname in varnames) and (y_varname in varnames):
                 if choose_map in dt.adata.uns['sparse']:
-                    # x_list = dt.adata.obsm[choose_map](dt.adata.var_names.tolist().index(x_varname)).toarray().flatten() # wrong
-                    # y_list = dt.adata.obsm[choose_map](dt.adata.var_names.tolist().index(y_varname)).toarray().flatten()
                     print("Fatal: sparse matrix in obsm not supported ")
                 else: 
                     x_list = dt.adata.obsm[choose_map][x_varname].tolist()
