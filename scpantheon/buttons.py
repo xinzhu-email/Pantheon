@@ -25,6 +25,8 @@ def make_widget(
                 'disabled', 'height', 'height_policy', 'js_event_callbacks', 'js_property_callbacks', 'margin', 
                 'max_height', 'max_width', 'min_height', 'min_width', 'name', 'render_as_text', 'sizing_mode', 
                 'style', 'subscribed_events', 'syncable', 'tags', 'text', 'visible', 'width', 'width_policy']
+            event_name = None
+            change_name = None
 
         case Widget_type.slider:
             necessary_param = ['start', 'end', 'value', 'step']
@@ -35,6 +37,7 @@ def make_widget(
                 'name', 'orientation', 'show_value', 'sizing_mode', 'start', 'step', 'subscribed_events', 
                 'syncable', 'tags', 'title', 'tooltips', 'value', 'value_throttled', 'visible', 'width', 
                 'width_policy']
+            event_name = None
             change_name = 'value'
         
         case Widget_type.rangeSlider:
@@ -46,6 +49,7 @@ def make_widget(
                 'name', 'orientation', 'show_value', 'sizing_mode', 'start', 'step', 'subscribed_events', 
                 'syncable', 'tags', 'title', 'tooltips', 'value', 'value_throttled', 'visible', 'width', 
                 'width_policy']
+            event_name = None
             change_name = 'value'
 
         case  Widget_type.button:
@@ -56,6 +60,7 @@ def make_widget(
                 'label', 'margin', 'max_height', 'max_width', 'min_height', 'min_width', 'name', 
                 'sizing_mode', 'subscribed_events', 'syncable', 'tags', 'visible', 'width', 'width_policy']
             event_name = 'button_click'
+            change_name = None
 
         case  Widget_type.text:
             necessary_param = []
@@ -66,6 +71,7 @@ def make_widget(
                 'placeholder', 'sizing_mode', 'subscribed_events', 'syncable', 'tags', 'title', 'value',
                 'value_input', 'visible', 'width', 'width_policy']
             change_name = 'value'
+            event_name = None
             
         case Widget_type.select:
             necessary_param = ['options', 'value']
@@ -75,6 +81,7 @@ def make_widget(
                 'max_height', 'max_width', 'min_height', 'min_width', 'name', 'options', 'sizing_mode', 
                 'subscribed_events', 'syncable', 'tags', 'title', 'value', 'visible', 'width', 'width_policy']
             change_name = 'value'
+            event_name = None
         
         case Widget_type.autocompleteInput:
             necessary_param = ['completions']
@@ -85,6 +92,7 @@ def make_widget(
                 'min_height', 'min_width', 'name', 'placeholder', 'restrict', 'sizing_mode', 'subscribed_events', 
                 'syncable', 'tags', 'title', 'value', 'value_input', 'visible', 'width', 'width_policy']
             change_name = 'value'
+            event_name = None 
 
         case Widget_type.checkBoxGroup:
             necessary_param = ['labels']
@@ -94,6 +102,7 @@ def make_widget(
                 'labels', 'margin', 'max_height', 'max_width', 'min_height', 'min_width', 'name', 'sizing_mode',
                 'subscribed_events', 'syncable', 'tags', 'visible', 'width', 'width_policy']
             change_name = 'active'
+            event_name = None
         
         case Widget_type.radioButtonGroup:
             necessary_param = ['labels']
@@ -104,12 +113,14 @@ def make_widget(
                 'name', 'orientation', 'sizing_mode', 'subscribed_events', 'syncable', 'tags', 'visible', 'width', 
                 'width_policy']
             change_name = 'active'
+            event_name = None
 
     kwargs = examine_args(widget_type, necessary_param, core_param, all_param, **kwargs)
     widget = widget_type.value(**kwargs)
     if func and event_name:
         widget.on_event(event_name, func)
     elif func and change_name:
+        func = lambda attr, old, new: func
         widget.on_change(change_name, func)
     return widget
 

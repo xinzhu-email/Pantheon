@@ -6,9 +6,12 @@ Customizing Extensions
     * In Windows:
     * In linux: ``.local/share/scpantheon/0.6.0.0/extensions``
     * In MacOS:
-* Steps:
 
-  1. Create a directory under the default path
+Steps
+-----
+
+1. Create directory under the default path
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   .. code-block:: bash
     :caption: eg: ``Clustering_with_Scanpy`` as your extensions name  
@@ -16,7 +19,8 @@ Customizing Extensions
       mkdir Clustering_with_Scanpy
       touch Clustering_with_Scanpy/module.py
 
-  2. In ``module.py`` just created, import modules:
+2. In ``module.py`` import modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   .. code-block:: python
 
@@ -31,7 +35,8 @@ Customizing Extensions
       import scanpy as sc
       import base64
 
-  3. Create class ``Widget_Ext(Widget)``
+3. Create class ``Widget_Ext(Widget)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    
     .. note:: Don't change the name of the class.
 
@@ -40,7 +45,8 @@ Customizing Extensions
         :undoc-members:
         :show-inheritance:
         
-    * ``__init__``
+``__init__``
+************
 
     .. code-block:: python
 
@@ -53,7 +59,8 @@ Customizing Extensions
       
     .. note:: You don't need to change anything in this ``__init__`` function.
     
-    * ``init_extension``
+``init_extension``
+******************
 
     In this function, customize the initial tab in the visualization of your method by defining widgets and arranging it into a layout.
     scPantheon is based on bokeh, however, you don't need to learn bokeh from scratch.
@@ -187,7 +194,7 @@ Customizing Extensions
               ``'name'``, ``'orientation'``, ``'show_value'``, ``'sizing_mode'``, ``'start'``, ``'step'``, ``'subscribed_events'``,\ 
               ``'syncable'``, ``'tags'``, ``'title'``, ``'tooltips'``, ``'value'``, ``'value_throttled'``, ``'visible'``, ``'width'``,\         
 
-    .. note:: 
+    .. tip:: 
         .. line-block::
             To see detailed examples of all widget_types, please refer to :ref:`Widget_type`
             To learn more about original bokeh widgets, please refer to `bokeh <https://bokeh.org/>`_
@@ -224,7 +231,8 @@ Customizing Extensions
         }
         self.widgets_dict = {**self.widgets_dict, **widgets_dict}
 
-    * callback functions
+callback functions
+******************
      
     .. note::
         1. Callback functions are designed to be asynchronous for safety. Don't modify the framework, but feel free to add parameters.
@@ -289,7 +297,8 @@ Customizing Extensions
                 tb.unmute_global(tb.panel_dict, tb.curpanel, tb.ext_widgets) # Don't modify this
             curdoc().add_next_tick_callback(lambda: next_neighborhood_graph(self, neighbor_num, pc_num, resolution)) 
 
-    * create layout
+create layout
+*************
      
     .. code-block:: python
 

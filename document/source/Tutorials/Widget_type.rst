@@ -22,6 +22,20 @@ Widget_type
             :canonical: div.disable_math
             
             **core_param**, whether the contents should not be processed as TeX/LaTeX input.
+        
+        .. code-block:: python
+            :caption: ``Widget_type.div`` example
+            
+            from bokeh.io import show # for quick testing, not necessary in scPantheon extension
+            from scpantheon.buttons import Widget_type, make_widget
+            Div_wid = make_widget(
+                Widget_type.div,
+                text = '\( e^{i\pi} + 1 = 0 \)', 
+                disable_math = False
+                )
+            show(Div_wid)
+
+        .. image:: image/Div.png
 
     .. class:: Widget_type.text
 
@@ -45,6 +59,21 @@ Widget_type
         .. note::
             Although bokeh also provides parameter ``value_input`` that corresponds with change events triggered whenever any update happens (i.e. on every keypress), 
             we only support change events triggered whenever <enter> is pressed by parameter text.value. You are not recommended to use the parameter ``value_input``
+        
+        .. code-block:: python
+            :caption: ``Widget_type.text`` example
+            
+            from bokeh.io import show # for quick testing, not necessary in scPantheon extension
+            from scpantheon.buttons import Widget_type, make_widget
+            args_text = {
+                'value': 'aaa',
+                'title': "TextInput",
+                }
+            def callback():
+                pass
+            TextInput_wid = make_widget(Widget_type.text, callback, **args_text)
+
+        .. image:: image/TextInput.png
 
     .. class:: Widget_type.button
 
@@ -125,6 +154,24 @@ Widget_type
         .. note::
             Although bokeh also provides parameter ``value_input`` that corresponds with change events triggered whenever any update happens (i.e. on every keypress), 
             we only support change events triggered whenever <enter> is pressed by parameter text.value. You are not recommended to use the parameter ``value_input``
+
+        .. code-block:: python
+            :caption: ``Widget_type.autocompleteInput`` example
+
+            from bokeh.io import show # for quick testing, not necessary in scPantheon extension
+            from scpantheon.buttons import Widget_type, make_widget
+            args = {
+                'completions': ['aaa', 'aab', 'vafg'],
+                'value': 'aaa',
+                'min_characters': 1,
+                'case_sensitive': True,
+                'title': "AutocompleteInput",
+                }
+            def callback():
+                pass
+            autocompleteInput_wid = make_widget(Widget_type.autocompleteInput, callback, **args)
+
+        .. image:: image/AutocompleteInput.png
 
     .. class:: Widget_type.checkBoxGroup
         
@@ -307,9 +354,9 @@ Widget_type
             **core_param**, color of the range bar. Acceptable values are:
 
             .. line-block::
-                1. any of the named CSS colors, e.g ``'green'``, ``'indigo'``
-                2. RGB(A) hex strings, e.g., ``'#FF0000'``, ``'#44444444'``
-                3. CSS4 color strings, e.g., ``'rgba(255, 0, 127, 0.6)'``, ``'rgb(0 127 0 / 1.0)'``, or ``'hsl(60deg 100% 50% / 1.0)'``
-                4. a 3-tuple of integers (r, g, b) between 0 and 255
-                5. a 4-tuple of (r, g, b, a) where r, g, b are integers between 0 and 255, and a is between 0 and 1
-                6. a 32-bit unsigned integer using the 0xRRGGBBAA byte order pattern.
+                7. any of the named CSS colors, e.g ``'green'``, ``'indigo'``
+                8. RGB(A) hex strings, e.g., ``'#FF0000'``, ``'#44444444'``
+                9. CSS4 color strings, e.g., ``'rgba(255, 0, 127, 0.6)'``, ``'rgb(0 127 0 / 1.0)'``, or ``'hsl(60deg 100% 50% / 1.0)'``
+                10. a 3-tuple of integers (r, g, b) between 0 and 255
+                11. a 4-tuple of (r, g, b, a) where r, g, b are integers between 0 and 255, and a is between 0 and 1
+                12. a 32-bit unsigned integer using the 0xRRGGBBAA byte order pattern.

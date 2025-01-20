@@ -93,6 +93,7 @@ document/source/scpantheon.rst
 document/source/Tutorials/Clustering with scanpy.rst
 document/source/Tutorials/Customizing extensions.rst
 document/source/Tutorials/Preprocessing with scanpy.rst
+document/source/Tutorials/Widget_type.rst
 document/source/Tutorials/index.rst
 document/source/Tutorials/Navigation/contents.rst
 document/source/Tutorials/Navigation/image/1overview0.png
