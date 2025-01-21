@@ -33,7 +33,7 @@ Widget_type
                 text = '\( e^{i\pi} + 1 = 0 \)', 
                 disable_math = False
                 )
-            show(Div_wid)
+            show(Div_wid) # for quick testing, not necessary in scPantheon extension
 
         .. image:: image/Div.png
 
@@ -72,6 +72,7 @@ Widget_type
             def callback():
                 pass
             TextInput_wid = make_widget(Widget_type.text, callback, **args_text)
+            show(TextInput_wid) # for quick testing, not necessary in scPantheon extension
 
         .. image:: image/TextInput.png
 
@@ -85,6 +86,18 @@ Widget_type
             :canonical: button.label
 
             **core_param**, the text label for the button to display.
+
+        .. code-block:: python
+            :caption: ``Widget_type.button`` example
+            
+            from bokeh.io import show # for quick testing, not necessary in scPantheon extension
+            from scpantheon.buttons import Widget_type, make_widget
+            def callback():
+                pass
+            Button_wid = make_widget(Widget_type.button, callback, label = "This is a button")
+            show(Button_wid) # for quick testing, not necessary in scPantheon extension
+
+        .. image:: image/Button.png
 
     .. class:: Widget_type.select
 
@@ -110,6 +123,23 @@ Widget_type
             :canonical: select.title
 
             **core_param**, widget's label to display.
+        
+        .. code-block:: python
+            :caption: ``Widget_type.select`` example
+            
+            from bokeh.io import show # for quick testing, not necessary in scPantheon extension
+            from scpantheon.buttons import Widget_type, make_widget
+            args_sel = {
+                'options': ['aaa', 'bbb', 'ccc'],
+                'value': 'aaa',
+                'title': 'Select Example'
+            }
+            def callback():
+                pass
+            Select_wid = make_widget(Widget_type.select, callback, **args_sel)
+            show(Select_wid) # for quick testing, not necessary in scPantheon extension
+            
+        .. image:: image/Select.png
 
     .. class:: Widget_type.autocompleteInput
 
@@ -170,6 +200,7 @@ Widget_type
             def callback():
                 pass
             autocompleteInput_wid = make_widget(Widget_type.autocompleteInput, callback, **args)
+            show(autocompleteInput_wid) # for quick testing, not necessary in scPantheon extension
 
         .. image:: image/AutocompleteInput.png
 
@@ -190,6 +221,23 @@ Widget_type
             :canonical: checkBoxGroup.active
 
             **core_param**, the list of indices of selected check boxes.
+        
+        .. code-block:: python
+            :caption: ``Widget_type.checkBoxGroup`` example
+
+            from bokeh.io import show # for quick testing, not necessary in scPantheon extension
+            from scpantheon.buttons import Widget_type, make_widget
+            def callback():
+                pass
+            CheckboxGroup_wid = make_widget(
+                Widget_type.checkBoxGroup,
+                callback,
+                labels = ['option_1', 'option_2', 'option_3'],
+                active = [0, 2] 
+            )
+            show(CheckboxGroup_wid) # for quick testing, not necessary in scPantheon extension
+
+        .. image:: image/CheckboxGroup.png
 
     .. class:: Widget_type.radioButtonGroup
 
@@ -204,11 +252,27 @@ Widget_type
 
         .. data:: active
             :type: Nullable(Int)
-            :value: []
+            :value: None
             :canonical: radioButtonGroup.active
 
             **core_param**, the index of the selected radio box, or None if nothing is selected.
 
+        .. code-block:: python
+            :caption: ``Widget_type.radioButtonGroup`` example
+
+            from bokeh.io import show # for quick testing, not necessary in scPantheon extension
+            from scpantheon.buttons import Widget_type, make_widget
+            def callback():
+                pass
+            RadioButtonGroup_wid = make_widget(
+                Widget_type.radioButtonGroup,
+                callback,
+                labels = ['option_1', 'option_2', 'option_3'],
+                active = 1
+            )
+            show(RadioButtonGroup_wid) # for quick testing, not necessary in scPantheon extension
+
+        .. image:: image/RadioButtonGroup.png
 
     .. class:: Widget_type.slider
         
@@ -276,15 +340,36 @@ Widget_type
             :canonical: Slider.bar_color
 
             **core_param**, color of the range bar. Acceptable values are:
+            
+            1. any of the named CSS colors, e.g ``'green'``, ``'indigo'``
+            2. RGB(A) hex strings, e.g., ``'#FF0000'``, ``'#44444444'``
+            3. CSS4 color strings, e.g., ``'rgba(255, 0, 127, 0.6)'``, ``'rgb(0 127 0 / 1.0)'``, or ``'hsl(60deg 100% 50% / 1.0)'``
+            4. a 3-tuple of integers (r, g, b) between 0 and 255
+            5. a 4-tuple of (r, g, b, a) where r, g, b are integers between 0 and 255, and a is between 0 and 1
+            6. a 32-bit unsigned integer using the 0xRRGGBBAA byte order pattern.
 
-            .. line-block::
-                1. any of the named CSS colors, e.g ``'green'``, ``'indigo'``
-                2. RGB(A) hex strings, e.g., ``'#FF0000'``, ``'#44444444'``
-                3. CSS4 color strings, e.g., ``'rgba(255, 0, 127, 0.6)'``, ``'rgb(0 127 0 / 1.0)'``, or ``'hsl(60deg 100% 50% / 1.0)'``
-                4. a 3-tuple of integers (r, g, b) between 0 and 255
-                5. a 4-tuple of (r, g, b, a) where r, g, b are integers between 0 and 255, and a is between 0 and 1
-                6. a 32-bit unsigned integer using the 0xRRGGBBAA byte order pattern.
-                 
+        .. code-block:: python
+            :caption: ``Widget_type.slider`` example
+
+            from bokeh.io import show # for quick testing, not necessary in scPantheon extension
+            from scpantheon.buttons import Widget_type, make_widget
+            args_slider = {
+                'start':0,
+                'end':10,
+                'value':5,
+                'step':0.1,
+                'title': "Slider value",
+                'orientation':"horizontal",
+                'show_value':True,
+                "format":"0.0000",
+                'bar_color': '#4caf50',
+                }
+            def callback():
+                pass
+            Slider_wid = make_widget(Widget_type.slider, callback, **args_slider)
+            show(Slider_wid) # for quick testing, not necessary in scPantheon extension
+
+        .. image:: image/Slider.png         
     
     .. class:: Widget_type.rangeSlider
 
@@ -352,11 +437,33 @@ Widget_type
             :canonical: rangeSlider.bar_color
 
             **core_param**, color of the range bar. Acceptable values are:
+            
+            1. any of the named CSS colors, e.g ``'green'``, ``'indigo'``
+            2. RGB(A) hex strings, e.g., ``'#FF0000'``, ``'#44444444'``
+            3. CSS4 color strings, e.g., ``'rgba(255, 0, 127, 0.6)'``, ``'rgb(0 127 0 / 1.0)'``, or ``'hsl(60deg 100% 50% / 1.0)'``
+            4. a 3-tuple of integers (r, g, b) between 0 and 255
+            5. a 4-tuple of (r, g, b, a) where r, g, b are integers between 0 and 255, and a is between 0 and 1
+            6. a 32-bit unsigned integer using the 0xRRGGBBAA byte order pattern.
 
-            .. line-block::
-                7. any of the named CSS colors, e.g ``'green'``, ``'indigo'``
-                8. RGB(A) hex strings, e.g., ``'#FF0000'``, ``'#44444444'``
-                9. CSS4 color strings, e.g., ``'rgba(255, 0, 127, 0.6)'``, ``'rgb(0 127 0 / 1.0)'``, or ``'hsl(60deg 100% 50% / 1.0)'``
-                10. a 3-tuple of integers (r, g, b) between 0 and 255
-                11. a 4-tuple of (r, g, b, a) where r, g, b are integers between 0 and 255, and a is between 0 and 1
-                12. a 32-bit unsigned integer using the 0xRRGGBBAA byte order pattern.
+        .. code-block:: python
+            :caption: ``Widget_type.rangeSlider`` example
+
+            from bokeh.io import show # for quick testing, not necessary in scPantheon extension
+            from scpantheon.buttons import Widget_type, make_widget
+            args_Rangeslider = {
+                'start':0,
+                'end':10,
+                'value':(3,7),
+                'step':0.1,
+                'title': "Slider value",
+                'orientation':"horizontal",
+                'show_value':True,
+                "format":"0.0000",
+                'bar_color': 'green',
+                }
+            def callback():
+                pass
+            RangeSlider_wid = make_widget(Widget_type.rangeSlider, callback, **args_Rangeslider)
+            show(RangeSlider_wid) # for quick testing, not necessary in scPantheon extension
+
+        .. image:: image/RangeSlider.png
