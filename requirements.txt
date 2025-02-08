@@ -11,5 +11,3 @@ requests
 leidenalg
 tomas
 setuptools_scm
-sphinx
-sphinx-rtd-theme
