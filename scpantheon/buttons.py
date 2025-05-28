@@ -1,5 +1,8 @@
 from enum import Enum
 from bokeh.models import Select, Button, CheckboxGroup, TextInput, AutocompleteInput, Div, RadioButtonGroup, Slider, RangeSlider
+from bokeh.layouts import row, column
+import logging
+logger = logging.getLogger(__name__)
 
 class Widget_type(Enum):
     div = Div
@@ -11,6 +14,10 @@ class Widget_type(Enum):
     radioButtonGroup = RadioButtonGroup
     slider = Slider
     rangeSlider = RangeSlider
+
+class LayoutOrientation(Enum):
+    vertical = column
+    horizontal = row
 
 def make_widget(
     widget_type: Widget_type,
@@ -120,8 +127,7 @@ def make_widget(
     if func and event_name:
         widget.on_event(event_name, func)
     elif func and change_name:
-        func = lambda attr, old, new: func
-        widget.on_change(change_name, func)
+        widget.on_change(change_name, lambda attr, old, new: func())
     return widget
 
 def examine_args(
@@ -131,11 +137,35 @@ def examine_args(
     all_params: list,
     **kwargs
 ):
-    print("Note: For", widget_type, "parameters", necessary_params, "must be included to function.",
-        core_params, "are also useful, others may not be used")
+    # print("Note: For", widget_type, "parameters", necessary_params, "must be included to function.",
+        # core_params, "are also useful, others may not be used")
     filtered_kwargs = {key: value for key, value in kwargs.items() if key in all_params}
-    illegal_keys = set(kwargs.keys()) - set(filtered_kwargs.keys())
-    if illegal_keys != set():
-        print("Warning:", illegal_keys, "are not allowed parameters for", widget_type,
-            "and will be ignored. All parameters allowed for", widget_type, "are", all_params)
+    # illegal_keys = set(kwargs.keys()) - set(filtered_kwargs.keys())
+    # if illegal_keys != set():
+        # print("Warning:", illegal_keys, "are not allowed parameters for", widget_type,
+        #     "and will be ignored. All parameters allowed for", widget_type, "are", all_params)
     return filtered_kwargs
+
+def make_layout(
+        widgets: list | dict,
+        key_list: list[str] | None = None,
+        orientation: LayoutOrientation = LayoutOrientation.vertical,
+        width_param = None
+        ):
+    values = []
+    if isinstance(widgets, dict): 
+        if key_list == None:
+            key_list = list(widgets.keys())
+        for key in key_list:
+            if key in widgets: 
+                if width_param:
+                    widgets[key].width = width_param
+                values.append(widgets[key])
+    if isinstance(widgets, list):
+        if not key_list:
+            values = widgets
+        else:
+            print("Warning: widgets is a list input, parameter key_list is ignored.")
+    layout_cur = orientation(values)
+    return layout_cur
+    
