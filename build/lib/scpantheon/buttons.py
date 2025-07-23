@@ -1,0 +1,171 @@
+from enum import Enum
+from bokeh.models import Select, Button, CheckboxGroup, TextInput, AutocompleteInput, Div, RadioButtonGroup, Slider, RangeSlider
+from bokeh.layouts import row, column
+import logging
+logger = logging.getLogger(__name__)
+
+class Widget_type(Enum):
+    div = Div
+    text = TextInput
+    button = Button
+    select = Select
+    autocompleteInput = AutocompleteInput
+    checkBoxGroup = CheckboxGroup
+    radioButtonGroup = RadioButtonGroup
+    slider = Slider
+    rangeSlider = RangeSlider
+
+class LayoutOrientation(Enum):
+    vertical = column
+    horizontal = row
+
+def make_widget(
+    widget_type: Widget_type,
+    func = None, 
+    **kwargs
+):
+    match widget_type:
+        case Widget_type.div:
+            necessary_param = ['text']
+            core_param = ['disable_math']
+            all_param = ['align', 'aspect_ratio', 'background', 'css_classes', 'default_size', 'disable_math', 
+                'disabled', 'height', 'height_policy', 'js_event_callbacks', 'js_property_callbacks', 'margin', 
+                'max_height', 'max_width', 'min_height', 'min_width', 'name', 'render_as_text', 'sizing_mode', 
+                'style', 'subscribed_events', 'syncable', 'tags', 'text', 'visible', 'width', 'width_policy']
+            event_name = None
+            change_name = None
+
+        case Widget_type.slider:
+            necessary_param = ['start', 'end', 'value', 'step']
+            core_param = ['title', 'format', 'orientation', 'show_value', 'bar_color']
+            all_param = ['align', 'aspect_ratio', 'background', 'bar_color', 'css_classes', 'default_size', 
+                'direction', 'disabled', 'end', 'format', 'height', 'height_policy', 'js_event_callbacks', 
+                'js_property_callbacks', 'margin', 'max_height', 'max_width', 'min_height', 'min_width', 
+                'name', 'orientation', 'show_value', 'sizing_mode', 'start', 'step', 'subscribed_events', 
+                'syncable', 'tags', 'title', 'tooltips', 'value', 'value_throttled', 'visible', 'width', 
+                'width_policy']
+            event_name = None
+            change_name = 'value'
+        
+        case Widget_type.rangeSlider:
+            necessary_param = ['start', 'end', 'value', 'step']
+            core_param = ['title', 'format', 'orientation', 'show_value', 'bar_color']
+            all_param = ['align', 'aspect_ratio', 'background', 'bar_color', 'css_classes', 'default_size', 
+                'direction', 'disabled', 'end', 'format', 'height', 'height_policy', 'js_event_callbacks', 
+                'js_property_callbacks', 'margin', 'max_height', 'max_width', 'min_height', 'min_width', 
+                'name', 'orientation', 'show_value', 'sizing_mode', 'start', 'step', 'subscribed_events', 
+                'syncable', 'tags', 'title', 'tooltips', 'value', 'value_throttled', 'visible', 'width', 
+                'width_policy']
+            event_name = None
+            change_name = 'value'
+
+        case  Widget_type.button:
+            necessary_param = []
+            core_param = ['label']
+            all_param = ['align', 'aspect_ratio', 'background', 'button_type', 'css_classes', 'default_size',
+                'disabled', 'height', 'height_policy', 'icon', 'js_event_callbacks', 'js_property_callbacks',
+                'label', 'margin', 'max_height', 'max_width', 'min_height', 'min_width', 'name', 
+                'sizing_mode', 'subscribed_events', 'syncable', 'tags', 'visible', 'width', 'width_policy']
+            event_name = 'button_click'
+            change_name = None
+
+        case  Widget_type.text:
+            necessary_param = []
+            core_param = ['title', 'value']
+            all_param = ['align', 'aspect_ratio', 'background', 'css_classes', 'default_size',
+                'disabled', 'height', 'height_policy', 'js_event_callbacks', 'js_property_callbacks',
+                'margin', 'max_height', 'max_length', 'max_width', 'min_height', 'min_width', 'name',
+                'placeholder', 'sizing_mode', 'subscribed_events', 'syncable', 'tags', 'title', 'value',
+                'value_input', 'visible', 'width', 'width_policy']
+            change_name = 'value'
+            event_name = None
+            
+        case Widget_type.select:
+            necessary_param = ['options', 'value']
+            core_param = ['title']
+            all_param = ['align', 'aspect_ratio', 'background', 'css_classes', 'default_size', 'disabled',
+                'height', 'height_policy', 'js_event_callbacks', 'js_property_callbacks', 'margin', 
+                'max_height', 'max_width', 'min_height', 'min_width', 'name', 'options', 'sizing_mode', 
+                'subscribed_events', 'syncable', 'tags', 'title', 'value', 'visible', 'width', 'width_policy']
+            change_name = 'value'
+            event_name = None
+        
+        case Widget_type.autocompleteInput:
+            necessary_param = ['completions']
+            core_param = ['min_characters', 'case_sensitive', 'value', 'title']
+            all_param = ['align', 'aspect_ratio', 'background', 'case_sensitive', 'completions', 'css_classes',
+                'default_size', 'disabled', 'height', 'height_policy', 'js_event_callbacks', 
+                'js_property_callbacks', 'margin', 'max_height', 'max_length', 'max_width', 'min_characters', 
+                'min_height', 'min_width', 'name', 'placeholder', 'restrict', 'sizing_mode', 'subscribed_events', 
+                'syncable', 'tags', 'title', 'value', 'value_input', 'visible', 'width', 'width_policy']
+            change_name = 'value'
+            event_name = None 
+
+        case Widget_type.checkBoxGroup:
+            necessary_param = ['labels']
+            core_param = ['active']
+            all_param = ['active', 'align', 'aspect_ratio', 'background', 'css_classes', 'default_size', 
+                'disabled', 'height', 'height_policy', 'inline', 'js_event_callbacks', 'js_property_callbacks',
+                'labels', 'margin', 'max_height', 'max_width', 'min_height', 'min_width', 'name', 'sizing_mode',
+                'subscribed_events', 'syncable', 'tags', 'visible', 'width', 'width_policy']
+            change_name = 'active'
+            event_name = None
+        
+        case Widget_type.radioButtonGroup:
+            necessary_param = ['labels']
+            core_param = ['active']
+            all_param = ['active', 'align', 'aspect_ratio', 'background', 'button_type', 'css_classes', 
+                'default_size', 'disabled', 'height', 'height_policy', 'js_event_callbacks', 
+                'js_property_callbacks', 'labels', 'margin', 'max_height', 'max_width', 'min_height', 'min_width',
+                'name', 'orientation', 'sizing_mode', 'subscribed_events', 'syncable', 'tags', 'visible', 'width', 
+                'width_policy']
+            change_name = 'active'
+            event_name = None
+
+    kwargs = examine_args(widget_type, necessary_param, core_param, all_param, **kwargs)
+    widget = widget_type.value(**kwargs)
+    if func and event_name:
+        widget.on_event(event_name, func)
+    elif func and change_name:
+        widget.on_change(change_name, lambda attr, old, new: func())
+    return widget
+
+def examine_args(
+    widget_type: Widget_type,
+    necessary_params: list,
+    core_params: list,
+    all_params: list,
+    **kwargs
+):
+    # print("Note: For", widget_type, "parameters", necessary_params, "must be included to function.",
+        # core_params, "are also useful, others may not be used")
+    filtered_kwargs = {key: value for key, value in kwargs.items() if key in all_params}
+    # illegal_keys = set(kwargs.keys()) - set(filtered_kwargs.keys())
+    # if illegal_keys != set():
+        # print("Warning:", illegal_keys, "are not allowed parameters for", widget_type,
+        #     "and will be ignored. All parameters allowed for", widget_type, "are", all_params)
+    return filtered_kwargs
+
+def make_layout(
+        widgets: list | dict,
+        key_list: list[str] | None = None,
+        orientation: LayoutOrientation = LayoutOrientation.vertical,
+        width_param = None
+        ):
+    values = []
+    if isinstance(widgets, dict): 
+        if key_list == None:
+            key_list = list(widgets.keys())
+        for key in key_list:
+            if key in widgets: 
+                if width_param:
+                    widgets[key].width = width_param
+                values.append(widgets[key])
+    if isinstance(widgets, list):
+        if not key_list:
+            values = widgets
+        else:
+            print("Warning: widgets is a list input, parameter key_list is ignored.")
+    layout_cur = orientation(values)
+    return layout_cur
+    
