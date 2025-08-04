@@ -94,7 +94,7 @@ class ResultSelector:
     def make_res_selections(self):
         for i in range(self.n_res):
             self.widgets_dict[f"res_title_{i}"] = make_widget(Widget_type.div, text = f"<div style='font-size: 20px;'> {self.data_type[i][1]}")
-            resultlist = self.find_result(i)
+            resultlist = self.synchronize_result(i)
             self.widgets_dict[f"select_result_{i}"] = make_widget(
                 Widget_type.select,
                 lambda: self.res_selection_callback(),
@@ -135,7 +135,7 @@ class ResultSelector:
     def mode_confirm_callback(self):
         pass
 
-    def find_result(
+    def synchronize_result(
         self,
         i: int
     ):

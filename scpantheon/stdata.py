@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import Enum 
 from functools import reduce
 from anndata import AnnData
-from bokeh.plotting import figure
+from bokeh.plotting import figure 
 from bokeh.models import ColumnDataSource, HoverTool, Arrow, OpenHead, LinearAxis
 from scpantheon.front_end.data_qt import dir, read_path
 import pandas as pd
@@ -81,7 +81,7 @@ class ExtAdataManager:
         unstructured: list[str] | None = []
     ):
         """exp_matrix: send out by default"""
-        self.var_valid = var_valid
+        self.var_valid = var_valid #11
         self.obs_valid = obs_valid
         self.kwargs = {"streamline": streamline, "ext_name": ext_name}
         self.kwargs["exp_matrix"] = ["X"]
@@ -231,7 +231,7 @@ class DiGplot:
     ):
         for node in self.G.nodes:
             if node.name == name:
-                if parents is not None:
+                if parents is True:
                     if parentlist is None:
                         print("Warning: parents is to be updated but no parentlist provided")
                         break
@@ -239,14 +239,14 @@ class DiGplot:
                         parent_dict = dict()
                         parent_node_namelist = []
                         for parent in parentlist:
-                            info_line = data.filter(data["result"] == parent)
+                            info_line = data[data["result"] == parent]
                             if len(info_line.index) > 1:
                                 print("Error: result name repeated")
                                 return
                             elif len(info_line.index == 1):
-                                info = f"{parent} from session: {data.loc[0, 'streamline']}"
-                                info_key = data.loc[0, "type"].value
-                                parent_node_namelist.append(data.loc[0, 'session'])
+                                info = f"{parent} from session: {info_line.loc[0, 'streamline']}"
+                                info_key = info_line.loc[0, "type"].value
+                                parent_node_namelist.append(info_line.loc[0, 'session'])
                                 if info_key in parent_dict:
                                     parent_dict[info_key].append(info)
                                 else: 
@@ -258,11 +258,24 @@ class DiGplot:
                                 parent_nodes.append(node)
                         self.add_edge(parent_nodes, node)
                         break
-                if results is not None:
+                if results is True:
                     if resultlist is None:
                         print("Warning: parents is to be updated but no parentlist provided")
                         return
-                    
+                    else:
+                        result_dict = dict()
+                        for result in resultlist:
+                            info_line = data[data["result"] == result]
+                            if len(info_line.index) > 1:
+                                print("Error: result name repeated")
+                                return
+                            info_key = info_line.loc[0, "type"].value
+                            if info_key in result_dict:
+                                result_dict[info_key].append(result)
+                            else:
+                                result_dict[info_key] = [result]
+                        node.results = result_dict
+                        break                    
     
     def update_node_valid(self, name: str, var_valid: list[int] | None = None, obs_valid: list[int] | None = None):
         for node in self.G.nodes:
@@ -399,6 +412,12 @@ def init_data():
         var_valid = list(range(adata.n_vars)), 
         obs_valid = list(range(adata.n_obs))
         )
+    adata.uns["scpantheon_categorizor"] = {
+        DataCat.Catagorial_obs.value: list[str](), 
+        DataCat.Data_obs.value: list[str](),
+        DataCat.Catagorial_var.value: list[str](),
+        DataCat.Data_var.value: list[str]()
+    }
     return adata
 
 def extract_streamline(): 

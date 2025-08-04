@@ -2,8 +2,8 @@
 from multiprocessing import freeze_support
 from multiprocessing import Process
 from scpantheon.config import set_software_rendering
-from front_end import data_qt
-from app import bokeh_qt
+from scpantheon.front_end import data_qt
+from scpantheon.app import bokeh_qt
 import pkg_resources
 import subprocess
 import numpy as np

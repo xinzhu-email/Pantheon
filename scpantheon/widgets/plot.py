@@ -5,6 +5,7 @@ from bokeh.transform import linear_cmap
 from scipy.sparse import issparse
 from scpantheon.buttons import make_layout, make_widget, LayoutOrientation, Widget_type
 from scpantheon.base import Base
+from scpantheon.stdata import DataCat
 import colorcet as cc
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
@@ -173,6 +174,25 @@ class DiscretePlot:
         wid_dict['layout_coords'] = layout_coords
         layout_key = ['plot', 'layout_coords']
         return(make_layout(wid_dict, layout_key, LayoutOrientation.horizontal))
+    
+    def update_categorical_by_categorizor(self, obsvar_categorial: str):
+        ori_value = self.widgets_dict['group_select'].value
+        if self.base == Base.Cell:
+            if obsvar_categorial in dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value]:
+                return
+            else:
+                dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value].append(obsvar_categorial)
+                self.widgets_dict['group_select'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value]
+                if ori_value not in dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value]:
+                    self.widgets_dict['group_select'].value = obsvar_categorial
+        if self.base == Base.Gene:
+            if obsvar_categorial in dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value]:
+                return
+            else:
+                dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value].append(obsvar_categorial)
+                self.widgets_dict['group_select'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value]
+                if ori_value not in dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value]:
+                    self.widgets_dict['group_select'].value = obsvar_categorial
     
     def coordinates_select_callback(self):
         pass

@@ -183,7 +183,7 @@ class ExtensionPicker:
                 data_kwarg[dt.session_dict[self.streamline][self.curmethod][self.cursession].prereq.data_type[i][0].value].append(res_key)
             # c) copy & filter selected results to new adata
         new_data = dt.ExtAdataManager(dt.adata, **data_kwarg)
-        dt.session_dict[self.streamline][self.curmethod][self.cursession].data = new_data.make_ext_data(dt.adata)
+        dt.session_dict[self.streamline][self.curmethod][self.cursession].data = new_data.make_ext_data(dt.adata).copy()
         print(dt.session_dict[self.streamline][self.curmethod][self.cursession].data)
         refresh_id_tracker = dt.digplot.plot.id
         dt.digplot.update_node_valid(
@@ -244,6 +244,7 @@ class ExtensionPicker:
         self.cursession = self.sessionlist[0]
         
     def update_navigation(self):
+        print(247, self.cursession)
         input_type = [prompt_tuple[0] for prompt_tuple in dt.session_dict[self.streamline][self.curmethod][self.cursession].prereq.data_type]
         input_type_unique = list(set(input_type))
         result_type = [prompt_tuple[0] for prompt_tuple in dt.session_dict[self.streamline][self.curmethod][self.cursession].res.data_type]
