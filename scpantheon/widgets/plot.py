@@ -177,26 +177,6 @@ class DiscretePlot:
         layout_key = ['plot', 'layout_coords']
         return(make_layout(wid_dict, layout_key, LayoutOrientation.horizontal))
     
-    def update_categorical_by_categorizor(self, obsvar_categorial: str, is_data: int):
-        ori_value = self.widgets_dict['group_select'].value
-        if is_data == 0:
-            if self.base == Base.Cell:
-                if obsvar_categorial in dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value]:
-                    return
-                else:
-                    dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value].append(obsvar_categorial)
-                    self.widgets_dict['group_select'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value]
-                    if ori_value not in dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value]:
-                        self.widgets_dict['group_select'].value = obsvar_categorial
-            if self.base == Base.Gene:
-                if obsvar_categorial in dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value]:
-                    return
-                else:
-                    dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value].append(obsvar_categorial)
-                    self.widgets_dict['group_select'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value]
-                    if ori_value not in dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value]:
-                        self.widgets_dict['group_select'].value = obsvar_categorial
-    
     def coordinates_select_callback(self):
         pass
 
@@ -216,10 +196,12 @@ class DiscretePlot:
         self.plotter.source = self.get_source()
         self.plotter.update_glyph_by_color()
         self.widgets_dict['plot'] = self.plotter.plot
-        
 
     def group_list_callback(self):
         pass
+
+
+    "functional"
 
     def get_coordinates(self):
         self.embedding = []
@@ -320,6 +302,9 @@ class DiscretePlot:
         if selected:
             source.selected.indices = selected
         return source
+    
+    
+    
     
 
 
@@ -514,3 +499,4 @@ class ContinuousPlot():
         if selected:
             source.selected.indices = selected
         return source
+        
