@@ -76,48 +76,38 @@ class Modification:
             lambda : self.change_color_callback(),
             label = "Change Cluster Color"
         )
-        self.widgets_dict['categorizor'] = make_widget(Widget_type.div, text = f"<div style='font-size: 30px;'> Obs/Var Categorizor")
         
-        obs_list = dt.adata.obs_keys()
-        if len(obs_list) == 0:
-            obs_list = ["no obs"]
-        var_list = dt.adata.var_keys()
-        if len(var_list) == 0:
-            var_list = ["no var"]
-        self.widgets_dict['obs_list'] = make_widget(
+        if self.base == Base.Cell:
+            cat_list = dt.adata.obs_keys()
+            if len(cat_list) == 0:
+                cat_list = ["no obs"]
+            string_base = "Obs"
+        elif self.base == Base.Gene:
+            cat_list = dt.adata.var_keys()
+            if len(cat_list) == 0:
+                cat_list = ["no var"]
+            string_base = "Var"
+        
+        self.widgets_dict['categorizor'] = make_widget(Widget_type.div, text = f"<div style='font-size: 30px;'> {string_base} Categorizor")
+        
+        self.widgets_dict['cat_list'] = make_widget(
             Widget_type.select,
-            lambda: self.obs_select(),
-            options = obs_list,
-            title = "obs list",
-            value = obs_list[0]
+            lambda: self.cat_select(),
+            options = cat_list,
+            title = f"{string_base} list",
+            value = cat_list[0]
         )
-        self.widgets_dict['obs_category'] = make_widget(
+        self.widgets_dict['cat_category'] = make_widget(
             Widget_type.radioButtonGroup,
-            labels = ['obs categorical', 'obs data'],
+            labels = [f"{string_base} categorical", f"{string_base} data"],
             active = 0,
         )
-        self.widgets_dict['obs_categorize'] = make_widget(
+        self.widgets_dict['cat_categorize'] = make_widget(
             Widget_type.button,
-            lambda: self.obs_categorize(),
+            lambda: self.cat_categorize(),
             label = "catagorize"
         )
-        self.widgets_dict['var_list'] = make_widget(
-            Widget_type.select,
-            lambda: self.var_select(),
-            options = var_list,
-            title = "var list",
-            value = var_list[0]
-        )
-        self.widgets_dict['var_category'] = make_widget(
-            Widget_type.radioButtonGroup,
-            labels = ['var categorical', 'var data'],
-            active = 0
-        )
-        self.widgets_dict['var_categorize'] = make_widget(
-            Widget_type.button,
-            lambda: self.var_categorize(),
-            label = "catagorize"
-        )
+      
         self.plot_dis = DiscretePlot(self.base)
         self.plot_con = ContinuousPlot(self.base)
         self.filter = Filter(self.base)
@@ -134,10 +124,7 @@ class Modification:
         function_layout = make_layout([group_layout, cluster_layout, annotation_layout], orientation = LayoutOrientation.horizontal)
         modify_layout = make_layout([self.widgets_dict['title'], function_layout])
         filter_complete = make_layout([self.filter.layout, self.filter_confirm])
-        obs_categorize = make_layout(self.widgets_dict, ['obs_list', 'obs_category', 'obs_categorize'])
-        var_categorize = make_layout(self.widgets_dict, ['var_list', 'var_category', 'var_categorize'])
-        obsvar_categorize = make_layout([obs_categorize, var_categorize], orientation = LayoutOrientation.horizontal)
-        categorize_layout = make_layout([self.widgets_dict['categorizor'], obsvar_categorize]) 
+        categorize_layout = make_layout(self.widgets_dict, ['categorizor', 'cat_list', 'cat_category', 'cat_categorize']) 
         operation_layout = make_layout([modify_layout, filter_complete], orientation = LayoutOrientation.horizontal)
         plot_layout = make_layout([self.plot_dis.layout, self.plot_con.layout], orientation = LayoutOrientation.horizontal)
         return make_layout([plot_layout, operation_layout, categorize_layout])
@@ -195,18 +182,13 @@ class Modification:
         self.plot_con.plotter.update_filterd_glyph(indices)
         self.plot_dis.plotter.update_filterd_glyph(indices)
 
-    def obs_select(self):
+    def cat_select(self):
         pass
 
-    def var_select(self):
-        pass
-
-    def obs_categorize(self):
-        obs_to_categorial = self.widgets_dict['obs_list'].value
-        self.plot_dis.update_categorical_by_categorizor(obs_to_categorial)
-
-    def var_categorize(self):
-        pass
+    def cat_categorize(self):
+        is_data = self.widgets_dict['cat_category'].active
+        cat_to_categorial = self.widgets_dict['cat_list'].value
+        self.plot_dis.update_categorical_by_categorizor(cat_to_categorial, is_data)
 
 
 
