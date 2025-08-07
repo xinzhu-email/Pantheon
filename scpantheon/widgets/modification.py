@@ -189,7 +189,7 @@ class Modification:
     def cat_categorize(self):
         is_data = self.widgets_dict['cat_category'].active
         obsvar = self.widgets_dict['cat_list'].value
-        ori_con_value = self.plot_con.widgets_dict['coordinates_select_mkr'].value
+        ori_con_value = self.plot_con.widgets_dict['marker_select_obsvar'].value
         ori_dis_value = self.plot_dis.widgets_dict['group_select'].value
         if is_data == 0:
             if self.base == Base.Cell:
@@ -200,11 +200,11 @@ class Modification:
                         dt.adata.uns["scpantheon_categorizor"][DataCat.Data_obs.value].remove(obsvar)
                         if ori_con_value == obsvar:
                             if len(dt.adata.uns["scpantheon_categorizor"][DataCat.Data_obs.value]) > 0:
-                                self.plot_con.widgets_dict['coordinates_select_mkr'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_obs.value]
-                                self.plot_con.widgets_dict['coordinates_select_mkr'].value = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_obs.value][0]
+                                self.plot_con.widgets_dict['marker_select_obsvar'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_obs.value]
+                                self.plot_con.widgets_dict['marker_select_obsvar'].value = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_obs.value][0]
                             else:
-                                self.plot_con.widgets_dict['coordinates_select_mkr'].options = ['no obs'] 
-                                self.plot_con.widgets_dict['coordinates_select_mkr'].value = 'no obs'
+                                self.plot_con.widgets_dict['marker_select_obsvar'].options = ['no obs'] 
+                                self.plot_con.widgets_dict['marker_select_obsvar'].value = 'no obs'
                     dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value].append(obsvar)
                     self.plot_dis.widgets_dict['group_select'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value]
                     self.plot_dis.widgets_dict['group_select'].value = obsvar
@@ -214,14 +214,14 @@ class Modification:
                 else:
                     if obsvar in dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value]:
                         dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value].remove(obsvar)
-                        self.plot_con.widgets_dict['coordinates_select_mkr'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value]
+                        self.plot_con.widgets_dict['marker_select_obsvar'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value]
                         if ori_con_value == obsvar:
                             if len(dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value]) > 0:
-                                self.plot_con.widgets_dict['coordinates_select_mkr'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value]
-                                self.plot_con.widgets_dict['coordinates_select_mkr'].value = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value][0]
+                                self.plot_con.widgets_dict['marker_select_obsvar'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value]
+                                self.plot_con.widgets_dict['marker_select_obsvar'].value = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value][0]
                             else:
-                                self.plot_con.widgets_dict['coordinates_select_mkr'].options = ['no var'] 
-                                self.plot_con.widgets_dict['coordinates_select_mkr'].value = 'no var'
+                                self.plot_con.widgets_dict['marker_select_obsvar'].options = ['no var'] 
+                                self.plot_con.widgets_dict['marker_select_obsvar'].value = 'no var'
                     dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value].append(obsvar)
                     self.plot_dis.widgets_dict['group_select'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value]
                     self.plot_dis.widgets_dict['group_select'].value = obsvar
@@ -240,8 +240,8 @@ class Modification:
                                 self.plot_dis.widgets_dict['group_select'].options = ['no obs'] 
                                 self.plot_dis.widgets_dict['group_select'].value = 'no obs'
                     dt.adata.uns["scpantheon_categorizor"][DataCat.Data_obs.value].append(obsvar)
-                    self.plot_con.widgets_dict['coordinates_select_mkr'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_obs.value]
-                    self.plot_con.widgets_dict['coordinates_select_mkr'].value = obsvar
+                    self.plot_con.widgets_dict['marker_select_obsvar'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_obs.value]
+                    self.plot_con.widgets_dict['marker_select_obsvar'].value = obsvar
             if self.base == Base.Gene:
                 if obsvar in dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value]:
                     return
@@ -256,8 +256,8 @@ class Modification:
                                 self.plot_dis.widgets_dict['group_select'].options = ['no var'] 
                                 self.plot_dis.widgets_dict['group_select'].value = 'no var'
                     dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value].append(obsvar)
-                    self.plot_con.widgets_dict['coordinates_select_mkr'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value]
-                    self.plot_con.widgets_dict['coordinates_select_mkr'].value = obsvar
+                    self.plot_con.widgets_dict['marker_select_obsvar'].options = dt.adata.uns["scpantheon_categorizor"][DataCat.Data_var.value]
+                    self.plot_con.widgets_dict['marker_select_obsvar'].value = obsvar
     
 
 

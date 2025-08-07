@@ -6,6 +6,7 @@ from scipy.sparse import issparse
 from scpantheon.buttons import make_layout, make_widget, LayoutOrientation, Widget_type
 from scpantheon.base import Base
 from scpantheon.stdata import DataCat
+from scpantheon.tabs import refresh
 import colorcet as cc
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
@@ -111,8 +112,6 @@ class ScatterPlot:
 class DiscretePlot:
     def __init__(self, base: Base):
         self.base = base
-        self.expression = list()
-        self.embedding = list()
         self.widgets_dict = dict()
         self.init_widget_dict()
         self.plot_source = {'x': dict(), 'y': dict(), 'color': list()}
@@ -204,30 +203,23 @@ class DiscretePlot:
     "functional"
 
     def get_coordinates(self):
-        self.embedding = []
-        self.expression = []
-        for key in list(dt.adata.uns["scpantheon"].keys()):
-            if dt.adata.uns["scpantheon"][key].kwargs['exp_matrix']:
-                self.expression = self.expression + dt.adata.uns["scpantheon"][key].kwargs['exp_matrix']
-            if dt.adata.uns["scpantheon"][key].kwargs['hd_coordinate']:
-                self.expression = self.expression + dt.adata.uns["scpantheon"][key].kwargs['hd_coordinate']
-            if self.base == Base.Cell:
-                if dt.adata.uns["scpantheon"][key].kwargs['obs_embedding']:
-                    self.embedding = self.embedding + dt.adata.uns["scpantheon"][key].kwargs['obs_embedding']
-            elif self.base == Base.Gene:
-                if dt.adata.uns["scpantheon"][key].kwargs['var_embedding']:
-                    self.embedding = self.embedding + dt.adata.uns["scpantheon"][key].kwargs['var_embedding']
-        return (self.expression + self.embedding)
+        if self.base == Base.Cell:
+            embedding = dt.adata.obsm_keys()
+            label = ['obs']
+        elif self.base == Base.Gene:
+            embedding = dt.adata.varm_keys()
+            label = ['var']
+        return ['X'] + embedding + label
     
     def get_axes(self):
         coordinate = self.widgets_dict['coordinates_select'].value
-        if coordinate in self.expression:
+        if coordinate == "X":
             if self.base == Base.Cell:
                 return dt.adata.var_names.to_list()
             elif self.base == Base.Gene:
                 return dt.adata.obs_names.to_list()
-        elif coordinate in self.embedding:
-            if self.base == Base.Cell:
+        else:
+            if self.base == Base.Cell and coordinate in dt.adata.obsm_keys():
                 if type(dt.adata.obsm[coordinate]) == np.ndarray:
                     axes = list()
                     for i in range(dt.adata.obsm[coordinate].shape[1]):
@@ -235,7 +227,7 @@ class DiscretePlot:
                     return axes
                 elif type(dt.adata.obsm[coordinate]) == pd.DataFrame:
                     return(dt.adata.obsm[coordinate].columns.to_list())
-            elif self.base == Base.Gene:
+            elif self.base == Base.Gene and coordinate in dt.adata.varm_keys():
                 if type(dt.adata.varm[coordinate]) == np.ndarray:
                     axes = list()
                     for i in range(dt.adata.varm[coordinate].shape[1]):
@@ -353,19 +345,37 @@ class ContinuousPlot():
             title = 'Choose marker map'
         )
         self.widgets_dict['coordinates_select_mkr'] = coordinates_select_mkr
-        axes_mkr = self.get_axes('marker')
-        marker_select = make_widget(
+        axes_mkr = self.get_axes()
+        marker_select_X = make_widget(
             Widget_type.autocompleteInput,
-            lambda: self.axis_select_callback(),
+            lambda: self.markerX_select_callback(),
             completions = axes_mkr,
             min_characters = 1,
             value = axes_mkr[-1],
             title = 'marker'
         )
+        if self.base == Base.Cell:
+            if len(dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value]) > 0:
+                axes_obsvar = dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_obs.value]
+            else:
+                axes_obsvar = ['no obs']
+        if self.base == Base.Gene:
+            if len(dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value]) > 0:
+                axes_obsvar = dt.adata.uns["scpantheon_categorizor"][DataCat.Catagorial_var.value]
+            else:
+                axes_obsvar = ['no var']
+        marker_select_obsvar = make_widget(
+            Widget_type.select,
+            options = axes_obsvar,
+            value = axes_obsvar[0],
+            title = 'marker'
+        )
         new_dict = {
             'x_axis_select': x_axis_select,
             'y_axis_select': y_axis_select,
-            'marker_select': marker_select
+            'marker_select_X': marker_select_X,
+            'marker_select_obsvar': marker_select_obsvar,
+            'marker_select': marker_select_X
         }
         merged_dict = {**self.widgets_dict, **new_dict}
         self.widgets_dict = merged_dict
@@ -379,36 +389,37 @@ class ContinuousPlot():
         return(make_layout(wid_dict, layout_key, LayoutOrientation.horizontal))
     
     def coordinates_select_callback(self):
+        id_marker = self.widgets_dict['marker_select'].id
+        if self.widgets_dict['coordinates_select_mkr'].value == 'X':
+            self.widgets_dict['marker_select'] = self.widgets_dict['marker_select_X']
+        elif self.widgets_dict['coordinates_select_mkr'].value in ['var', 'obs']:
+            self.widgets_dict['marker_select'] = self.widgets_dict['marker_select_obsvar']
+        refresh(id_marker, self.widgets_dict['marker_select'])
+    
+    def markerX_select_callback(self):
         pass
 
     def axis_select_callback(self):
         pass
 
     def get_coordinates(self):
-        self.embedding = []
-        self.expression = []
-        for key in list(dt.adata.uns["scpantheon"].keys()):
-            if dt.adata.uns["scpantheon"][key].kwargs['exp_matrix']:
-                self.expression = self.expression + dt.adata.uns["scpantheon"][key].kwargs['exp_matrix']
-            if dt.adata.uns["scpantheon"][key].kwargs['hd_coordinate']:
-                self.expression = self.expression + dt.adata.uns["scpantheon"][key].kwargs['hd_coordinate']
-            if self.base == Base.Cell:
-                if dt.adata.uns["scpantheon"][key].kwargs['obs_embedding']:
-                    self.embedding = self.embedding + dt.adata.uns["scpantheon"][key].kwargs['obs_embedding']
-            elif self.base == Base.Gene:
-                if dt.adata.uns["scpantheon"][key].kwargs['var_embedding']:
-                    self.embedding = self.embedding + dt.adata.uns["scpantheon"][key].kwargs['var_embedding']
-        return (self.expression + self.embedding)
+        if self.base == Base.Cell:
+            embedding = dt.adata.obsm_keys()
+            label = ['obs']
+        elif self.base == Base.Gene:
+            embedding = dt.adata.varm_keys()
+            label = ['var']
+        return ['X'] + embedding + label   
     
-    def get_axes(self, mode: str | None = None):
+    def get_axes(self):
         coordinate = self.widgets_dict['coordinates_select'].value
-        if coordinate in self.expression:
+        if coordinate == 'X':
             if self.base == Base.Cell:
                 return dt.adata.var_names.to_list()
             elif self.base == Base.Gene:
                 return dt.adata.obs_names.to_list()
-        elif coordinate in self.embedding:
-            if self.base == Base.Cell:
+        else:
+            if self.base == Base.Cell and coordinate in dt.adata.obsm_keys():
                 if type(dt.adata.obsm[coordinate]) == np.ndarray:
                     axes = list()
                     for i in range(dt.adata.obsm[coordinate].shape[1]):
@@ -416,7 +427,7 @@ class ContinuousPlot():
                     return axes
                 elif type(dt.adata.obsm[coordinate]) == pd.DataFrame:
                     return(dt.adata.obsm[coordinate].columns.to_list())
-            elif self.base == Base.Gene:
+            elif self.base == Base.Gene and coordinate in dt.adata.varm_keys():
                 if type(dt.adata.varm[coordinate]) == np.ndarray:
                     axes = list()
                     for i in range(dt.adata.varm[coordinate].shape[1]):
