@@ -14,7 +14,6 @@ import pandas as pd
 import stdata as dt
 
 color_list = d3['Category20c'][20]
-fake_data = {'x': [0,1,2,3,4], 'y': [2, 6, 9,3,10], 'color': [color_list[0], color_list[0], color_list[0], color_list[0], color_list[0]]}
 
 class ScatterPlot:
     def __init__(
@@ -84,7 +83,7 @@ class ScatterPlot:
                     selection_line_width = 0.5,
                     source = self.source
                 )
-                
+
             self.glyphs = glyphs
             self.plot = plot
         else: 
@@ -94,16 +93,19 @@ class ScatterPlot:
     
     def update_filterd_glyph(self, indices: list[int] = []):
         self.source.selected.indices = indices
-        # length = len(self.source.data['x'])
-        # if indices == []
-        #     indices = list(range(length))
-        # mask = np.zeros(length, dtype=bool)
-        # mask[indices] = True
-        # alpha = np.where(mask, 1.0, 0.1)
-        # self.source.data['alpha'] = alpha
-        # if self.glyphs:
-        #     self.glyphs.glyph.alpha = 'alpha'
-        # self.plot.change.emit()
+    
+    def update_glyph_by_color(self):
+        self.glyphs = self.plot.scatter(
+            x = self.source.column_names[0],
+            y = self.source.column_names[-2],
+            color = self.source.column_names[-1],
+            nonselection_alpha = 0.1,
+            selection_line_color = 'black',
+            selection_line_width = 0.5,
+            source = self.source
+        )
+
+
 
 
 class DiscretePlot:
@@ -147,8 +149,8 @@ class DiscretePlot:
         group_select = make_widget(
             Widget_type.select,
             lambda: self.group_select_callback(),
-            options = ['group_0', 'group_1'],
-            value = 'group_0',
+            options = [],
+            value = '',
             title = 'Group by Variable:'
         )
         group_list = make_widget(
@@ -202,7 +204,19 @@ class DiscretePlot:
         pass
     
     def group_select_callback(self):
-        pass
+        curgroup = self.widgets_dict['group_select'].value
+        if self.base == Base.Cell:
+            class_list = dt.adata.obs[curgroup]
+        if self.base == Base.Gene:
+            class_list = dt.adata.var[curgroup]
+        unique_classes = list(set(class_list))
+        class_to_color = {cls: color_list[i % len(color_list)] for i, cls in enumerate(unique_classes)}
+        assigned_colors = [class_to_color[cls] for cls in class_list]
+        self.plot_source['color'] = assigned_colors
+        self.plotter.source = self.get_source()
+        self.plotter.update_glyph_by_color()
+        self.widgets_dict['plot'] = self.plotter.plot
+        
 
     def group_list_callback(self):
         pass
@@ -293,8 +307,8 @@ class DiscretePlot:
         self.plot_source['y'].clear()
         self.plot_source['x'][x_varname] = x_list
         self.plot_source['y'][y_varname] = y_list
-        self.plot_source['color'] = []
-        self.plot_source['color'] = [color_list[0]]*len(x_list)
+        if self.plot_source['color'] == []:
+            self.plot_source['color'] = [color_list[0]]*len(x_list)
         # TODO: color with obs_categorical
         source = ColumnDataSource(
             data = {
@@ -306,6 +320,9 @@ class DiscretePlot:
         if selected:
             source.selected.indices = selected
         return source
+    
+
+
 
 class ContinuousPlot():
     def __init__(self, base: Base):

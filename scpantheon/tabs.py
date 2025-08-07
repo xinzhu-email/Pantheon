@@ -5,11 +5,13 @@ def refresh(widget_id, new_layout):
     def refresh_traverse(widget_id, new_layout, _curroot=None):
         if _curroot is None:
             _curroot = curdoc().roots
+            # print(_curroot)
         
         elif isinstance(_curroot, TabPanel):
             _curroot = [_curroot]
         
         for child in _curroot:
+            # print(child)
             if hasattr(child, 'children'):
                 for i in range(len(child.children)):
                     if child.children[i].id == widget_id:
