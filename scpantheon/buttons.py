@@ -150,7 +150,8 @@ def make_layout(
         widgets: list | dict,
         key_list: list[str] | None = None,
         orientation: LayoutOrientation = LayoutOrientation.vertical,
-        width_param = None
+        width_param = None,
+        
         ):
     values = []
     if isinstance(widgets, dict): 
@@ -166,6 +167,10 @@ def make_layout(
             values = widgets
         else:
             print("Warning: widgets is a list input, parameter key_list is ignored.")
-    layout_cur = orientation(values)
+    layout_cur = orientation(values, styles={
+        "background": "#6c72df",  # 背景色
+        "padding": "20px",        # 内边距
+        "border-radius": "100px",   # 圆角
+    })
     return layout_cur
     

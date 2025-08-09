@@ -121,6 +121,10 @@ class DiscretePlot:
     
     def init_widget_dict(self):
         coordinates = self.get_coordinates()
+        if self.base == Base.Cell:
+            coordinates.remove('obs')
+        elif self.base == Base.Gene:
+            coordinates.remove('var')
         coordinates_select = make_widget(
             Widget_type.select,
             lambda: self.coordinates_select_callback(),
@@ -295,6 +299,28 @@ class DiscretePlot:
             source.selected.indices = selected
         return source
     
+    # def get_cluster_list_prompt(self,
+    #     active_cluster = None
+    # ):
+    #     """
+    #     organize text of cluster checkbox by uns    
+    #     return option list of cluster_checkbox
+    #     """
+    #     curgroup = self.widgets_dict['group_select'].value
+    #     cluster_promtlist = []
+    #     label_divlist = []
+    #     active_prompt = None
+    #     for cluster_name in dt.adata.uns['group_dict'][curgroup].index:
+    #         cellnum = dt.adata.uns['group_dict'][curgroup].loc[cluster_name, 'cell_num']
+    #         cluster_prompt = str(cluster_name) + ": cell_nums = " + str(cellnum)
+    #         cluster_color = dt.adata.uns['group_dict'][curgroup].loc[cluster_name, 'color']
+    #         cluster_label = Div (text = cluster_prompt, height = 8, style = {'color': cluster_color})
+    #         label_divlist.append(cluster_label)
+    #         cluster_promtlist.append(cluster_prompt)
+    #         if cluster_name == active_cluster:
+    #             active_prompt = cluster_prompt
+    #     return cluster_promtlist, column(label_divlist, height = 30 * len(cluster_prompt)), active_prompt
+    
     
     
     
@@ -313,6 +339,10 @@ class ContinuousPlot():
     
     def init_widget_dict(self):
         coordinates = self.get_coordinates()
+        if self.base == Base.Cell:
+            label = 'obs'
+        elif self.base == Base.Gene:
+            label = 'var'
         coordinates_select = make_widget(
             Widget_type.select,
             lambda: self.coordinates_select_callback(),
@@ -337,9 +367,10 @@ class ContinuousPlot():
             value = axes[1],
             title = 'y_axis'
         )
+        coordinates.append(label)
         coordinates_select_mkr = make_widget(
             Widget_type.select,
-            lambda: self.coordinates_select_callback(),
+            lambda: self.marker_select_callback(),
             options = coordinates,
             value = coordinates[0],
             title = 'Choose marker map'
@@ -388,7 +419,11 @@ class ContinuousPlot():
         layout_key = ['plot', 'layout_coords']
         return(make_layout(wid_dict, layout_key, LayoutOrientation.horizontal))
     
+
     def coordinates_select_callback(self):
+        pass
+
+    def marker_select_callback(self):
         id_marker = self.widgets_dict['marker_select'].id
         if self.widgets_dict['coordinates_select_mkr'].value == 'X':
             self.widgets_dict['marker_select'] = self.widgets_dict['marker_select_X']
@@ -405,11 +440,9 @@ class ContinuousPlot():
     def get_coordinates(self):
         if self.base == Base.Cell:
             embedding = dt.adata.obsm_keys()
-            label = ['obs']
         elif self.base == Base.Gene:
             embedding = dt.adata.varm_keys()
-            label = ['var']
-        return ['X'] + embedding + label   
+        return ['X'] + embedding 
     
     def get_axes(self):
         coordinate = self.widgets_dict['coordinates_select'].value

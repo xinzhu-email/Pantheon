@@ -20,7 +20,7 @@ def main(doc):
     print('===loading finished=====')
     
     """update main page"""
-    doc.add_next_tick_callback(upload_callback)                                                     
+    doc.add_next_tick_callback(upload_callback)                                                 
 
 if __name__ == "main":
     main(curdoc())

@@ -4,6 +4,7 @@ from anndata import AnnData
 from bokeh.plotting import figure 
 from bokeh.models import ColumnDataSource, HoverTool, Arrow, OpenHead, LinearAxis
 from scpantheon.front_end.data_qt import dir, read_path
+from scipy.sparse import csr_matrix
 import pandas as pd
 import numpy as np
 import scanpy as sc
@@ -418,7 +419,21 @@ def init_data():
         DataCat.Catagorial_var.value: list[str](),
         DataCat.Data_var.value: list[str]()
     }
+    if adata.obsm.keys():
+        update_data_obsm(adata)
     return adata
+
+def update_data_obsm(adata: AnnData):
+    for obsm_key in adata.obsm_keys():
+        if type(adata.obsm[obsm_key]) == csr_matrix:
+            adata.uns['sparse'].append(obsm_key)
+        if type(adata.obsm[obsm_key]) == np.ndarray:
+            column_names = list([obsm_key + str(i) for i in range(adata.obsm[obsm_key].shape[1])])
+            adata.obsm[obsm_key] = pd.DataFrame(
+                adata.obsm[obsm_key],
+                index = adata.obs_names,
+                columns = column_names
+            )
 
 def extract_streamline(): 
     # TODO: examine: dir/extensions/streamline/method_name/module.py
