@@ -1,77 +1,70 @@
-from bokeh.layouts import column
-from bokeh.models import Panel, Tabs
+from bokeh.models import TabPanel, Tabs
 from bokeh.io import curdoc
 
-panel_dict = dict()
-curpanel = None
-ext_layout = column([])
-ext_widgets = dict()
+def refresh(widget_id, new_layout):
+    def refresh_traverse(widget_id, new_layout, _curroot=None):
+        if _curroot is None:
+            _curroot = curdoc().roots
+            # print(_curroot)
+        
+        elif isinstance(_curroot, TabPanel):
+            _curroot = [_curroot]
+        
+        for child in _curroot:
+            # print(child)
+            if hasattr(child, 'children'):
+                for i in range(len(child.children)):
+                    if child.children[i].id == widget_id:
+                        child.children[i] = new_layout
+                        return True
+                if refresh_traverse(widget_id, new_layout, child.children):
+                    return True
+            elif isinstance(child, Tabs):
+                tab_substitute = False
+                for tab in child.tabs:
+                    if refresh_traverse(widget_id, new_layout, tab):
+                        tab_substitute = True
+                if tab_substitute:
+                    return True
+            elif isinstance(child, TabPanel):
+                for i in range(len(child.child.children)):
+                    if hasattr(child.child.children[i], 'id') and child.child.children[i].id == widget_id:
+                        child.child.children[i] = new_layout
+                        return True
+                if refresh_traverse(widget_id, new_layout, child.child.children):
+                    return True
+        return False
+    
+    found = refresh_traverse(widget_id, new_layout)
+    if found == False:
+        print("Error: no corresponding id")
 
-def view_panel(
-    panel_dict,
-    ext_layout,
-    ext_widgets: dict,
-    curpanel: str | None = None 
-):
-    curdoc().clear()
-    tab_list = []
-    for key in panel_dict:
-        key_layout = panel_dict[key].layout
-        panel_layout = ext_layout
-        if key == 'gene relations':
-            layout = column(key_layout, panel_layout)
-        else:
-            layout = key_layout
-        panel_creat = Panel (child = layout, title = key)
-        tab_list.append (panel_creat)
-    panel_view = Tabs(tabs = tab_list)
-    panel_view.active = get_index(panel_dict, curpanel)
-    panel_view.on_change('active',lambda attr, old, new : update_curpanel(panel_dict, curpanel, ext_widgets, attr, old, new))
-    curdoc().add_root(panel_view)
 
-def update_curpanel(panel_dict, curpanel, ext_widgets, attr, old, new):
-    mute_global(panel_dict, curpanel, ext_widgets)
-    def update_curpanel_next(panel_dict, curpanel, ext_widgets, new):
-        key_list = list(panel_dict.keys())
-        curpanel = key_list[new]
-        print(curpanel)
-        panel_dict[curpanel].switch_tab()
-        unmute_global(panel_dict, curpanel, ext_widgets)
-    curdoc().add_next_tick_callback(lambda: update_curpanel_next(panel_dict, curpanel, ext_widgets, new))
-
-def get_index(
-    panel_dict: dict | None = None,
-    curpanel: str | None = None,
-):
-    key_list = list(panel_dict.keys())
-    if curpanel in key_list:
-        index_position = key_list.index(curpanel)
-    else:
-        index_position = 0
-    return index_position
-
-def mute_global(
-    panel_dict: dict,
-    curpanel: str,
-    ext_widgets: dict
-):
-    Tabs.disabled = True
-    if ext_widgets:
-        for widget_key in ext_widgets:
-            ext_widgets[widget_key].disabled = True
-    if panel_dict:
-        for widget_key in panel_dict[curpanel].widgets_dict:
-            panel_dict[curpanel].widgets_dict[widget_key].disabled = True  
-  
-def unmute_global(
-    panel_dict: dict,
-    curpanel: str,
-    ext_widgets: dict
-):
-    Tabs.disabled = False
-    if ext_widgets:
-        for widget_key in ext_widgets:
-            ext_widgets[widget_key].disabled = False
-    if panel_dict:
-        for widget_key in panel_dict[curpanel].widgets_dict:
-            panel_dict[curpanel].widgets_dict[widget_key].disabled = False
+def refresh_layout(widget_id, new_layout, target_layout):
+    def refresh_traverse(widget_id, new_layout, target_layout):
+        if hasattr(target_layout, 'id') and target_layout.id == widget_id:
+            target_layout = new_layout
+            return
+        elif hasattr(target_layout, 'children'):
+            target = target_layout.children
+        elif isinstance(target_layout, list):
+            target = target_layout
+        for child in target:
+            if hasattr(child, 'children'):
+                for i in range(len(child.children)):
+                    if child.children[i].id == widget_id:
+                        child.children[i] = new_layout
+                        return True
+                if refresh_traverse(widget_id, new_layout, child.children):
+                    return True
+            elif isinstance(child, Tabs):
+                if refresh_traverse(widget_id, new_layout, child.tabs):
+                    return True
+            elif isinstance(child, TabPanel):
+                if refresh_traverse(widget_id, new_layout, child.child.children):
+                    return True
+        return False
+    
+    found = refresh_traverse(widget_id, new_layout, target_layout)
+    if found == False:
+        print("Error: no corresponding id")
