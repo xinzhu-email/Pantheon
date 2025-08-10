@@ -2,8 +2,8 @@ import os, sys, io, ast, pkgutil, pkg_resources
 import subprocess
 import re
 import hashlib
+from scpantheon.config import configure_opengl
 from PyQt5 import QtCore, QtGui
-# import mysql.connector
 from pathlib import Path
 from appdirs import AppDirs
 from PyQt5.QtGui import *
@@ -369,10 +369,9 @@ def read_path(dir):
     try:
         d_file = open(dir + '/' + 'data_file.txt', 'r')
     except:
-        new_extensions_path = dir + '/extensions'
-        if not os.path.exists(new_extensions_path):
-            os.makedirs(new_extensions_path)
-            
+        d_file = open(dir + '/' + 'data_file.txt', 'a')
+
+    print(d_file)
     data = d_file.readline()
     # print('-======- data:', data)
     d_file.close()
@@ -390,7 +389,9 @@ def main():
     print("center directory path:\n\t", dir)
     mkdir(path=dir)
     # create qt app
+    print("data_qt")
     app = QApplication(sys.argv)
+    configure_opengl()
     Dialog = QDialog()
     ui = Ui_Dialog()
     ui.setupUi(Dialog)
@@ -399,4 +400,5 @@ def main():
     Dialog.setWindowFlags(Dialog.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint) 
     Dialog.show()
     app.exec()
+    print(check_code)
     return check_code

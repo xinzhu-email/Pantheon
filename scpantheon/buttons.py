@@ -122,7 +122,7 @@ def make_widget(
             change_name = 'active'
             event_name = None
 
-    kwargs = examine_args(widget_type, necessary_param, core_param, all_param, **kwargs)
+    kwargs = examine_args(all_param, **kwargs)
     widget = widget_type.value(**kwargs)
     if func and event_name:
         widget.on_event(event_name, func)
@@ -131,19 +131,10 @@ def make_widget(
     return widget
 
 def examine_args(
-    widget_type: Widget_type,
-    necessary_params: list,
-    core_params: list,
     all_params: list,
     **kwargs
 ):
-    # print("Note: For", widget_type, "parameters", necessary_params, "must be included to function.",
-        # core_params, "are also useful, others may not be used")
     filtered_kwargs = {key: value for key, value in kwargs.items() if key in all_params}
-    # illegal_keys = set(kwargs.keys()) - set(filtered_kwargs.keys())
-    # if illegal_keys != set():
-        # print("Warning:", illegal_keys, "are not allowed parameters for", widget_type,
-        #     "and will be ignored. All parameters allowed for", widget_type, "are", all_params)
     return filtered_kwargs
 
 def make_layout(
@@ -151,7 +142,7 @@ def make_layout(
         key_list: list[str] | None = None,
         orientation: LayoutOrientation = LayoutOrientation.vertical,
         width_param = None,
-        
+        **kwargs
         ):
     values = []
     if isinstance(widgets, dict): 
@@ -167,10 +158,6 @@ def make_layout(
             values = widgets
         else:
             print("Warning: widgets is a list input, parameter key_list is ignored.")
-    layout_cur = orientation(values, styles={
-        "background": "#6c72df",  # 背景色
-        "padding": "20px",        # 内边距
-        "border-radius": "100px",   # 圆角
-    })
+    layout_cur = orientation(values, **kwargs)
     return layout_cur
     

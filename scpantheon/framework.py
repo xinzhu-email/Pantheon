@@ -20,7 +20,7 @@ class Framework:
         export_panel = TabPanel(child = self.export.layout, title = "export")
         homepage_tabs = Tabs(tabs = [navigation_panel, console_panel, export_panel])
         visualization = self.session.visualization.layout
-        return make_layout([visualization, homepage_tabs, self.session.streamline_tab], orientation = LayoutOrientation.horizontal)
+        return make_layout([visualization, self.session.streamline_tab, homepage_tabs], orientation = LayoutOrientation.horizontal)
 
     # def make_navigation_panel(self):
     #     return make_layout([

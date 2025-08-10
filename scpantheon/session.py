@@ -25,6 +25,7 @@ class Session:
             tab_layout = make_layout([self.streamline_panel.layout, self.synchronize])
             streamline_tablist.append(TabPanel(child = tab_layout, title = key))
         self.streamline_tab = Tabs(tabs = streamline_tablist)
+        self.streamline_tab.tabs_location = "left"
         self.streamline_tab.on_change('active',lambda attr, old, new : self.streamline_tab_callback(attr, old, new))
 
     

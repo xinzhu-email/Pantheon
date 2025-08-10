@@ -36,6 +36,7 @@ class ScatterPlot:
                 print("Warning: discrete scatter plot has no attribute contrast_bar")
             self.contrast_bar = None
         self.source = source
+        self.color_bar = None
         self.plot_figure()
     
     def plot_figure(self):
@@ -71,8 +72,8 @@ class ScatterPlot:
                     selection_line_color = 'black',
                     selection_line_width = 0.5,
                     )
-                color_bar = ColorBar(color_mapper=color_mapper, location=(0, 0), width = 30)
-                plot.add_layout(color_bar, 'right')
+                self.color_bar = ColorBar(color_mapper=color_mapper, location=(0, 0), width = 30)
+                plot.add_layout(self.color_bar, 'right')
 
             else:
                 glyphs = plot.scatter(
@@ -95,16 +96,49 @@ class ScatterPlot:
     def update_filterd_glyph(self, indices: list[int] = []):
         self.source.selected.indices = indices
     
-    def update_glyph_by_color(self):
-        self.glyphs = self.plot.scatter(
-            x = self.source.column_names[0],
-            y = self.source.column_names[-2],
-            color = self.source.column_names[-1],
-            nonselection_alpha = 0.1,
-            selection_line_color = 'black',
-            selection_line_width = 0.5,
-            source = self.source
-        )
+    def update_glyph_by_source(self):
+        self.plot.renderers = []
+        self.plot.xaxis.axis_label, self.plot.yaxis.axis_label = self.source.column_names[0], self.source.column_names[-2]
+        if self.is_continuous:
+            if self.contrast_bar:
+                cmap = cm.get_cmap('jet', 256)
+                palette = [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]
+            else:
+                palette = cc.kbc[::-1]
+            color_mapper = LogColorMapper(
+                palette = palette, 
+                low = min(self.source.data['color']), 
+                high = max(self.source.data['color'])
+                )
+            glyphs = self.plot.scatter(
+                x = self.source.column_names[0],
+                y = self.source.column_names[-2],
+                source = self.source,
+                color = linear_cmap(
+                    'color',
+                    palette = palette,
+                    low = min(self.source.data['color']),
+                    high = max(self.source.data['color']),
+                    ),
+                nonselection_alpha = 0.1,
+                selection_line_color = 'black',
+                selection_line_width = 0.5,
+                )
+            self.color_bar.color_mapper = color_mapper
+            self.plot.right = [self.color_bar]
+
+        else:
+            glyphs = self.plot.scatter(
+                x = self.source.column_names[0],
+                y = self.source.column_names[-2],
+                color = self.source.column_names[-1],
+                nonselection_alpha = 0.1,
+                selection_line_color = 'black',
+                selection_line_width = 0.5,
+                source = self.source
+            )
+
+        self.glyphs = glyphs
 
 
 
@@ -178,13 +212,22 @@ class DiscretePlot:
         wid_dict = self.widgets_dict
         wid_dict['layout_coords'] = layout_coords
         layout_key = ['plot', 'layout_coords']
-        return(make_layout(wid_dict, layout_key, LayoutOrientation.horizontal))
+        return(make_layout(wid_dict, layout_key, LayoutOrientation.horizontal, 
+            styles={
+                "background": "#6c72df",  # 背景色
+                "padding": "20px",        # 内边距
+                "border-radius": "100px",   # 圆角
+            }
+        ))
     
     def coordinates_select_callback(self):
         pass
 
     def axis_select_callback(self):
-        pass
+        new_source = self.get_source()
+        self.plotter.source = new_source
+        self.plotter.update_glyph_by_source()
+        self.widgets_dict['plot'] = self.plotter.plot
     
     def group_select_callback(self):
         curgroup = self.widgets_dict['group_select'].value
@@ -197,7 +240,7 @@ class DiscretePlot:
         assigned_colors = [class_to_color[cls] for cls in class_list]
         self.plot_source['color'] = assigned_colors
         self.plotter.source = self.get_source()
-        self.plotter.update_glyph_by_color()
+        self.plotter.update_glyph_by_source()
         self.widgets_dict['plot'] = self.plotter.plot
 
     def group_list_callback(self):
@@ -435,7 +478,10 @@ class ContinuousPlot():
         pass
 
     def axis_select_callback(self):
-        pass
+        new_source = self.get_source()
+        self.plotter.source = new_source
+        self.plotter.update_glyph_by_source()
+        self.widgets_dict['plot'] = self.plotter.plot
 
     def get_coordinates(self):
         if self.base == Base.Cell:
